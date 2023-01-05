@@ -32,3 +32,5 @@ typing-extensions==4.4.0
     #   starlette
 uvicorn==0.20.0
     # via -r ./requirements.in
+websockets==10.4
+    # via -r ./requirements.in

@@ -11,6 +11,7 @@ from s2_analyzer_backend.logging import LogLevel, setup_logging
 
 LOGGER = logging.getLogger(__name__)
 
+
 def main():
     parser = argparse.ArgumentParser(prog='S2 analyzer backend')
     parser.add_argument('--s2-json-schemas-dir', required=True, type=str)
@@ -22,17 +23,11 @@ def main():
     s2_json_schemas_dir = Path(args.s2_json_schemas_dir)
     if not s2_json_schemas_dir.is_dir():
         print(f'Cannot find s2 json schemas directory {s2_json_schemas_dir}')
-    validator = S2JsonSchemaValidator(s2_json_schemas_dir)
-    validator.setup()
-    # print(validator.validate({'message_type': 'FRBC.ActuatorStatus',
-    #                           'message_id': '1234',
-    #                           'active_operation_mode_id': '1234',
-    #                           'operation_mode_factor': 0.5,
-    #                           'previous_operation_mode_id': '4321'},
-    #                          'FRBC.ActuatorStatus'))
+    s2_validator = S2JsonSchemaValidator(s2_json_schemas_dir)
+    s2_validator.setup()
 
     applications = AsyncApplications()
-    applications.add_application(S2CEMServer('127.0.0.1', 8001))
+    applications.add_application(S2CEMServer('127.0.0.1', 8001, s2_validator))
 
     def handle_exit(sig, frame):
         LOGGER.info("Received stop from signal to stop.")
