@@ -1,0 +1,5 @@
+**.pyc
+.idea/
+
+backend/.venv/
+backend/unit_test_coverage/
