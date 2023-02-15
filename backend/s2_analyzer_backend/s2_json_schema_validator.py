@@ -1,9 +1,10 @@
 import json
 import logging
-from pathlib import Path
-from typing import Optional
-
+from typing import TYPE_CHECKING, Optional
 import jsonschema
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 MessageType = str
@@ -11,13 +12,13 @@ ValidationError = jsonschema.ValidationError
 
 
 class S2JsonSchemaValidator:
-    dir_to_s2_json_schemas: Path
+    dir_to_s2_json_schemas: "Path"
     resolver: jsonschema.validators.RefResolver
 
     schemas_per_message_type: dict[MessageType, dict]
     message_types: list[MessageType]
 
-    def __init__(self, dir_to_s2_json_schemas: Path):
+    def __init__(self, dir_to_s2_json_schemas: "Path"):
         self.dir_to_s2_json_schemas = dir_to_s2_json_schemas
         self.resolver = jsonschema.validators.RefResolver(base_uri=f"{dir_to_s2_json_schemas.resolve().as_uri()}/",
                                                           referrer=True)

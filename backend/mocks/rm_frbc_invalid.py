@@ -4,7 +4,7 @@ import websockets
 
 
 async def main():
-    async with websockets.connect("ws://localhost:8001/backend/resourcemanager/battery1/ws") as websocket:
+    async with websockets.connect("ws://localhost:8001/backend/rm/battery1/cem/admin/ws") as websocket:
         message = {'message_type': 'FRBC.ActuatorStatus',
                    # 'message_id': '1234', <-- Is missing. So invalid message
                    'active_operation_mode_id': '1234',

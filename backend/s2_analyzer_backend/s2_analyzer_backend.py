@@ -5,7 +5,7 @@ import os
 import signal
 
 from s2_analyzer_backend.s2_json_schema_validator import S2JsonSchemaValidator
-from s2_analyzer_backend.s2_cem_server import S2CEMServer
+from s2_analyzer_backend.rest_api import RestAPI
 from s2_analyzer_backend.async_application import AsyncApplications
 from s2_analyzer_backend.logging import LogLevel, setup_logging
 
@@ -27,7 +27,7 @@ def main():
     s2_validator.setup()
 
     applications = AsyncApplications()
-    applications.add_application(S2CEMServer('127.0.0.1', 8001, s2_validator))
+    applications.add_application(RestAPI('0.0.0.0', 8001, s2_validator))
 
     def handle_exit(sig, frame):
         LOGGER.info("Received stop from signal to stop.")
@@ -37,6 +37,9 @@ def main():
     signal.signal(signal.SIGTERM, handle_exit)
     signal.signal(signal.SIGQUIT, handle_exit)
 
+    # Model(bla)
+    # ModelConnection(bla)
+    # MessageRouter.add_new_connect(model_connection)
     applications.run_all()
 
 

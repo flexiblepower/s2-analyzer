@@ -12,7 +12,7 @@ class AsyncApplication(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def main_task(self, loop:asyncio.AbstractEventLoop) -> None:
+    async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         pass
 
     @abc.abstractmethod
@@ -45,7 +45,7 @@ class AsyncApplications:
         if name in self.applications:
             del self.applications[name]
 
-    async def _run_application(self, application):
+    async def _run_application(self, application: AsyncApplication):
         try:
             await application.create_main_task(self.loop)
         except Exception as exc:  # pylint: disable=broad-except

@@ -1,5 +1,6 @@
 **.pyc
 .idea/
+.vscode/
 
 backend/.venv/
 backend/unit_test_coverage/
