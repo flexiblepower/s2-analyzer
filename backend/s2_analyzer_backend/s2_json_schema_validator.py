@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 MessageType = str
-ValidationError = jsonschema.ValidationError
+FormatValidationError = jsonschema.ValidationError
 
 
 class S2JsonSchemaValidator:
@@ -39,7 +39,7 @@ class S2JsonSchemaValidator:
                 self.schemas_per_message_type[message_type] = json_schema
                 self.message_types.append(message_type)
 
-    def validate(self, message, message_type: MessageType) -> Optional[ValidationError]:
+    def validate(self, message, message_type: MessageType) -> Optional[FormatValidationError]:
         schema = self.schemas_per_message_type.get(message_type, None)
         if schema:
             try:
@@ -48,7 +48,7 @@ class S2JsonSchemaValidator:
             except jsonschema.ValidationError as e:
                 result = e
         else:
-            result = ValidationError(f'There is no schema loaded for message type {message_type}.')
+            result = FormatValidationError(f'There is no schema loaded for message type {message_type}.')
 
         return result
 

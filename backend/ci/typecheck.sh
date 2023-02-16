@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
-. .venv/bin/activate
-mypy ./ev_flex_metric/ ./test/
+source .venv/bin/activate
+mypy ./s2_analyzer_backend/ ./test/
