@@ -9,11 +9,10 @@ import uvicorn
 
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.connection import WebSocketConnection, S2OriginType
-from s2_analyzer_backend.router import MessageRouter
 import s2_analyzer_backend.logging
 
 if TYPE_CHECKING:
-    from s2_analyzer_backend.s2_json_schema_validator import S2JsonSchemaValidator
+    from s2_analyzer_backend.router import MessageRouter
     from s2_analyzer_backend.async_application import ApplicationName
 
 
@@ -21,21 +20,17 @@ LOGGER = logging.getLogger(__name__)
 
 
 class RestAPI(AsyncApplication):
-    listen_address: str
-    listen_port: int
-    s2_validator: "S2JsonSchemaValidator"
 
     uvicorn_server: Optional[uvicorn.Server]
     fastapi_router: APIRouter
 
-    def __init__(self, listen_address: str, listen_port: int, s2_validator: "S2JsonSchemaValidator"):
+    def __init__(self, listen_address: str, listen_port: int, msg_router: "MessageRouter"):
         super().__init__()
         self.listen_address = listen_address
         self.listen_port = listen_port
         self.uvicorn_server = None
-        self.s2_validator = s2_validator
         self.fastapi_router = APIRouter()
-        self.msg_router = MessageRouter(s2_validator)
+        self.msg_router = msg_router
 
         self.fastapi_router.add_api_route('/', self.get_root)
         self.fastapi_router.add_api_websocket_route('/backend/rm/{rm_id}/cem/{cem_id}/ws',
@@ -67,28 +62,6 @@ class RestAPI(AsyncApplication):
     async def get_root(self) -> str:
         return 'Hello world!'
 
-    async def websocket_resource_manager(self, websocket: "WebSocket", resource_manager_id: str):
-        try:
-            await websocket.accept()
-            LOGGER.info(f'Received connection from resource manager {resource_manager_id}')
-            while True:
-                message_str = await websocket.receive_text()
-                LOGGER.debug(f'{resource_manager_id} send message: {message_str}')
-                message = json.loads(message_str)
-                message_type = self.s2_validator.get_message_type(message)
-                validation_error = self.s2_validator.validate(message, message_type)
-
-                if validation_error is None:
-                    LOGGER.debug(f'{resource_manager_id} send valid message: {message_str}')
-                    await websocket.send_text('Message is valid!')
-                else:
-                    LOGGER.debug(f'{resource_manager_id} send invalid message: {message_str}\nError: {validation_error}')
-                    await websocket.send_text(f'Message is invalid: {validation_error}')
-        except WebSocketDisconnect:
-            LOGGER.info(f'Resource manager {resource_manager_id} disconnected.')
-        except WebSocketException as e:
-            LOGGER.exception(f'Connection to resource manager {resource_manager_id} had an exception:', e)
-
     async def receive_new_rm_connection(self, ws: WebSocket, rm_id: str, cem_id: str) -> None:
         # Creates the WebsocketConnection instance
         conn = WebSocketConnection(rm_id, cem_id, S2OriginType.RM, self.msg_router, ws)
@@ -116,4 +89,3 @@ class RestAPI(AsyncApplication):
         except WebSocketDisconnect:
             self.msg_router.connection_has_closed(conn)
             LOGGER.info(f'{conn.s2_origin_type.name} {conn.origin_id} disconnected.')
-        pass
