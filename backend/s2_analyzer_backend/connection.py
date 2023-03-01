@@ -15,19 +15,22 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
+class ConnectionClosedReason(Enum):
+    TIMEOUT = 'timeout',
+    DISCONNECT = 'disconnect'
+
+
 class S2OriginType(Enum):
     RM = 'RM'
     CEM = 'CEM'
 
     def reverse(self):
-        if self.value == 'RM':
+        if self is S2OriginType.RM:
             return S2OriginType.CEM
-        elif self.value == 'CEM':
+        elif self is S2OriginType.CEM:
             return S2OriginType.RM
         else:
             raise ValueError
-
-
 
 
 class Connection(ABC):
@@ -40,6 +43,10 @@ class Connection(ABC):
     # @abstractmethod
     def get_connection_type(self):
         return ConnectionType(type(self))
+
+    @property
+    def destination_type(self):
+        return S2OriginType.reverse(self.s2_origin_type)
 
     @abstractmethod
     async def send_envelope(self, envelope: "Envelope") -> bool:

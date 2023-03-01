@@ -1,48 +1,25 @@
 import abc
+import asyncio
 import datetime
-import itertools
-import uuid
 from enum import Enum
+import itertools
 import logging
+import time
 from typing import Optional, Callable, Iterator
-from uuid import UUID
-from s2_analyzer_backend.async_application import AsyncApplication
-from s2_analyzer_backend.s2_json_schema_validator import MessageType
+import uuid
+
+from s2_analyzer_backend.async_application import ApplicationName
+from s2_analyzer_backend.connection import Connection, S2OriginType, ConnectionClosedReason
+from s2_analyzer_backend.envelope import Envelope, S2Message
+from s2_analyzer_backend.model import Model
+from s2_analyzer_backend.router import MessageRouter
 
 LOGGER = logging.getLogger(__name__)
-S2Message = dict
 
 S2_VERSION = '0.0.1-beta'
 
 # List of priority. Earlier in the list means higher preferences over later items in the list.
 SUPPORTED_CONTROL_TYPES = ['FILL_RATE_BASED_CONTROL', 'NOT_CONTROLABLE']
-
-class S2OriginType(Enum):
-    RM = 'RM',
-    CEM = 'CEM'
-
-class Connection:
-    origin_id: str
-    s2_origin_type: S2OriginType
-
-class ModelConnection(Connection):
-    pass
-
-class MessageRouter:
-    def routeS2Message(self, origin: Connection, destination: str, s2_msg: S2Message) -> bool:
-        pass
-
-class ValidatedEnvelope:
-    id: UUID
-    origin: Connection
-    destination: Connection
-    s2_msg_type: MessageType
-    s2_msg: S2Message
-
-
-class ConnectionClosedReason(Enum):
-    TIMEOUT = 'timeout',
-    DISCONNECT = 'disconnect'
 
 
 class ControlType(Enum):
@@ -67,16 +44,25 @@ class CemModelS2DeviceControlStrategy(abc.ABC):
         pass
 
 
-def inclusive_numerical_range(start:float, stop: float, step: float) -> Iterator[float]:
-    i = 1
-    result = start
-    
-    while result < stop:
-        yield result
-        result = start + i * step
-        i += 1
-    yield stop
-    
+class NumericalRange:
+    start: float
+    end: float
+
+    def __init__(self, start: float, end: float):
+        self.start = start
+        self.end = end
+
+    @staticmethod
+    def inclusive(start: float, stop: float, step: float) -> Iterator[float]:
+        i = 1
+        result = start
+
+        while result < stop:
+            yield result
+            result = start + i * step
+            i += 1
+        yield stop
+
 
 class FRBCStrategy(CemModelS2DeviceControlStrategy):
     OM_STEP_RESOLUTION = 0.1
@@ -95,7 +81,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
     timers_started_at: dict[str, datetime.datetime]
     expected_fill_level_at_end_of_timestep: Optional[float]
 
-    s2_msg_type_to_callable: dict[str, Callable[[ValidatedEnvelope], None]]
+    s2_msg_type_to_callable: dict[str, Callable[[Envelope], None]]
 
     def __init__(self, s2_device_model: 'DeviceModel'):
         self.s2_device_model = s2_device_model
@@ -109,44 +95,44 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
             'FRBC.StorageStatus': self.handle_storage_status
         }
 
-    def receive_envelope(self, envelope: ValidatedEnvelope):
-        handle = self.s2_msg_type_to_callable.get(envelope.s2_msg_type)
+    def receive_envelope(self, envelope: Envelope):
+        handle = self.s2_msg_type_to_callable.get(envelope.msg_type)
         if handle:
             handle(envelope)
         else:
-            LOGGER.warning(f'Received a message of type {envelope.s2_msg_type} which CEM device '
-                           f'model {self.s2_device_model.cem_model_id} connected to RM {self.s2_device_model.rm_id} is '
+            LOGGER.warning(f'Received a message of type {envelope.msg_type} which CEM device '
+                           f'model {self.s2_device_model.id} connected to RM {self.s2_device_model.rm_id} is '
                            f'unable to handle. Ignoring message.')
 
-    def handle_system_description(self, envelope: ValidatedEnvelope) -> None:
-        self.system_descriptions.append(envelope.s2_msg)
+    def handle_system_description(self, envelope: Envelope) -> None:
+        self.system_descriptions.append(envelope.msg)
 
-    def handle_actuator_status(self, envelope: ValidatedEnvelope) -> None:
-        actuator_id = envelope.s2_msg['actuator_id'] # TODO Currently not in spec.
-        self.actuator_status_per_actuator_id[actuator_id] = envelope.s2_msg
+    def handle_actuator_status(self, envelope: Envelope) -> None:
+        actuator_id = envelope.msg['actuator_id'] # TODO Currently not in spec.
+        self.actuator_status_per_actuator_id[actuator_id] = envelope.msg
 
-    def handle_fill_level_target_profile(self, envelope: ValidatedEnvelope) -> None:
-        self.fill_level_target_profiles.append(envelope.s2_msg)
+    def handle_fill_level_target_profile(self, envelope: Envelope) -> None:
+        self.fill_level_target_profiles.append(envelope.msg)
 
-    def handle_leakage_behaviour(self, envelope: ValidatedEnvelope) -> None:
-        self.leakage_behaviours.append(envelope.s2_msg)
+    def handle_leakage_behaviour(self, envelope: Envelope) -> None:
+        self.leakage_behaviours.append(envelope.msg)
 
-    def handle_usage_forecast(self, envelope: ValidatedEnvelope) -> None:
-        self.usage_forecasts.append(envelope.s2_msg)
+    def handle_usage_forecast(self, envelope: Envelope) -> None:
+        self.usage_forecasts.append(envelope.msg)
 
-    def handle_storage_status(self, envelope: ValidatedEnvelope) -> None:
-        self.expected_fill_level_at_end_of_timestep = envelope.s2_msg['present_fill_level']
+    def handle_storage_status(self, envelope: Envelope) -> None:
+        self.expected_fill_level_at_end_of_timestep = envelope.msg['present_fill_level']
 
     def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> list[S2Message]:
-        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] tick starts.')
+        LOGGER.debug(f'[{self.s2_device_model.id}] tick starts.')
         active_system_description = FRBCStrategy.get_active_s2_message(timestep_start,
                                                                        lambda m: m['valid_from'],
                                                                        self.system_descriptions)
-        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] Active system description: {active_system_description}.')
+        LOGGER.debug(f'[{self.s2_device_model.id}] Active system description: {active_system_description}.')
         storage_description = active_system_description['storage']
         allowed_fill_level_range = storage_description['fill_level_range']
         fill_level_at_start_of_timestep = self.expected_fill_level_at_end_of_timestep
-        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] Fill level at start of'
+        LOGGER.debug(f'[{self.s2_device_model.id}] Fill level at start of'
                      f'timestep: {fill_level_at_start_of_timestep}.')
 
         expected_fill_level_range_at_end_of_timestep = self.get_expected_fill_level_at_end_of_timestep(fill_level_at_start_of_timestep,
@@ -154,7 +140,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         target_fill_level_range_at_end_of_timestep = range(max(allowed_fill_level_range['start_of_range'],
                                                                expected_fill_level_range_at_end_of_timestep.start),
                                                            min(allowed_fill_level_range['end_of_range'],
-                                                               expected_fill_level_range_at_end_of_timestep.stop))
+                                                               expected_fill_level_range_at_end_of_timestep.end))
         expected_usage_during_timestep = self.get_expected_usage_during_timestep(timestep_start, timestep_end)
         expected_leakage_during_timestep = self.get_expected_leakage_during_timestep(fill_level_at_start_of_timestep,
                                                                                      timestep_start,
@@ -169,7 +155,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         else:
             actuate_fill_level = target_fill_level_range_at_end_of_timestep.stop - fill_level_if_no_action
 
-        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] '
+        LOGGER.debug(f'[{self.s2_device_model.id}] '
                      f'Expected end fill level: {expected_leakage_during_timestep}\n'
                      f'    Allowed fill range: {allowed_fill_level_range}\n'
                      f'    Expected usage: {expected_usage_during_timestep}\n'
@@ -182,14 +168,14 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                                                          active_system_description,
                                                                          timestep_end - timestep_start,
                                                                          timestep_start)
-        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] Resulting instructions:')
-        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] tick ends.')
+        LOGGER.debug(f'[{self.s2_device_model.id}] Resulting instructions:')
+        LOGGER.debug(f'[{self.s2_device_model.id}] tick ends.')
         return instructions
         # TODO UNIT TESTSSSSSSS
 
     def get_expected_fill_level_at_end_of_timestep(self,
                                                    fill_level_at_start_of_timestep: float,
-                                                   timestep_end: datetime.datetime) -> range:
+                                                   timestep_end: datetime.datetime) -> NumericalRange:
         active_fill_level_target_profile = FRBCStrategy.get_active_s2_message(timestep_end,
                                                                               lambda m: m['start_time'],
                                                                               self.fill_level_target_profiles)
@@ -201,15 +187,15 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
             if current_start <= timestep_end < current_end:
                 fill_level_range = fill_level_element['fill_level_range']
-                expected_fill_level_at_end = range(fill_level_range['start_of_range'],
-                                                   fill_level_range['end_of_range'])
+                expected_fill_level_at_end = NumericalRange(fill_level_range['start_of_range'],
+                                                            fill_level_range['end_of_range'])
                 break
 
             current_start = current_start + duration
 
         if expected_fill_level_at_end is None:
-            expected_fill_level_at_end = range(fill_level_at_start_of_timestep,
-                                               fill_level_at_start_of_timestep)
+            expected_fill_level_at_end = NumericalRange(fill_level_at_start_of_timestep,
+                                                        fill_level_at_start_of_timestep)
 
         return expected_fill_level_at_end
 
@@ -280,7 +266,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                                           current_fill_level: float,
                                                           actuate_fill_level: float,
                                                           active_system_description: S2Message,
-                                                          duration: datetime.timedelta) -> list[tuple(S2Message,)]:
+                                                          duration: datetime.timedelta) -> list[tuple[S2Message, S2Message, float]]:
         """
 
         :param current_fill_level:
@@ -307,7 +293,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
             for actuator, om, om_element in actuator_combination:
                 begin_factor = om_element['fill_level_range']['start_of_range']
                 end_factor = om_element['fill_level_range']['end_of_range']
-                all_factors = list(inclusive_numerical_range(begin_factor, end_factor, self.OM_STEP_RESOLUTION))
+                all_factors = list(NumericalRange.inclusive(begin_factor, end_factor, self.OM_STEP_RESOLUTION))
                 # TODO move all_factors to previous for-loop into the tuple so it is not repeated so often
                 operation_mode_factors.append(all_factors)
             
@@ -385,9 +371,8 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
 
 class DeviceModel:
-    cem_model_id: str
-    cem_model_connection: Connection
-    rm_id: str
+    id: str
+    model_connection_to_rm: Connection
     message_router: MessageRouter
     initialization_state: S2DeviceInitializationState
     control_type_strategy: Optional[CemModelS2DeviceControlStrategy]
@@ -400,16 +385,14 @@ class DeviceModel:
     power_measurements_received: list[S2Message]
     power_forecasts_received: list[S2Message]
 
-    s2_msg_type_to_callable: dict[str, Callable[[ValidatedEnvelope], None]]
+    s2_msg_type_to_callable: dict[str, Callable[[Envelope], None]]
 
     def __init__(self,
-                 cem_model_id: str,
-                 cem_model_connection: Connection,
-                 rm_id: str,
+                 id: str,
+                 model_connection_to_rm: Connection,
                  message_router: MessageRouter):
-        self.cem_model_id = cem_model_id
-        self.cem_model_connection = cem_model_connection
-        self.rm_id = rm_id
+        self.id = id
+        self.model_connection_to_rm = model_connection_to_rm
         self.message_router = message_router
         self.initialization_state = S2DeviceInitializationState.HandShake
         self.control_type_strategy = None
@@ -429,16 +412,20 @@ class DeviceModel:
             'PowerMeasurement': self.handle_power_measurement,
         }
 
-    def receive_envelope(self, envelope: ValidatedEnvelope):
-        handle = self.s2_msg_type_to_callable.get(envelope.s2_msg_type)
+    @property
+    def rm_id(self):
+        return self.model_connection_to_rm.dest_id
+
+    def receive_envelope(self, envelope: Envelope):
+        handle = self.s2_msg_type_to_callable.get(envelope.msg_type)
         if handle:
             handle(envelope)
         else:
-            LOGGER.warning(f'Received a message of type {envelope.s2_msg_type} which CEM model {self.cem_model_id} '
+            LOGGER.warning(f'Received a message of type {envelope.msg_type} which CEM model {self.id} '
                            f'connected to RM {self.rm_id} is unable to handle. Ignoring message.')
 
-    def handle_handshake(self, envelope: ValidatedEnvelope):
-        self.handshake_received = envelope.s2_msg
+    def handle_handshake(self, envelope: Envelope):
+        self.handshake_received = envelope.msg
 
         if S2_VERSION in self.handshake_received.get('supported_protocol_versions', []):
             self.handshake_send = {
@@ -447,110 +434,121 @@ class DeviceModel:
                 'role': 'CEM',
                 'supported_protocol_versions': [S2_VERSION]
             }
-            self.message_router.routeS2Message(self.cem_model_connection, self.rm_id, self.handshake_send)
+            self.message_router.route_s2_message(self.model_connection_to_rm, self.handshake_send)
 
             self.handshake_response_send = {
                 'message_type': 'HandshakeResponse',
                 'message_id': str(uuid.uuid4()),
                 'selected_protocol_version': S2_VERSION
             }
-            self.message_router.routeS2Message(self.cem_model_connection, self.rm_id, self.handshake_response_send)
+            self.message_router.route_s2_message(self.model_connection_to_rm, self.handshake_response_send)
             self.initialization_state = S2DeviceInitializationState.SelectingControlType
         else:
             pass
             # TODO close the connection somehow
 
-    def handle_resource_manager_details(self, envelope: ValidatedEnvelope):
-        self.resource_manager_details_received = envelope.s2_msg
+    def handle_resource_manager_details(self, envelope: Envelope):
+        self.resource_manager_details_received = envelope.msg
 
         available_control_types = self.resource_manager_details_received.get('available_control_types', [])
         selected_control_type = next((ct for ct in SUPPORTED_CONTROL_TYPES if ct in available_control_types), None)
 
         if selected_control_type:
-            self.message_router.routeS2Message(self.cem_model_connection, self.rm_id, {
+            self.message_router.route_s2_message(self.model_connection_to_rm, {
                 'message_type': 'SelectControlType',
                 'message_id': str(uuid.uuid4()),
                 'control_type': selected_control_type
             })
             self.initialization_state = S2DeviceInitializationState.SelectedControlType
             self.control_type = ControlType(selected_control_type)
-
         else:
             pass
             # TODO Terminate the session? Close the connection somehow?
 
-    def handle_power_forecast(self, envelope: ValidatedEnvelope):
-        self.power_forecasts_received.append(envelope.s2_msg)
+    def handle_power_forecast(self, envelope: Envelope):
+        self.power_forecasts_received.append(envelope.msg)
 
-    def handle_power_measurement(self, envelope: ValidatedEnvelope):
-        self.power_measurements_received.append(envelope.s2_msg)
+    def handle_power_measurement(self, envelope: Envelope):
+        self.power_measurements_received.append(envelope.msg)
 
     def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> list[S2Message]:
         if self.control_type_strategy:
-            self.control_type_strategy.tick(timestep_start, timestep_end)
+            return self.control_type_strategy.tick(timestep_start, timestep_end)
+        else:
+            return []
 
 
-class CEM(AsyncApplication):
+class CEM(Model):
     SCHEDULE_INTERVAL = datetime.timedelta(minutes=5)
 
-    model_id: str
-    model_connection: ModelConnection
     message_router: MessageRouter
+    device_models_by_rm_ids: dict[str, DeviceModel]
 
-    device_models_by_origin_ids: dict[str, DeviceModel]
+    def __init__(self, model_id: str, message_router: MessageRouter):
+        super().__init__(model_id, message_router)
+        self.message_router = message_router
+        self.device_models_by_rm_ids = {}
 
-    def __init__(self):
-        super().__init__()
-        self.device_models_by_origin_ids = {}
-
-    def receive_envelope(self, envelope: ValidatedEnvelope) -> None:
-        device_model = self.device_models_by_origin_ids.get(envelope.origin.origin_id)
+    def receive_envelope(self, envelope: Envelope) -> None:
+        device_model = self.device_models_by_rm_ids.get(envelope.origin.origin_id)
 
         if not device_model:
             LOGGER.error(f'Received a message from {envelope.origin} but this connection is unknown to CEM '
                          f'model {self.model_id}.')
         else:
-            LOGGER.debug(f'Received message {envelope.id} with type {envelope.s2_msg_type} from {envelope.origin} for '
-                         f'device {device_model.cem_model_id}')
+            LOGGER.debug(f'Received message {envelope.id} with type {envelope.msg_type} from {envelope.origin} for '
+                         f'device {device_model.id}')
             device_model.receive_envelope(envelope)
 
     def receive_new_connection(self, new_connection: Connection) -> bool:
-        if new_connection.s2_origin_type == S2OriginType.RM:
-            LOGGER.info(f'CEM model {self.model_id} has received new connection from RM {new_connection.origin_id}.')
-            cem_model_id = f'{self.model_id}-{new_connection.origin_id}'
-            self.device_models_by_origin_ids[new_connection.origin_id] = DeviceModel(cem_model_id,
-                                                                                     self.model_connection,
-                                                                                     new_connection.origin_id,
-                                                                                     self.message_router)
+        """
+
+        :param new_connection: The new model connection with this CEM model as origin and the RM as destination.
+        :return:
+        """
+        if new_connection.destination_type == S2OriginType.RM:
+            LOGGER.info(f'CEM model {self.id} has received new connection from RM {new_connection.dest_id}.')
+            device_model_id = f'{self.id}->{new_connection.dest_id}'
+            self.device_models_by_rm_ids[new_connection.dest_id] = DeviceModel(device_model_id,
+                                                                               new_connection,
+                                                                               self.message_router)
             accepted = True
         else:
-            LOGGER.warning(f'CEM model {self.model_id} has received a CEM connection {new_connection.origin_id}.'
+            LOGGER.warning(f'CEM model {self.id} has received a CEM->CEM model connection '
+                           f'(CEM: {new_connection.dest_id}).'
                            f'CEM to CEM connection is unsupported. Not accepting connection.')
             accepted = False
 
         return accepted
 
     def connection_has_closed(self, closed_connection: Connection, reason: ConnectionClosedReason) -> None:
-        if closed_connection.origin_id in self.device_models_by_origin_ids:
-            del self.device_models_by_origin_ids[closed_connection.origin_id]
-            LOGGER.info(f'CEM model {self.model_id} was notified that connection '
+        if closed_connection.origin_id in self.device_models_by_rm_ids:
+            del self.device_models_by_rm_ids[closed_connection.origin_id]
+            LOGGER.info(f'CEM model {self.id} was notified that connection '
                         f'from {closed_connection.origin_id} was closed due to {reason}.')
         else:
-            LOGGER.warning(f'CEM model {self.model_id} was notified that unknown '
+            LOGGER.warning(f'CEM model {self.id} was notified that unknown '
                            f'connection {closed_connection.origin_id} was closed. Not doing anything...')
 
-    def tick(self) -> None:
-        """Progress all device models for this timestep."""
+    def stop(self, loop: asyncio.AbstractEventLoop) -> None:
+        # TODO
+        pass
+
+    def entry(self) -> None:
+        """Progress all device models each timestep."""
         timestep_start = datetime.datetime.now()
         timestep_end = timestep_start + CEM.SCHEDULE_INTERVAL
 
-        for origin_id, device_model in self.device_models_by_origin_ids.items():
-            new_messages = device_model.tick(timestep_start, timestep_end)
+        while self._running:
+            for origin_id, device_model in self.device_models_by_origin_ids.items():
+                new_messages = device_model.tick(timestep_start, timestep_end)
 
-            for new_message in new_messages:
-                # TODO confirm with Serkan, use model connection to send messages or immediately route using route_message
-                self.message_router.routeS2Message(self.model_connection,
-                                                   origin_id,
-                                                   new_message)
+                for new_message in new_messages:
+                    self.message_router.route_s2_message(device_model.model_connection_to_rm, new_message)
 
-
+            delay = timestep_end.timestamp() - time.time()
+            if delay > 0:
+                LOGGER.debug(f'CEM model {self.id} will sleep for {delay} seconds until {timestep_end}.')
+                await asyncio.sleep(delay)
+            timestep_start = datetime.datetime.now()
+            timestep_end = timestep_start + CEM.SCHEDULE_INTERVAL
