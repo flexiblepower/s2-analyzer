@@ -1,9 +1,10 @@
 import abc
 import datetime
+import itertools
 import uuid
 from enum import Enum
 import logging
-from typing import Optional, Callable
+from typing import Optional, Callable, Iterator
 from uuid import UUID
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.s2_json_schema_validator import MessageType
@@ -66,7 +67,21 @@ class CemModelS2DeviceControlStrategy(abc.ABC):
         pass
 
 
+def inclusive_numerical_range(start:float, stop: float, step: float) -> Iterator[float]:
+    i = 1
+    result = start
+    
+    while result < stop:
+        yield result
+        result = start + i * step
+        i += 1
+    yield stop
+    
+
 class FRBCStrategy(CemModelS2DeviceControlStrategy):
+    OM_STEP_RESOLUTION = 0.1
+    DELAY_IN_INSTRUCTIONS = datetime.timedelta(seconds=2)
+
     s2_device_model: 'DeviceModel'
 
     system_descriptions: list[S2Message]
@@ -122,13 +137,17 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
     def handle_storage_status(self, envelope: ValidatedEnvelope) -> None:
         self.expected_fill_level_at_end_of_timestep = envelope.s2_msg['present_fill_level']
 
-    def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime):
+    def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> list[S2Message]:
+        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] tick starts.')
         active_system_description = FRBCStrategy.get_active_s2_message(timestep_start,
                                                                        lambda m: m['valid_from'],
                                                                        self.system_descriptions)
+        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] Active system description: {active_system_description}.')
         storage_description = active_system_description['storage']
         allowed_fill_level_range = storage_description['fill_level_range']
         fill_level_at_start_of_timestep = self.expected_fill_level_at_end_of_timestep
+        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] Fill level at start of'
+                     f'timestep: {fill_level_at_start_of_timestep}.')
 
         expected_fill_level_range_at_end_of_timestep = self.get_expected_fill_level_at_end_of_timestep(fill_level_at_start_of_timestep,
                                                                                                        timestep_end)
@@ -150,7 +169,22 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         else:
             actuate_fill_level = target_fill_level_range_at_end_of_timestep.stop - fill_level_if_no_action
 
-        # TODO Figure out instructions that will get us to actuate_fill_level
+        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] '
+                     f'Expected end fill level: {expected_leakage_during_timestep}\n'
+                     f'    Allowed fill range: {allowed_fill_level_range}\n'
+                     f'    Expected usage: {expected_usage_during_timestep}\n'
+                     f'    Expected leakage: {expected_leakage_during_timestep}\n'
+                     f'    Fill level on noop: {fill_level_if_no_action}\n'
+                     f'    Actuate fill level: {actuate_fill_level}')
+
+        instructions = self.find_instructions_to_reach_fill_level_target(fill_level_at_start_of_timestep,
+                                                                         actuate_fill_level,
+                                                                         active_system_description,
+                                                                         timestep_end - timestep_start,
+                                                                         timestep_start)
+        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] Resulting instructions:')
+        LOGGER.debug(f'[{self.s2_device_model.cem_model_id}] tick ends.')
+        return instructions
         # TODO UNIT TESTSSSSSSS
 
     def get_expected_fill_level_at_end_of_timestep(self,
@@ -214,6 +248,114 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                 expected_leakage = (timestep_end - timestep_start) * leakage_element['leakage_rate']
 
         return expected_leakage
+
+    def find_instructions_to_reach_fill_level_target(self,
+                                                     current_fill_level: float,
+                                                     actuate_fill_level: float,
+                                                     active_system_description: S2Message,
+                                                     duration: datetime.timedelta,
+                                                     start_of_timestep: datetime.datetime) -> list[S2Message]:
+        actuator_om_omfactor = self.choose_operation_modes_to_reach_fill_level_target(current_fill_level,
+                                                                                      actuate_fill_level,
+                                                                                      active_system_description,
+                                                                                      duration)
+        start_of_instruction = start_of_timestep + self.DELAY_IN_INSTRUCTIONS
+        instructions = []
+
+        for actuator, om, om_factor in actuator_om_omfactor:
+            instructions.append({
+                'message_type': 'FRBC.Instruction',
+                'message_id': str(uuid.uuid4()),
+                'id': str(uuid.uuid4()),
+                'actuator_id': actuator['id'],
+                'operation_mode': om['id'],
+                'operation_mode_factor': om_factor,
+                'execution_time': start_of_instruction,
+                'abnormal_condition': False
+            })
+
+        return instructions
+
+    def choose_operation_modes_to_reach_fill_level_target(self,
+                                                          current_fill_level: float,
+                                                          actuate_fill_level: float,
+                                                          active_system_description: S2Message,
+                                                          duration: datetime.timedelta) -> list[tuple(S2Message,)]:
+        """
+
+        :param current_fill_level:
+        :param actuate_fill_level:
+        :param active_system_description:
+        :param duration:
+        :return: A list of tuples containing an actuator description, om description and om factor.
+        """
+        reachable_operation_mode_ids_per_actuator_id = {}
+        duration_seconds = duration.total_seconds()
+
+        for actuator in active_system_description['actuators']:
+            actuator_status = self.actuator_status_per_actuator_id[actuator['id']]
+            reachable_operation_modes = self.get_reachable_operation_modes_for_actuator(actuator_status, actuator)
+            reachable_operation_mode_ids_per_actuator_id[actuator['id']] = [(actuator,
+                                                                             om,
+                                                                             self.get_active_operation_mode_element(current_fill_level,
+                                                                                                                    om))
+                                                                            for om in reachable_operation_modes]
+        current_best_combination = None
+        current_best_fill_rate = None
+        for actuator_combination in itertools.product(*reachable_operation_mode_ids_per_actuator_id.values()):
+            operation_mode_factors = []
+            for actuator, om, om_element in actuator_combination:
+                begin_factor = om_element['fill_level_range']['start_of_range']
+                end_factor = om_element['fill_level_range']['end_of_range']
+                all_factors = list(inclusive_numerical_range(begin_factor, end_factor, self.OM_STEP_RESOLUTION))
+                # TODO move all_factors to previous for-loop into the tuple so it is not repeated so often
+                operation_mode_factors.append(all_factors)
+            
+            for om_factors in itertools.product(*operation_mode_factors):
+                would_actuate_fill_level = 0
+                for om_factor, _, om, om_element in zip(om_factors, actuator_combination):
+                    would_actuate_fill_level += self.get_fill_rate_for_operation_mode_element(om_element,
+                                                                                              om_factor) * duration_seconds
+                if current_best_fill_rate is None:
+                    current_best_combination = (actuator_combination, om_factors)
+                    current_best_fill_rate = would_actuate_fill_level
+                elif abs(actuate_fill_level - would_actuate_fill_level) < abs(actuate_fill_level - current_best_fill_rate):
+                    current_best_combination = (actuator_combination, om_factors)
+                    current_best_fill_rate = would_actuate_fill_level
+
+        return [(actuator, om, om_factor) for actuator, om, _, om_factor in current_best_combination]
+
+    @staticmethod
+    def get_fill_rate_for_operation_mode_element(om_element: S2Message,
+                                                 om_factor: float) -> float:
+        om_0_fill_rate = om_element['fill_rate']['start_of_range']
+        om_1_fill_rate = om_element['fill_rate']['end_of_range']
+        return om_factor * (om_1_fill_rate - om_0_fill_rate) + om_0_fill_rate
+
+    @staticmethod
+    def get_active_operation_mode_element(current_fill_level: float,
+                                          om_description: S2Message) -> Optional[S2Message]:
+        result_element = None
+        for om_element in om_description['elements']:
+            fill_level_range = om_element['fill_level_range']
+            if fill_level_range['start_of_range'] <= current_fill_level < fill_level_range['end_of_range']:
+                result_element = om_element
+                break
+        return result_element
+
+    @staticmethod
+    def get_reachable_operation_modes_for_actuator(actuator_status: S2Message,
+                                                   actuator_description: S2Message) -> list[S2Message]:
+        om_descriptions_by_ids = {om['id']: om for om in actuator_description['operation_modes']}
+        current_operation_mode_id = actuator_status['active_operation_mode_id']
+        reachable_operation_mode_ids = [om_descriptions_by_ids[current_operation_mode_id]]
+
+        for transition in actuator_description['transitions']:
+            if current_operation_mode_id == transition['from']:
+                # TODO look at timers
+                reachable_operation_mode_ids.append(om_descriptions_by_ids[transition['to']])
+
+        return reachable_operation_mode_ids
 
     @staticmethod
     def get_active_s2_message(timestep_instant: datetime.datetime,
@@ -343,7 +485,7 @@ class DeviceModel:
     def handle_power_measurement(self, envelope: ValidatedEnvelope):
         self.power_measurements_received.append(envelope.s2_msg)
 
-    def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime):
+    def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> list[S2Message]:
         if self.control_type_strategy:
             self.control_type_strategy.tick(timestep_start, timestep_end)
 
@@ -398,10 +540,17 @@ class CEM(AsyncApplication):
                            f'connection {closed_connection.origin_id} was closed. Not doing anything...')
 
     def tick(self) -> None:
-        '''Progress all device models for this timestep.'''
+        """Progress all device models for this timestep."""
         timestep_start = datetime.datetime.now()
         timestep_end = timestep_start + CEM.SCHEDULE_INTERVAL
 
-        for device_model in self.device_models_by_origin_ids.values():
-            device_model.tick(timestep_start, timestep_end)
+        for origin_id, device_model in self.device_models_by_origin_ids.items():
+            new_messages = device_model.tick(timestep_start, timestep_end)
+
+            for new_message in new_messages:
+                # TODO confirm with Serkan, use model connection to send messages or immediately route using route_message
+                self.message_router.routeS2Message(self.model_connection,
+                                                   origin_id,
+                                                   new_message)
+
 
