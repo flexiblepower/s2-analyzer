@@ -19,6 +19,16 @@ class S2OriginType(Enum):
     RM = 'RM'
     CEM = 'CEM'
 
+    def reverse(self):
+        if self.value == 'RM':
+            return S2OriginType.CEM
+        elif self.value == 'CEM':
+            return S2OriginType.RM
+        else:
+            raise ValueError
+
+
+
 
 class Connection(ABC):
     def __init__(self, origin_id: str, dest_id: str, origin_type: S2OriginType, msg_router: "MessageRouter"):
@@ -60,7 +70,7 @@ class WebSocketConnection(Connection):
                 message_str = await self.ws.receive_text()
                 LOGGER.debug(f'{self.origin_id} sent the message: {message_str}')
                 message = json.loads(message_str)
-                await self.msg_router.route_s2_message(self, message, self.dest_id)
+                await self.msg_router.route_s2_message(self, message)
         except WebSocketException as e:
             LOGGER.exception(f'Connection to {self.s2_origin_type.name} {self.origin_id} had an exception:', e)
 
