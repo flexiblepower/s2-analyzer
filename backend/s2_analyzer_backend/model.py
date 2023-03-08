@@ -19,7 +19,7 @@ class ConnectionClosedReason(Enum):
     TIMEOUT = 'timeout'
 
 
-class Model(abc.ABC, AsyncApplication):
+class Model(AsyncApplication):
     id: str
     msg_router: "MessageRouter"
     _running: bool
@@ -32,21 +32,20 @@ class Model(abc.ABC, AsyncApplication):
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         self._running = True
-        await self.tick()
+        await self.entry()
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
         self._running = False
+
+    def get_name(self) -> "ApplicationName":
+        return self.id
 
     @abc.abstractmethod
     async def entry(self) -> None:
         pass
 
     @abc.abstractmethod
-    def get_name(self) -> "ApplicationName":
-        pass
-
-    @abc.abstractmethod
-    def receive_envelope(self, envelope: "Envelope") -> None:
+    async def receive_envelope(self, envelope: "Envelope") -> None:
         pass
 
     @abc.abstractmethod
@@ -76,10 +75,7 @@ class DummyModel(Model):
                                                            "operation_mode_factor": 0.5,
                                                            "previous_operation_mode_id": "4321"})
 
-    def get_name(self) -> "ApplicationName":
-        return f'Model: {self.id}'
-
-    def receive_envelope(self, envelope: "Envelope") -> None:
+    async def receive_envelope(self, envelope: "Envelope") -> None:
         print(f"Model {self.id} received following envelope: {envelope}")
 
     def receive_new_connection(self, new_connection: "ModelConnection") -> None:

@@ -88,7 +88,7 @@ class ModelConnection(Connection):
         self.model = model
 
     async def send_envelope(self, envelope: "Envelope") -> bool:
-        self.model.receive_envelope(envelope)
+        await self.model.receive_envelope(envelope)
 
 
 class ConnectionType(Enum):

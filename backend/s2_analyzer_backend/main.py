@@ -10,8 +10,8 @@ from s2_analyzer_backend.async_application import AsyncApplications
 from s2_analyzer_backend.logging import LogLevel, setup_logging
 from s2_analyzer_backend.router import MessageRouter
 
-from s2_analyzer_backend.model import Model, ModelRegistry
-from s2_analyzer_backend.connection import ModelConnection, S2OriginType
+from s2_analyzer_backend.model import DummyModel, ModelRegistry
+from s2_analyzer_backend.cem_model_simple import CEM
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,8 @@ def main():
     signal.signal(signal.SIGTERM, handle_exit)
     signal.signal(signal.SIGQUIT, handle_exit)
 
-    m = Model('dummy_model', msg_router)
+    #m = DummyModel('dummy_model', msg_router)
+    m = CEM('dummy_model', msg_router)
     applications.add_application(m)
     mr.add_model(m)
     

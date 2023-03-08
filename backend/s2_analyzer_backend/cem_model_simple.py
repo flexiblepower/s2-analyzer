@@ -5,10 +5,9 @@ from enum import Enum
 import itertools
 import logging
 import time
-from typing import Optional, Callable, Iterator
+from typing import Optional, Callable, Iterator, Awaitable
 import uuid
 
-from s2_analyzer_backend.async_application import ApplicationName
 from s2_analyzer_backend.connection import Connection, S2OriginType, ConnectionClosedReason
 from s2_analyzer_backend.envelope import Envelope, S2Message
 from s2_analyzer_backend.model import Model
@@ -23,7 +22,7 @@ SUPPORTED_CONTROL_TYPES = ['FILL_RATE_BASED_CONTROL', 'NOT_CONTROLABLE']
 
 
 class ControlType(Enum):
-    NoSelection = 'NO_SELECTION'
+    NoSelection = 'NO_SELECTION',
     NoControl = 'NOT_CONTROLABLE',
     FRBC = 'FILL_RATE_BASED_CONTROL',
     DDBC = 'DEMAND_DRIVEN_BASED_CONTROL',
@@ -385,7 +384,7 @@ class DeviceModel:
     power_measurements_received: list[S2Message]
     power_forecasts_received: list[S2Message]
 
-    s2_msg_type_to_callable: dict[str, Callable[[Envelope], None]]
+    s2_msg_type_to_callable: dict[str, Callable[[Envelope], Awaitable[None]]]
 
     def __init__(self,
                  id: str,
@@ -416,15 +415,15 @@ class DeviceModel:
     def rm_id(self):
         return self.model_connection_to_rm.dest_id
 
-    def receive_envelope(self, envelope: Envelope):
+    async def receive_envelope(self, envelope: Envelope) -> None:
         handle = self.s2_msg_type_to_callable.get(envelope.msg_type)
         if handle:
-            handle(envelope)
+            await handle(envelope)
         else:
             LOGGER.warning(f'Received a message of type {envelope.msg_type} which CEM model {self.id} '
                            f'connected to RM {self.rm_id} is unable to handle. Ignoring message.')
 
-    def handle_handshake(self, envelope: Envelope):
+    async def handle_handshake(self, envelope: Envelope) -> None:
         self.handshake_received = envelope.msg
 
         if S2_VERSION in self.handshake_received.get('supported_protocol_versions', []):
@@ -434,27 +433,27 @@ class DeviceModel:
                 'role': 'CEM',
                 'supported_protocol_versions': [S2_VERSION]
             }
-            self.message_router.route_s2_message(self.model_connection_to_rm, self.handshake_send)
+            await self.message_router.route_s2_message(self.model_connection_to_rm, self.handshake_send)
 
             self.handshake_response_send = {
                 'message_type': 'HandshakeResponse',
                 'message_id': str(uuid.uuid4()),
                 'selected_protocol_version': S2_VERSION
             }
-            self.message_router.route_s2_message(self.model_connection_to_rm, self.handshake_response_send)
+            await self.message_router.route_s2_message(self.model_connection_to_rm, self.handshake_response_send)
             self.initialization_state = S2DeviceInitializationState.SelectingControlType
         else:
             pass
             # TODO close the connection somehow
 
-    def handle_resource_manager_details(self, envelope: Envelope):
+    async def handle_resource_manager_details(self, envelope: Envelope) -> None:
         self.resource_manager_details_received = envelope.msg
 
         available_control_types = self.resource_manager_details_received.get('available_control_types', [])
         selected_control_type = next((ct for ct in SUPPORTED_CONTROL_TYPES if ct in available_control_types), None)
 
         if selected_control_type:
-            self.message_router.route_s2_message(self.model_connection_to_rm, {
+            await self.message_router.route_s2_message(self.model_connection_to_rm, {
                 'message_type': 'SelectControlType',
                 'message_id': str(uuid.uuid4()),
                 'control_type': selected_control_type
@@ -465,10 +464,10 @@ class DeviceModel:
             pass
             # TODO Terminate the session? Close the connection somehow?
 
-    def handle_power_forecast(self, envelope: Envelope):
+    async def handle_power_forecast(self, envelope: Envelope) -> None:
         self.power_forecasts_received.append(envelope.msg)
 
-    def handle_power_measurement(self, envelope: Envelope):
+    async def handle_power_measurement(self, envelope: Envelope) -> None:
         self.power_measurements_received.append(envelope.msg)
 
     def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> list[S2Message]:
@@ -484,21 +483,21 @@ class CEM(Model):
     message_router: MessageRouter
     device_models_by_rm_ids: dict[str, DeviceModel]
 
-    def __init__(self, model_id: str, message_router: MessageRouter):
-        super().__init__(model_id, message_router)
+    def __init__(self, id: str, message_router: MessageRouter):
+        super().__init__(id, message_router)
         self.message_router = message_router
         self.device_models_by_rm_ids = {}
 
-    def receive_envelope(self, envelope: Envelope) -> None:
+    async def receive_envelope(self, envelope: Envelope) -> None:
         device_model = self.device_models_by_rm_ids.get(envelope.origin.origin_id)
 
         if not device_model:
             LOGGER.error(f'Received a message from {envelope.origin} but this connection is unknown to CEM '
-                         f'model {self.model_id}.')
+                         f'model {self.id}.')
         else:
             LOGGER.debug(f'Received message {envelope.id} with type {envelope.msg_type} from {envelope.origin} for '
                          f'device {device_model.id}')
-            device_model.receive_envelope(envelope)
+            await device_model.receive_envelope(envelope)
 
     def receive_new_connection(self, new_connection: Connection) -> bool:
         """
@@ -534,17 +533,17 @@ class CEM(Model):
         # TODO
         pass
 
-    def entry(self) -> None:
+    async def entry(self) -> None:
         """Progress all device models each timestep."""
         timestep_start = datetime.datetime.now()
         timestep_end = timestep_start + CEM.SCHEDULE_INTERVAL
 
         while self._running:
-            for origin_id, device_model in self.device_models_by_origin_ids.items():
+            for device_model in self.device_models_by_rm_ids.values():
                 new_messages = device_model.tick(timestep_start, timestep_end)
 
                 for new_message in new_messages:
-                    self.message_router.route_s2_message(device_model.model_connection_to_rm, new_message)
+                    await self.message_router.route_s2_message(device_model.model_connection_to_rm, new_message)
 
             delay = timestep_end.timestamp() - time.time()
             if delay > 0:
