@@ -10,8 +10,8 @@ from s2_analyzer_backend.async_application import AsyncApplications
 from s2_analyzer_backend.app_logging import LogLevel, setup_logging
 from s2_analyzer_backend.router import MessageRouter
 
-from s2_analyzer_backend.model import DummyModel, ModelRegistry
-from s2_analyzer_backend.cem_model_simple import CEM
+from s2_analyzer_backend.model import ModelRegistry
+from s2_analyzer_backend.cem_model_simple.cem_model_simple import CEM
 
 LOGGER = logging.getLogger(__name__)
 
