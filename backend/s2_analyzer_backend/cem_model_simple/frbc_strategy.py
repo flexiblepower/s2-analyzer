@@ -158,14 +158,14 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         return instructions
         # TODO UNIT TESTSSSSSSS
 
-    def get_expected_fill_level_at_end_of_timestep(self,
-                                                   fill_level_at_start_of_timestep: float,
+    @staticmethod
+    def get_expected_fill_level_at_end_of_timestep(fill_level_at_start_of_timestep: float,
                                                    timestep_end: datetime.datetime,
                                                    active_fill_level_target_profile: S2Message) -> NumericalRange:
         expected_fill_level_at_end = None
         current_start = datetime.datetime.fromisoformat(active_fill_level_target_profile['start_time'])
         for fill_level_element in active_fill_level_target_profile['elements']:
-            duration = datetime.timedelta(milliseconds=fill_level_element['duration'])
+            duration = datetime.timedelta(seconds=fill_level_element['duration'])
             current_end = current_start + duration
 
             if current_start <= timestep_end < current_end:
@@ -174,7 +174,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                                             fill_level_range['end_of_range'])
                 break
 
-            current_start = current_start + duration
+            current_start = current_end
 
         if expected_fill_level_at_end is None:
             expected_fill_level_at_end = NumericalRange(fill_level_at_start_of_timestep,
