@@ -7,7 +7,7 @@ import signal
 from s2_analyzer_backend.s2_json_schema_validator import S2JsonSchemaValidator
 from s2_analyzer_backend.rest_api import RestAPI
 from s2_analyzer_backend.async_application import AsyncApplications
-from s2_analyzer_backend.logging import LogLevel, setup_logging
+from s2_analyzer_backend.app_logging import LogLevel, setup_logging
 from s2_analyzer_backend.router import MessageRouter
 
 from s2_analyzer_backend.model import DummyModel, ModelRegistry

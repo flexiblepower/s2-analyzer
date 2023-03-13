@@ -4,6 +4,7 @@ from enum import Enum
 import json
 from fastapi import WebSocketException
 import logging
+from websockets.exceptions import ConnectionClosedOK
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
@@ -68,6 +69,9 @@ class WebSocketConnection(Connection):
     async def send_envelope(self, envelope: "Envelope") -> bool:
         try:
             await self.ws.send_text(json.dumps(envelope.msg))
+        except ConnectionClosedOK:
+            LOGGER.warning(f'Could not send envelope to {self.s2_origin_type.name} {self.origin_id} as connection was '
+                           f'already closed.')
         except WebSocketException as e:
             LOGGER.exception(f'Connection to {self.s2_origin_type.name} {self.origin_id} had an exception:', e)
 

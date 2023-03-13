@@ -6,17 +6,10 @@ import websockets
 
 async def main():
     async with websockets.connect("ws://localhost:8001/backend/rm/battery1/cem/dummy_model/ws") as websocket:
-        message = {'message_type': 'FRBC.ActuatorStatus',
-                   'message_id': '1234',
-                   'active_operation_mode_id': '1234',
-                   'operation_mode_factor': 0.5,
-                   'previous_operation_mode_id': '4321'}
-        await websocket.send(json.dumps(message))
-
         # Send Handshake
         await websocket.send(json.dumps({
             'message_type': 'Handshake',
-            'message_id': '1',
+            'message_id': 'm1',
             'role': 'RM',
             'supported_protocol_versions': ['0.0.1-beta']
         }))
@@ -27,19 +20,19 @@ async def main():
         # Send ResourceManagerDetails
         await websocket.send(json.dumps({
             'message_type': 'ResourceManagerDetails',
-            'message_id': '3',
+            'message_id': 'm3',
             'resource_id': 'battery1',
             'name': 'Some Battery 1',
-            'roles': {
+            'roles': [{
                 'role': 'ENERGY_STORAGE',
                 'commodity': 'ELECTRICITY'
-            },
+            }],
             'manufacturer': 'APC',
             'model': 'SMT500I',
             'serial_number': 'kellox',
             'firmware_version': '1.2.5',
-            'instruction_processing_delay': '100', # milliseconds
-            'available_control_types': 'FILL_RATE_BASED_CONTROL',
+            'instruction_processing_delay': 100,  # milliseconds
+            'available_control_types': ['FILL_RATE_BASED_CONTROL'],
             'currency': 'EUR',
             'provides_forecast': False,
             'provides_power_measurement_types': ['ELECTRIC.POWER.L1']
@@ -51,40 +44,41 @@ async def main():
         # Send PowerMeasurement
         await websocket.send(json.dumps({
             'message_type': 'PowerMeasurement',
-            'message_id': '5',
-            'measurement_timestamp': datetime.datetime.now(),
+            'message_id': 'm5',
+            'measurement_timestamp': datetime.datetime.now().isoformat(),
             'values': [
-                {'commodity_quantity': 'ELECTRICITY', 'value': 30}
+                {'commodity_quantity': 'ELECTRIC.POWER.L1', 'value': 30}
             ]
         }))
 
         # Send ActuatorStatus
         await websocket.send(json.dumps({
             'message_type': 'FRBC.ActuatorStatus',
-            'message_id': '6',
-            'active_operation_mode_id': '0',
+            'message_id': 'm6',
+            'actuator_id': 'actuator1',
+            'active_operation_mode_id': 'om0',
             'operation_mode_factor': 0.5
         }))
 
         # Send StorageStatus
         await websocket.send(json.dumps({
             'message_type': 'FRBC.StorageStatus',
-            'message_id': '7',
+            'message_id': 'm7',
             'present_fill_level': 85
         }))
 
         # Send SystemDescription
         await websocket.send(json.dumps({
             'message_type': 'FRBC.SystemDescription',
-            'message_id': '8',
-            'valid_from': datetime.datetime.now(),
+            'message_id': 'm8',
+            'valid_from': datetime.datetime.now().isoformat(),
             'actuators': [{
                 'id': 'actuator1',
                 'diagnostic_label': 'charge_discharge_idle',
                 'supported_commodities': ['ELECTRICITY'],
                 'operation_modes': [
                     {
-                        'id': '0',
+                        'id': 'om0',
                         'diagnostic_label': 'charge_discharge_idle',
                         'elements': [{
                             'fill_level_range': {'start_of_range': 0, 'end_of_range': 100},
@@ -92,7 +86,7 @@ async def main():
                             'power_ranges': [{
                                 'start_of_range': -80_000,
                                 'end_of_range': 80_000,
-                                'commodity_quantity': 'ELECTRICITY'
+                                'commodity_quantity': 'ELECTRIC.POWER.L1'
                             }],
                         }],
                         'abnormal_condition_only': False,
@@ -109,6 +103,24 @@ async def main():
                 'provides_usage_forecast': False,
                 'fill_level_range': {'start_of_range': 0, 'end_of_range': 100}
             }
+        }))
+
+        # Send Fill Level Target profile
+        await websocket.send(json.dumps({
+            'message_type': 'FRBC.FillLevelTargetProfile',
+            'message_id': 'm9',
+            'start_time': datetime.datetime.now().isoformat(),
+            'elements': [{
+                    'duration': 60,
+                    'fill_level_range': {'start_of_range': 100, 'end_of_range': 100}
+                }, {
+                    'duration': 60,
+                    'fill_level_range': {'start_of_range': 80, 'end_of_range': 80}
+                }, {
+                    'duration': 60,
+                    'fill_level_range': {'start_of_range': 30, 'end_of_range': 60}
+                }
+            ]
         }))
 
         # Recv Instructions

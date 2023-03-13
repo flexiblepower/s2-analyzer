@@ -43,7 +43,8 @@ class MessageRouter():
         if validation_error is None:
             LOGGER.debug(f'{envelope.origin.origin_id} send valid message: {envelope.msg}')
         else:
-            LOGGER.debug(f'{envelope.origin.origin_id} send invalid message: {envelope.msg}\nError: {validation_error}')
+            LOGGER.warning(f'{envelope.origin.origin_id} send invalid message: {envelope.msg}\n'
+                           f'Error: {validation_error}')
 
         conn = envelope.dest
 

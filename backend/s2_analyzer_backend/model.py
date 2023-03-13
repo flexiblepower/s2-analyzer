@@ -23,6 +23,7 @@ class Model(AsyncApplication):
     id: str
     msg_router: "MessageRouter"
     _running: bool
+    _task: asyncio.Task
 
     def __init__(self, id: str, msg_router: "MessageRouter") -> None:
         super().__init__()
@@ -32,9 +33,14 @@ class Model(AsyncApplication):
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         self._running = True
-        await self.entry()
+        self._task = loop.create_task(self.entry())
+        try:
+            await self._task
+        except asyncio.exceptions.CancelledError as e:
+            LOGGER.info(f'Shutdown {self.get_name()}.')
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
+        self._task.cancel('Request to stop')
         self._running = False
 
     def get_name(self) -> "ApplicationName":

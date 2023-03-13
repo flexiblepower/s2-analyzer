@@ -1,5 +1,6 @@
 import abc
 import asyncio
+from collections import OrderedDict
 import datetime
 from enum import Enum
 import itertools
@@ -17,27 +18,28 @@ LOGGER = logging.getLogger(__name__)
 
 S2_VERSION = '0.0.1-beta'
 
-# List of priority. Earlier in the list means higher preferences over later items in the list.
-SUPPORTED_CONTROL_TYPES = ['FILL_RATE_BASED_CONTROL', 'NOT_CONTROLABLE']
-
 
 class ControlType(Enum):
-    NoSelection = 'NO_SELECTION',
-    NoControl = 'NOT_CONTROLABLE',
-    FRBC = 'FILL_RATE_BASED_CONTROL',
-    DDBC = 'DEMAND_DRIVEN_BASED_CONTROL',
-    PPBC = 'POWER_PROFILE_BASED_CONTROL',
-    OMBC = 'OPERATION_MODE_BASED_CONTROL',
+    NoSelection = 'NO_SELECTION'
+    NoControl = 'NOT_CONTROLABLE'
+    FRBC = 'FILL_RATE_BASED_CONTROL'
+    DDBC = 'DEMAND_DRIVEN_BASED_CONTROL'
+    PPBC = 'POWER_PROFILE_BASED_CONTROL'
+    OMBC = 'OPERATION_MODE_BASED_CONTROL'
     PEBC = 'POWER_ENVELOPE_BASED_CONTROL'
 
 
 class S2DeviceInitializationState(Enum):
-    HandShake = 'HandShake',
-    SelectingControlType = 'SelectingControlType',
+    HandShake = 'HandShake'
+    SelectingControlType = 'SelectingControlType'
     SelectedControlType = 'SelectedControlType'
 
 
 class CemModelS2DeviceControlStrategy(abc.ABC):
+    @abc.abstractmethod
+    def receive_envelope(self, envelope: Envelope):
+        pass
+
     @abc.abstractmethod
     def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime):
         pass
@@ -94,6 +96,15 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
             'FRBC.StorageStatus': self.handle_storage_status
         }
 
+        self.system_descriptions = []
+        self.actuator_status_per_actuator_id = {}
+        self.fill_level_target_profiles = []
+        self.leakage_behaviours = []
+        self.usage_forecasts = []
+        self.instructions_send = []
+        self.timers_started_at = {}
+        self.expected_fill_level_at_end_of_timestep = None
+
     def receive_envelope(self, envelope: Envelope):
         handle = self.s2_msg_type_to_callable.get(envelope.msg_type)
         if handle:
@@ -107,7 +118,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         self.system_descriptions.append(envelope.msg)
 
     def handle_actuator_status(self, envelope: Envelope) -> None:
-        actuator_id = envelope.msg['actuator_id'] # TODO Currently not in spec.
+        actuator_id = envelope.msg['actuator_id']
         self.actuator_status_per_actuator_id[actuator_id] = envelope.msg
 
     def handle_fill_level_target_profile(self, envelope: Envelope) -> None:
@@ -125,7 +136,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
     def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> list[S2Message]:
         LOGGER.debug(f'[{self.s2_device_model.id}] tick starts.')
         active_system_description = FRBCStrategy.get_active_s2_message(timestep_start,
-                                                                       lambda m: m['valid_from'],
+                                                                       lambda m: datetime.datetime.fromisoformat(m['valid_from']),
                                                                        self.system_descriptions)
         LOGGER.debug(f'[{self.s2_device_model.id}] Active system description: {active_system_description}.')
         storage_description = active_system_description['storage']
@@ -134,52 +145,70 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         LOGGER.debug(f'[{self.s2_device_model.id}] Fill level at start of'
                      f'timestep: {fill_level_at_start_of_timestep}.')
 
-        expected_fill_level_range_at_end_of_timestep = self.get_expected_fill_level_at_end_of_timestep(fill_level_at_start_of_timestep,
-                                                                                                       timestep_end)
-        target_fill_level_range_at_end_of_timestep = range(max(allowed_fill_level_range['start_of_range'],
-                                                               expected_fill_level_range_at_end_of_timestep.start),
-                                                           min(allowed_fill_level_range['end_of_range'],
-                                                               expected_fill_level_range_at_end_of_timestep.end))
-        expected_usage_during_timestep = self.get_expected_usage_during_timestep(timestep_start, timestep_end)
-        expected_leakage_during_timestep = self.get_expected_leakage_during_timestep(fill_level_at_start_of_timestep,
-                                                                                     timestep_start,
-                                                                                     timestep_end)
+        active_fill_level_target_profile = FRBCStrategy.get_active_s2_message(timestep_end,
+                                                                              lambda m: datetime.datetime.fromisoformat(m['start_time']),
+                                                                              self.fill_level_target_profiles)
 
-        fill_level_if_no_action = fill_level_at_start_of_timestep + expected_usage_during_timestep + expected_leakage_during_timestep
+        if active_system_description and fill_level_at_start_of_timestep is not None and active_fill_level_target_profile:
+            expected_fill_level_range_at_end_of_timestep = self.get_expected_fill_level_at_end_of_timestep(fill_level_at_start_of_timestep,
+                                                                                                           timestep_end,
+                                                                                                           active_fill_level_target_profile)
+            target_fill_level_range_at_end_of_timestep = range(max(allowed_fill_level_range['start_of_range'],
+                                                                   expected_fill_level_range_at_end_of_timestep.start),
+                                                               min(allowed_fill_level_range['end_of_range'],
+                                                                   expected_fill_level_range_at_end_of_timestep.end))
+            expected_usage_during_timestep = self.get_expected_usage_during_timestep(timestep_start, timestep_end)
+            expected_leakage_during_timestep = self.get_expected_leakage_during_timestep(fill_level_at_start_of_timestep,
+                                                                                         timestep_start,
+                                                                                         timestep_end)
 
-        if target_fill_level_range_at_end_of_timestep.start <= fill_level_if_no_action < target_fill_level_range_at_end_of_timestep.stop:
-            actuate_fill_level = 0
-        elif fill_level_if_no_action < target_fill_level_range_at_end_of_timestep.start:
-            actuate_fill_level = target_fill_level_range_at_end_of_timestep.start - fill_level_if_no_action
+            fill_level_if_no_action = fill_level_at_start_of_timestep + expected_usage_during_timestep + expected_leakage_during_timestep
+
+            if target_fill_level_range_at_end_of_timestep.start <= fill_level_if_no_action < target_fill_level_range_at_end_of_timestep.stop:
+                actuate_fill_level = 0
+            elif fill_level_if_no_action < target_fill_level_range_at_end_of_timestep.start:
+                actuate_fill_level = target_fill_level_range_at_end_of_timestep.start - fill_level_if_no_action
+            else:
+                actuate_fill_level = target_fill_level_range_at_end_of_timestep.stop - fill_level_if_no_action
+
+            LOGGER.debug(f'[{self.s2_device_model.id}] '
+                         f'Expected end fill level: {expected_leakage_during_timestep}\n'
+                         f'    Allowed fill range: {allowed_fill_level_range}\n'
+                         f'    Expected usage: {expected_usage_during_timestep}\n'
+                         f'    Expected leakage: {expected_leakage_during_timestep}\n'
+                         f'    Fill level on noop: {fill_level_if_no_action}\n'
+                         f'    Actuate fill level: {actuate_fill_level}')
+
+            instructions = self.find_instructions_to_reach_fill_level_target(fill_level_at_start_of_timestep,
+                                                                             actuate_fill_level,
+                                                                             active_system_description,
+                                                                             timestep_end - timestep_start,
+                                                                             timestep_start)
+            LOGGER.debug(f'[{self.s2_device_model.id}] Resulting instructions:')
+            LOGGER.debug(f'[{self.s2_device_model.id}] tick ends.')
         else:
-            actuate_fill_level = target_fill_level_range_at_end_of_timestep.stop - fill_level_if_no_action
+            LOGGER.debug(f'[{self.s2_device_model.id}] No new instructions generated as:')
 
-        LOGGER.debug(f'[{self.s2_device_model.id}] '
-                     f'Expected end fill level: {expected_leakage_during_timestep}\n'
-                     f'    Allowed fill range: {allowed_fill_level_range}\n'
-                     f'    Expected usage: {expected_usage_during_timestep}\n'
-                     f'    Expected leakage: {expected_leakage_during_timestep}\n'
-                     f'    Fill level on noop: {fill_level_if_no_action}\n'
-                     f'    Actuate fill level: {actuate_fill_level}')
+            if not active_system_description:
+                LOGGER.debug(f'[{self.s2_device_model.id}]     No active system description.')
 
-        instructions = self.find_instructions_to_reach_fill_level_target(fill_level_at_start_of_timestep,
-                                                                         actuate_fill_level,
-                                                                         active_system_description,
-                                                                         timestep_end - timestep_start,
-                                                                         timestep_start)
-        LOGGER.debug(f'[{self.s2_device_model.id}] Resulting instructions:')
-        LOGGER.debug(f'[{self.s2_device_model.id}] tick ends.')
+            if fill_level_at_start_of_timestep is None:
+                LOGGER.debug(f'[{self.s2_device_model.id}]     No fill level status available.')
+
+            if not active_fill_level_target_profile:
+                LOGGER.debug(f'[{self.s2_device_model.id}]     No active fill level target.')
+
+            instructions = []
+
         return instructions
         # TODO UNIT TESTSSSSSSS
 
     def get_expected_fill_level_at_end_of_timestep(self,
                                                    fill_level_at_start_of_timestep: float,
-                                                   timestep_end: datetime.datetime) -> NumericalRange:
-        active_fill_level_target_profile = FRBCStrategy.get_active_s2_message(timestep_end,
-                                                                              lambda m: m['start_time'],
-                                                                              self.fill_level_target_profiles)
+                                                   timestep_end: datetime.datetime,
+                                                   active_fill_level_target_profile: S2Message) -> NumericalRange:
         expected_fill_level_at_end = None
-        current_start = active_fill_level_target_profile['start_time']
+        current_start = datetime.datetime.fromisoformat(active_fill_level_target_profile['start_time'])
         for fill_level_element in active_fill_level_target_profile['elements']:
             duration = datetime.timedelta(milliseconds=fill_level_element['duration'])
             current_end = current_start + duration
@@ -203,7 +232,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                            timestep_end: datetime.datetime) -> float:
         expected_usage = 0.0
         for usage_forecast in self.usage_forecasts:
-            current_start = usage_forecast['start_time']
+            current_start = datetime.datetime.fromisoformat(usage_forecast['start_time'])
 
             for usage_element in usage_forecast['elements']:
                 duration = datetime.timedelta(milliseconds=usage_element['duration'])
@@ -225,12 +254,13 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                              timestep_end: datetime.datetime) -> float:
         expected_leakage = 0.0
         active_leakage_behaviour = FRBCStrategy.get_active_s2_message(timestep_start,
-                                                                      lambda m: m['valid_from'],
+                                                                      lambda m: datetime.datetime.fromisoformat(m['valid_from']),
                                                                       self.leakage_behaviours)
-        for leakage_element in active_leakage_behaviour['elements']:
-            leakage_fill_range = leakage_element['fill_level_range']
-            if leakage_fill_range['start_of_range'] <= fill_level_at_start_of_timestep < leakage_fill_range['end_of_range']:
-                expected_leakage = (timestep_end - timestep_start) * leakage_element['leakage_rate']
+        if active_leakage_behaviour:
+            for leakage_element in active_leakage_behaviour['elements']:
+                leakage_fill_range = leakage_element['fill_level_range']
+                if leakage_fill_range['start_of_range'] <= fill_level_at_start_of_timestep < leakage_fill_range['end_of_range']:
+                    expected_leakage = (timestep_end - timestep_start) * leakage_element['leakage_rate']
 
         return expected_leakage
 
@@ -255,7 +285,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                 'actuator_id': actuator['id'],
                 'operation_mode': om['id'],
                 'operation_mode_factor': om_factor,
-                'execution_time': start_of_instruction,
+                'execution_time': start_of_instruction.isoformat(),
                 'abnormal_condition': False
             })
 
@@ -298,17 +328,19 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
             
             for om_factors in itertools.product(*operation_mode_factors):
                 would_actuate_fill_level = 0
-                for om_factor, _, om, om_element in zip(om_factors, actuator_combination):
+                combination = []
+                for (om_factor), (actuator, om, om_element) in zip(om_factors, actuator_combination):
                     would_actuate_fill_level += self.get_fill_rate_for_operation_mode_element(om_element,
                                                                                               om_factor) * duration_seconds
+                    combination.append((actuator, om, om_factor))
                 if current_best_fill_rate is None:
-                    current_best_combination = (actuator_combination, om_factors)
+                    current_best_combination = combination
                     current_best_fill_rate = would_actuate_fill_level
                 elif abs(actuate_fill_level - would_actuate_fill_level) < abs(actuate_fill_level - current_best_fill_rate):
-                    current_best_combination = (actuator_combination, om_factors)
+                    current_best_combination = combination
                     current_best_fill_rate = would_actuate_fill_level
 
-        return [(actuator, om, om_factor) for actuator, om, _, om_factor in current_best_combination]
+        return current_best_combination
 
     @staticmethod
     def get_fill_rate_for_operation_mode_element(om_element: S2Message,
@@ -369,11 +401,18 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         return youngest_active
 
 
+# List of priority. Earlier in the list means higher preferences over later items in the list.
+SUPPORTED_CONTROL_TYPES = OrderedDict([(ControlType.FRBC, FRBCStrategy),
+                                       (ControlType.NoSelection, None),
+                                       (ControlType.NoControl, None)])
+
+
 class DeviceModel:
     id: str
     model_connection_to_rm: Connection
     message_router: MessageRouter
     initialization_state: S2DeviceInitializationState
+    control_type: ControlType
     control_type_strategy: Optional[CemModelS2DeviceControlStrategy]
 
     handshake_send: Optional[S2Message]
@@ -394,6 +433,7 @@ class DeviceModel:
         self.model_connection_to_rm = model_connection_to_rm
         self.message_router = message_router
         self.initialization_state = S2DeviceInitializationState.HandShake
+        self.control_type = ControlType.NoSelection
         self.control_type_strategy = None
 
         self.handshake_send = None
@@ -419,6 +459,10 @@ class DeviceModel:
         handle = self.s2_msg_type_to_callable.get(envelope.msg_type)
         if handle:
             await handle(envelope)
+        elif self.control_type_strategy:
+            LOGGER.debug(f'CEM device model {self.id} forwarded envelope to control '
+                         f'strategy {self.control_type_strategy}')
+            self.control_type_strategy.receive_envelope(envelope)
         else:
             LOGGER.warning(f'Received a message of type {envelope.msg_type} which CEM model {self.id} '
                            f'connected to RM {self.rm_id} is unable to handle. Ignoring message.')
@@ -450,16 +494,23 @@ class DeviceModel:
         self.resource_manager_details_received = envelope.msg
 
         available_control_types = self.resource_manager_details_received.get('available_control_types', [])
-        selected_control_type = next((ct for ct in SUPPORTED_CONTROL_TYPES if ct in available_control_types), None)
+        selected_control_type = next((ct
+                                      for ct in SUPPORTED_CONTROL_TYPES.keys()
+                                      if ct.value in available_control_types), None)
 
         if selected_control_type:
             await self.message_router.route_s2_message(self.model_connection_to_rm, {
                 'message_type': 'SelectControlType',
                 'message_id': str(uuid.uuid4()),
-                'control_type': selected_control_type
+                'control_type': selected_control_type.value
             })
             self.initialization_state = S2DeviceInitializationState.SelectedControlType
-            self.control_type = ControlType(selected_control_type)
+            self.control_type = selected_control_type
+            control_type_strategy = SUPPORTED_CONTROL_TYPES.get(self.control_type)
+            LOGGER.info(f'Model {self.id} has set control type {self.control_type}.')
+            if control_type_strategy:
+                self.control_type_strategy = control_type_strategy(self)
+            LOGGER.debug(f'Model {self.id} has set control type strategy {self.control_type_strategy}.')
         else:
             pass
             # TODO Terminate the session? Close the connection somehow?
@@ -478,7 +529,7 @@ class DeviceModel:
 
 
 class CEM(Model):
-    SCHEDULE_INTERVAL = datetime.timedelta(minutes=5)
+    SCHEDULE_INTERVAL = datetime.timedelta(minutes=1)
 
     message_router: MessageRouter
     device_models_by_rm_ids: dict[str, DeviceModel]
@@ -528,10 +579,6 @@ class CEM(Model):
         else:
             LOGGER.warning(f'CEM model {self.id} was notified that unknown '
                            f'connection {closed_connection.origin_id} was closed. Not doing anything...')
-
-    def stop(self, loop: asyncio.AbstractEventLoop) -> None:
-        # TODO
-        pass
 
     async def entry(self) -> None:
         """Progress all device models each timestep."""
