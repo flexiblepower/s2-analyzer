@@ -40,11 +40,14 @@ pytest==7.2.0
     # via
     #   -r ./dev-requirements.in
     #   pytest-cov
+    #   pytest-timer
 pytest-cov==4.0.0
     # via pytest-cover
 pytest-cover==3.0.0
     # via pytest-coverage
 pytest-coverage==0.0
+    # via -r ./dev-requirements.in
+pytest-timer==0.0.11
     # via -r ./dev-requirements.in
 tomli==2.0.1
     # via
