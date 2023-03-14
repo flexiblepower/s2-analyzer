@@ -16,7 +16,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class FRBCStrategy(CemModelS2DeviceControlStrategy):
-    OM_STEP_RESOLUTION = 0.1
+    OM_STEP_RESOLUTION = 0.001
     DELAY_IN_INSTRUCTIONS = datetime.timedelta(seconds=2)
 
     s2_device_model: 'DeviceModel'
@@ -127,7 +127,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                 actuate_fill_level = target_fill_level_range_at_end_of_timestep.stop - fill_level_if_no_action
 
             LOGGER.debug(f'[{self.s2_device_model.id}] '
-                         f'Expected end fill level: {expected_leakage_during_timestep}\n'
+                         f'Expected end fill level: {target_fill_level_range_at_end_of_timestep}\n'
                          f'    Allowed fill range: {allowed_fill_level_range}\n'
                          f'    Expected usage: {expected_usage_during_timestep}\n'
                          f'    Expected leakage: {expected_leakage_during_timestep}\n'
@@ -139,7 +139,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                                                              active_system_description,
                                                                              timestep_end - timestep_start,
                                                                              timestep_start)
-            LOGGER.debug(f'[{self.s2_device_model.id}] Resulting instructions:')
+            LOGGER.debug(f'[{self.s2_device_model.id}] Resulting instructions: {instructions}')
             LOGGER.debug(f'[{self.s2_device_model.id}] tick ends.')
         else:
             LOGGER.debug(f'[{self.s2_device_model.id}] No new instructions generated as:')
@@ -253,8 +253,9 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                                           current_fill_level: float,
                                                           actuate_fill_level: float,
                                                           active_system_description: S2Message,
-                                                          duration: datetime.timedelta) -> list[
-        tuple[S2Message, S2Message, float]]:
+                                                          duration: datetime.timedelta) -> list[tuple[S2Message,
+                                                                                                      S2Message,
+                                                                                                      float]]:
         """
 
         :param current_fill_level:
@@ -276,7 +277,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                                                                  om))
                                                                             for om in reachable_operation_modes]
         current_best_combination = None
-        current_best_fill_rate = None
+        current_best_actuate_fill_level = None
         for actuator_combination in itertools.product(*reachable_operation_mode_ids_per_actuator_id.values()):
             operation_mode_factors = []
             for actuator, om, om_element in actuator_combination:
@@ -293,13 +294,12 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                     would_actuate_fill_level += self.get_fill_rate_for_operation_mode_element(om_element,
                                                                                               om_factor) * duration_seconds
                     combination.append((actuator, om, om_factor))
-                if current_best_fill_rate is None:
+                if current_best_actuate_fill_level is None:
                     current_best_combination = combination
-                    current_best_fill_rate = would_actuate_fill_level
-                elif abs(actuate_fill_level - would_actuate_fill_level) < abs(
-                        actuate_fill_level - current_best_fill_rate):
+                    current_best_actuate_fill_level = would_actuate_fill_level
+                elif abs(actuate_fill_level - would_actuate_fill_level) < abs(actuate_fill_level - current_best_actuate_fill_level):
                     current_best_combination = combination
-                    current_best_fill_rate = would_actuate_fill_level
+                    current_best_actuate_fill_level = would_actuate_fill_level
 
         return current_best_combination
 

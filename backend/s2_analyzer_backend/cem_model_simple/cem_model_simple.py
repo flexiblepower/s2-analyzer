@@ -56,13 +56,13 @@ class CEM(Model):
         return accepted
 
     def connection_has_closed(self, closed_connection: Connection, reason: ConnectionClosedReason) -> None:
-        if closed_connection.origin_id in self.device_models_by_rm_ids:
-            del self.device_models_by_rm_ids[closed_connection.origin_id]
+        if closed_connection.dest_id in self.device_models_by_rm_ids:
+            del self.device_models_by_rm_ids[closed_connection.dest_id]
             LOGGER.info(f'CEM model {self.id} was notified that connection '
-                        f'from {closed_connection.origin_id} was closed due to {reason}.')
+                        f'from {closed_connection.dest_id} was closed due to {reason}.')
         else:
             LOGGER.warning(f'CEM model {self.id} was notified that unknown '
-                           f'connection {closed_connection.origin_id} was closed. Not doing anything...')
+                           f'connection {closed_connection.dest_id} was closed. Not doing anything...')
 
     async def entry(self) -> None:
         """Progress all device models each timestep."""

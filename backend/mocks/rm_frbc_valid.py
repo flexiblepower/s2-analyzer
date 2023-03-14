@@ -125,6 +125,7 @@ async def main():
 
         # Recv Instructions
         while True:
-            print(await websocket.recv())
+            instruction = await websocket.recv()
+            print(datetime.datetime.now().isoformat(), instruction)
 
 asyncio.run(main())
