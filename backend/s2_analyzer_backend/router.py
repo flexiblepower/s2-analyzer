@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 import logging
 from s2_analyzer_backend.envelope import Envelope
-from s2_analyzer_backend.connection import ConnectionType, ModelConnection, S2OriginType
+from s2_analyzer_backend.connection import ConnectionType, ModelConnection
 from s2_analyzer_backend.model import ConnectionClosedReason
 
 if TYPE_CHECKING:
@@ -60,13 +60,12 @@ class MessageRouter():
 
     def receive_new_connection(self, conn: "Connection") -> None:
         self.connections[(conn.origin_id, conn.dest_id)] = conn
-       
+
         model = self.model_registry.lookup_by_id(conn.dest_id)
         if model:
             model_conn = ModelConnection(conn.dest_id, conn.origin_id, conn.s2_origin_type.reverse(), self, model)
             self.connections[(model_conn.origin_id, model_conn.dest_id)] = model_conn
             model.receive_new_connection(model_conn)
-
 
     def connection_has_closed(self, conn: "Connection") -> None:
         del self.connections[(conn.origin_id, conn.dest_id)]

@@ -74,7 +74,7 @@ class DummyModel(Model):
         while self._running:
             await asyncio.sleep(1)
             for c in self._connections:
-                #await self.msg_router.route_s2_message(c, f"Hi {c.dest_id}, this is {c.origin_id}!")
+                # await self.msg_router.route_s2_message(c, f"Hi {c.dest_id}, this is {c.origin_id}!")
                 await self.msg_router.route_s2_message(c, {"message_type": "FRBC.ActuatorStatus",
                                                            "message_id": "1234",
                                                            "active_operation_mode_id": "1234",
@@ -96,7 +96,7 @@ class DummyModel(Model):
 class ModelRegistry:
     def __init__(self) -> None:
         self.models: list[Model] = []
-    
+
     def add_model(self, model: Model) -> None:
         self.models.append(model)
 

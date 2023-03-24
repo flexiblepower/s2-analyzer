@@ -9,6 +9,7 @@ from s2_analyzer_backend.rest_api import RestAPI
 from s2_analyzer_backend.async_application import AsyncApplications
 from s2_analyzer_backend.app_logging import LogLevel, setup_logging
 from s2_analyzer_backend.router import MessageRouter
+from s2_analyzer_backend.config import init_models
 
 from s2_analyzer_backend.model import ModelRegistry
 from s2_analyzer_backend.cem_model_simple.cem_model_simple import CEM
@@ -44,11 +45,13 @@ def main():
     signal.signal(signal.SIGTERM, handle_exit)
     signal.signal(signal.SIGQUIT, handle_exit)
 
-    #m = DummyModel('dummy_model', msg_router)
-    m = CEM('dummy_model', msg_router)
-    applications.add_application(m)
-    mr.add_model(m)
-    
+    # m = DummyModel('dummy_model', msg_router)
+    # m = CEM('dummy_model', msg_router)
+
+    models = init_models(msg_router)
+    for m in models:
+        applications.add_application(m)
+        mr.add_model(m)
     applications.run_all()
 
 

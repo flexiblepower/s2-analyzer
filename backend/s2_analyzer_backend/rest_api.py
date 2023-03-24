@@ -8,7 +8,8 @@ from fastapi import FastAPI, WebSocket, APIRouter, WebSocketDisconnect, WebSocke
 import uvicorn
 
 from s2_analyzer_backend.async_application import AsyncApplication
-from s2_analyzer_backend.connection import WebSocketConnection, S2OriginType
+from s2_analyzer_backend.connection import WebSocketConnection
+from s2_analyzer_backend.origin_type import S2OriginType
 import s2_analyzer_backend.app_logging
 
 if TYPE_CHECKING:

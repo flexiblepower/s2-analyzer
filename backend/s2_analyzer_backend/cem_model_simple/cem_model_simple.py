@@ -2,12 +2,15 @@ import asyncio
 import datetime
 import logging
 import time
+from typing import TYPE_CHECKING
 
 from s2_analyzer_backend.cem_model_simple.device_model import DeviceModel
-from s2_analyzer_backend.connection import Connection, S2OriginType, ConnectionClosedReason
-from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.model import Model
-from s2_analyzer_backend.router import MessageRouter
+
+if TYPE_CHECKING:
+    from s2_analyzer_backend.connection import Connection, ConnectionClosedReason
+    from s2_analyzer_backend.envelope import Envelope
+    from s2_analyzer_backend.router import MessageRouter
 
 LOGGER = logging.getLogger(__name__)
 
@@ -15,15 +18,15 @@ LOGGER = logging.getLogger(__name__)
 class CEM(Model):
     SCHEDULE_INTERVAL = datetime.timedelta(minutes=1)
 
-    message_router: MessageRouter
+    message_router: 'MessageRouter'
     device_models_by_rm_ids: dict[str, DeviceModel]
 
-    def __init__(self, id: str, message_router: MessageRouter):
+    def __init__(self, id: str, message_router: 'MessageRouter'):
         super().__init__(id, message_router)
         self.message_router = message_router
         self.device_models_by_rm_ids = {}
 
-    async def receive_envelope(self, envelope: Envelope) -> None:
+    async def receive_envelope(self, envelope: 'Envelope') -> None:
         device_model = self.device_models_by_rm_ids.get(envelope.origin.origin_id)
 
         if not device_model:
@@ -34,13 +37,13 @@ class CEM(Model):
                          f'device {device_model.id}')
             await device_model.receive_envelope(envelope)
 
-    def receive_new_connection(self, new_connection: Connection) -> bool:
+    def receive_new_connection(self, new_connection: 'Connection') -> bool:
         """
 
         :param new_connection: The new model connection with this CEM model as origin and the RM as destination.
         :return:
         """
-        if new_connection.destination_type == S2OriginType.RM:
+        if new_connection.destination_type.isRM():
             LOGGER.info(f'CEM model {self.id} has received new connection from RM {new_connection.dest_id}.')
             device_model_id = f'{self.id}->{new_connection.dest_id}'
             self.device_models_by_rm_ids[new_connection.dest_id] = DeviceModel(device_model_id,
@@ -55,7 +58,7 @@ class CEM(Model):
 
         return accepted
 
-    def connection_has_closed(self, closed_connection: Connection, reason: ConnectionClosedReason) -> None:
+    def connection_has_closed(self, closed_connection: 'Connection', reason: 'ConnectionClosedReason') -> None:
         if closed_connection.dest_id in self.device_models_by_rm_ids:
             del self.device_models_by_rm_ids[closed_connection.dest_id]
             LOGGER.info(f'CEM model {self.id} was notified that connection '

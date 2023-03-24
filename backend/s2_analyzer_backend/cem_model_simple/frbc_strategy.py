@@ -7,10 +7,10 @@ import uuid
 from s2_analyzer_backend.cem_model_simple.common import (CemModelS2DeviceControlStrategy,
                                                          NumericalRange,
                                                          get_active_s2_message)
-from s2_analyzer_backend.envelope import Envelope, S2Message
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.cem_model_simple.device_model import DeviceModel
+    from s2_analyzer_backend.envelope import Envelope, S2Message
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,18 +21,18 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
     s2_device_model: 'DeviceModel'
 
-    system_descriptions: list[S2Message]
-    actuator_status_per_actuator_id: dict[str, S2Message]
-    fill_level_target_profiles: list[S2Message]
-    leakage_behaviours: list[S2Message]
-    usage_forecasts: list[S2Message]
+    system_descriptions: 'list[S2Message]'
+    actuator_status_per_actuator_id: 'dict[str, S2Message]'
+    fill_level_target_profiles: 'list[S2Message]'
+    leakage_behaviours: 'list[S2Message]'
+    usage_forecasts: 'list[S2Message]'
 
-    instructions_send: list[S2Message]
+    instructions_send: 'list[S2Message]'
 
     timers_started_at: dict[str, datetime.datetime]
     expected_fill_level_at_end_of_timestep: Optional[float]
 
-    s2_msg_type_to_callable: dict[str, Callable[[Envelope], None]]
+    s2_msg_type_to_callable: 'dict[str, Callable[[Envelope], None]]'
 
     def __init__(self, s2_device_model: 'DeviceModel'):
         self.s2_device_model = s2_device_model
@@ -55,7 +55,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         self.timers_started_at = {}
         self.expected_fill_level_at_end_of_timestep = None
 
-    def receive_envelope(self, envelope: Envelope):
+    def receive_envelope(self, envelope: 'Envelope'):
         handle = self.s2_msg_type_to_callable.get(envelope.msg_type)
         if handle:
             handle(envelope)
@@ -64,26 +64,26 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                            f'model {self.s2_device_model.id} connected to RM {self.s2_device_model.rm_id} is '
                            f'unable to handle. Ignoring message.')
 
-    def handle_system_description(self, envelope: Envelope) -> None:
+    def handle_system_description(self, envelope: 'Envelope') -> None:
         self.system_descriptions.append(envelope.msg)
 
-    def handle_actuator_status(self, envelope: Envelope) -> None:
+    def handle_actuator_status(self, envelope: 'Envelope') -> None:
         actuator_id = envelope.msg['actuator_id']
         self.actuator_status_per_actuator_id[actuator_id] = envelope.msg
 
-    def handle_fill_level_target_profile(self, envelope: Envelope) -> None:
+    def handle_fill_level_target_profile(self, envelope: 'Envelope') -> None:
         self.fill_level_target_profiles.append(envelope.msg)
 
-    def handle_leakage_behaviour(self, envelope: Envelope) -> None:
+    def handle_leakage_behaviour(self, envelope: 'Envelope') -> None:
         self.leakage_behaviours.append(envelope.msg)
 
-    def handle_usage_forecast(self, envelope: Envelope) -> None:
+    def handle_usage_forecast(self, envelope: 'Envelope') -> None:
         self.usage_forecasts.append(envelope.msg)
 
-    def handle_storage_status(self, envelope: Envelope) -> None:
+    def handle_storage_status(self, envelope: 'Envelope') -> None:
         self.expected_fill_level_at_end_of_timestep = envelope.msg['present_fill_level']
 
-    def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> list[S2Message]:
+    def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> 'list[S2Message]':
         LOGGER.debug(f'[{self.s2_device_model.id}] tick starts.')
         active_system_description = get_active_s2_message(timestep_start,
                                                           lambda m: datetime.datetime.fromisoformat(
@@ -117,7 +117,8 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                 timestep_start,
                 timestep_end)
 
-            fill_level_if_no_action = fill_level_at_start_of_timestep + expected_usage_during_timestep + expected_leakage_during_timestep
+            fill_level_if_no_action = fill_level_at_start_of_timestep + \
+                expected_usage_during_timestep + expected_leakage_during_timestep
 
             if target_fill_level_range_at_end_of_timestep.start <= fill_level_if_no_action < target_fill_level_range_at_end_of_timestep.stop:
                 actuate_fill_level = 0
@@ -161,7 +162,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
     @staticmethod
     def get_expected_fill_level_at_end_of_timestep(fill_level_at_start_of_timestep: float,
                                                    timestep_end: datetime.datetime,
-                                                   active_fill_level_target_profile: S2Message) -> NumericalRange:
+                                                   active_fill_level_target_profile: 'S2Message') -> NumericalRange:
         expected_fill_level_at_end = None
         current_start = datetime.datetime.fromisoformat(active_fill_level_target_profile['start_time'])
         for fill_level_element in active_fill_level_target_profile['elements']:
@@ -217,7 +218,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
             for leakage_element in active_leakage_behaviour['elements']:
                 leakage_fill_range = leakage_element['fill_level_range']
                 if leakage_fill_range['start_of_range'] <= fill_level_at_start_of_timestep < leakage_fill_range[
-                    'end_of_range']:
+                        'end_of_range']:
                     expected_leakage = (timestep_end - timestep_start) * leakage_element['leakage_rate']
 
         return expected_leakage
@@ -225,9 +226,9 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
     def find_instructions_to_reach_fill_level_target(self,
                                                      current_fill_level: float,
                                                      actuate_fill_level: float,
-                                                     active_system_description: S2Message,
+                                                     active_system_description: 'S2Message',
                                                      duration: datetime.timedelta,
-                                                     start_of_timestep: datetime.datetime) -> list[S2Message]:
+                                                     start_of_timestep: datetime.datetime) -> 'list[S2Message]':
         actuator_om_omfactor = self.choose_operation_modes_to_reach_fill_level_target(current_fill_level,
                                                                                       actuate_fill_level,
                                                                                       active_system_description,
@@ -252,10 +253,8 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
     def choose_operation_modes_to_reach_fill_level_target(self,
                                                           current_fill_level: float,
                                                           actuate_fill_level: float,
-                                                          active_system_description: S2Message,
-                                                          duration: datetime.timedelta) -> list[tuple[S2Message,
-                                                                                                      S2Message,
-                                                                                                      float]]:
+                                                          active_system_description: 'S2Message',
+                                                          duration: datetime.timedelta) -> 'list[tuple[S2Message, S2Message, float]]':
         """
 
         :param current_fill_level:
@@ -304,7 +303,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         return current_best_combination
 
     @staticmethod
-    def get_fill_rate_for_operation_mode_element(om_element: S2Message,
+    def get_fill_rate_for_operation_mode_element(om_element: 'S2Message',
                                                  om_factor: float) -> float:
         om_0_fill_rate = om_element['fill_rate']['start_of_range']
         om_1_fill_rate = om_element['fill_rate']['end_of_range']
@@ -312,7 +311,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
     @staticmethod
     def get_active_operation_mode_element(current_fill_level: float,
-                                          om_description: S2Message) -> Optional[S2Message]:
+                                          om_description: 'S2Message') -> 'Optional[S2Message]':
         result_element = None
         for om_element in om_description['elements']:
             fill_level_range = om_element['fill_level_range']
@@ -322,8 +321,8 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         return result_element
 
     @staticmethod
-    def get_reachable_operation_modes_for_actuator(actuator_status: S2Message,
-                                                   actuator_description: S2Message) -> list[S2Message]:
+    def get_reachable_operation_modes_for_actuator(actuator_status: 'S2Message',
+                                                   actuator_description: 'S2Message') -> 'list[S2Message]':
         om_descriptions_by_ids = {om['id']: om for om in actuator_description['operation_modes']}
         current_operation_mode_id = actuator_status['active_operation_mode_id']
         reachable_operation_mode_ids = [om_descriptions_by_ids[current_operation_mode_id]]

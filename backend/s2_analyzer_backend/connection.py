@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from s2_analyzer_backend.router import MessageRouter
     from s2_analyzer_backend.envelope import Envelope
     from s2_analyzer_backend.model import Model
+    from s2_analyzer_backend.origin_type import S2OriginType
 
 
 LOGGER = logging.getLogger(__name__)
@@ -21,21 +22,8 @@ class ConnectionClosedReason(Enum):
     DISCONNECT = 'disconnect'
 
 
-class S2OriginType(Enum):
-    RM = 'RM'
-    CEM = 'CEM'
-
-    def reverse(self):
-        if self is S2OriginType.RM:
-            return S2OriginType.CEM
-        elif self is S2OriginType.CEM:
-            return S2OriginType.RM
-        else:
-            raise ValueError
-
-
 class Connection(ABC):
-    def __init__(self, origin_id: str, dest_id: str, origin_type: S2OriginType, msg_router: "MessageRouter"):
+    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter'):
         self.origin_id = origin_id
         self.dest_id = dest_id
         self.s2_origin_type = origin_type
@@ -47,7 +35,7 @@ class Connection(ABC):
 
     @property
     def destination_type(self):
-        return S2OriginType.reverse(self.s2_origin_type)
+        return self.s2_origin_type.reverse()
 
     @abstractmethod
     async def send_envelope(self, envelope: "Envelope") -> bool:
@@ -55,7 +43,7 @@ class Connection(ABC):
 
 
 class WebSocketConnection(Connection):
-    def __init__(self, origin_id: str, dest_id: str, origin_type: S2OriginType, msg_router: "MessageRouter", ws: "WebSocket"):
+    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', ws: 'WebSocket'):
         super().__init__(origin_id, dest_id, origin_type, msg_router)
         self.ws = ws
 
@@ -87,11 +75,11 @@ class WebSocketConnection(Connection):
 
 
 class ModelConnection(Connection):
-    def __init__(self, origin_id: str, dest_id: str, origin_type: S2OriginType, msg_router: "MessageRouter", model: "Model"):
+    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', model: 'Model'):
         super().__init__(origin_id, dest_id, origin_type, msg_router)
         self.model = model
 
-    async def send_envelope(self, envelope: "Envelope") -> bool:
+    async def send_envelope(self, envelope: 'Envelope') -> bool:
         await self.model.receive_envelope(envelope)
 
 
