@@ -29,7 +29,7 @@ class Connection(ABC):
         self.s2_origin_type = origin_type
         self.msg_router = msg_router
 
-    # @abstractmethod
+    @abstractmethod
     def get_connection_type(self):
         return ConnectionType(type(self))
 
@@ -46,6 +46,9 @@ class WebSocketConnection(Connection):
     def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', ws: 'WebSocket'):
         super().__init__(origin_id, dest_id, origin_type, msg_router)
         self.ws = ws
+
+    def get_connection_type(self):
+        return ConnectionType.WEBSOCKET
 
     async def accept(self) -> None:
         try:
@@ -79,10 +82,13 @@ class ModelConnection(Connection):
         super().__init__(origin_id, dest_id, origin_type, msg_router)
         self.model = model
 
+    def get_connection_type(self):
+        return ConnectionType.MODEL
+
     async def send_envelope(self, envelope: 'Envelope') -> bool:
         await self.model.receive_envelope(envelope)
 
 
 class ConnectionType(Enum):
-    WEBSOCKET = WebSocketConnection
-    MODEL = ModelConnection
+    WEBSOCKET = 'WebSocketConnection'
+    MODEL = 'ModelConnection'
