@@ -11,8 +11,8 @@ S2_VERSION = '0.0.1-beta'
 
 
 class ControlType(Enum):
-    NoSelection = 'NO_SELECTION'
-    NoControl = 'NOT_CONTROLABLE'
+    NO_SELECTION = 'NO_SELECTION'
+    NO_CONTROL = 'NOT_CONTROLABLE'
     FRBC = 'FILL_RATE_BASED_CONTROL'
     DDBC = 'DEMAND_DRIVEN_BASED_CONTROL'
     PPBC = 'POWER_PROFILE_BASED_CONTROL'
@@ -21,9 +21,9 @@ class ControlType(Enum):
 
 
 class S2DeviceInitializationState(Enum):
-    HandShake = 'HandShake'
-    SelectingControlType = 'SelectingControlType'
-    SelectedControlType = 'SelectedControlType'
+    HAND_SHAKE = 'HandShake'
+    SELECTING_CONTROL_TYPE = 'SelectingControlType'
+    SELECTED_CONTROL_TYPE = 'SelectedControlType'
 
 
 class CemModelS2DeviceControlStrategy(abc.ABC):

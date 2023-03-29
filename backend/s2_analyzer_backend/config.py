@@ -1,11 +1,7 @@
 import os
-import yaml
-from typing import TYPE_CHECKING, Type
-from enum import Enum
-
-
+from typing import TYPE_CHECKING
 from dataclasses import dataclass, field
-from dataclass_wizard import YAMLWizard, LoadMixin
+from dataclass_wizard import YAMLWizard
 from s2_analyzer_backend.origin_type import S2OriginType
 from s2_analyzer_backend.cem_model_simple.cem_model_simple import CEM
 
@@ -19,7 +15,7 @@ S2_MODEL_CONF = os.getenv('S2_MODEL_CONF', 'config.yaml')
 @dataclass
 class ModelConfig(YAMLWizard):
     model_type: 'S2OriginType'
-    id: str
+    model_id: str
 
 
 @dataclass
@@ -28,27 +24,23 @@ class ModelsConfig(YAMLWizard):
 
 
 def read_s2_model_conf() -> 'ModelsConfig':
-    r = ModelsConfig.from_yaml_file(S2_MODEL_CONF)
-    if isinstance(r, list):
-        return r[0]
-    else:
-        return r
+    result = ModelsConfig.from_yaml_file(S2_MODEL_CONF)
+    if isinstance(result, list):
+        return result[0]
+    return result
 
 
-def model_create(m: 'ModelConfig', router: 'MessageRouter') -> 'Model':
-    if m.model_type.isCEM():
-        return CEM(m.id, router)
-    else:
-        raise RuntimeError()
+def model_create(model: 'ModelConfig', router: 'MessageRouter') -> 'Model':
+    if model.model_type.is_cem():
+        return CEM(model.model_id, router)
+    raise RuntimeError()
 
 
 def init_models(router: 'MessageRouter') -> 'list[Model]':
-    r = []
-
+    result = []
     config = read_s2_model_conf()
 
     model: 'ModelConfig'
-    model_constructor: 'type[Model]'
     for model in config.models:
-        r.append(model_create(model, router))
-    return r
+        result.append(model_create(model, router))
+    return result

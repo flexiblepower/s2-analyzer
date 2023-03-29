@@ -60,9 +60,10 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         if handle:
             handle(envelope)
         else:
-            LOGGER.warning(f'Received a message of type {envelope.msg_type} which CEM device '
-                           f'model {self.s2_device_model.id} connected to RM {self.s2_device_model.rm_id} is '
-                           f'unable to handle. Ignoring message.')
+            LOGGER.warning('Received a message of type %s which CEM device model '
+                           '%s connected to RM %s is unable to handle. Ignoring message.',
+                           envelope.msg_type, self.s2_device_model.dev_model_id,
+                           self.s2_device_model.rm_id)
 
     def handle_system_description(self, envelope: 'Envelope') -> None:
         self.system_descriptions.append(envelope.msg)
@@ -84,17 +85,18 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         self.expected_fill_level_at_end_of_timestep = envelope.msg['present_fill_level']
 
     def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> 'list[S2Message]':
-        LOGGER.debug(f'[{self.s2_device_model.id}] tick starts.')
+        LOGGER.debug('[%s] tick starts.', self.s2_device_model.dev_model_id)
         active_system_description = get_active_s2_message(timestep_start,
                                                           lambda m: datetime.datetime.fromisoformat(
                                                               m['valid_from']),
                                                           self.system_descriptions)
-        LOGGER.debug(f'[{self.s2_device_model.id}] Active system description: {active_system_description}.')
+        LOGGER.debug('[%s] Active system description: %s.',
+                     self.s2_device_model.dev_model_id, active_system_description)
         storage_description = active_system_description['storage']
         allowed_fill_level_range = storage_description['fill_level_range']
         fill_level_at_start_of_timestep = self.expected_fill_level_at_end_of_timestep
-        LOGGER.debug(f'[{self.s2_device_model.id}] Fill level at start of'
-                     f'timestep: {fill_level_at_start_of_timestep}.')
+        LOGGER.debug('[%s] Fill level at start of timestep: %s.',
+                     self.s2_device_model.dev_model_id, {fill_level_at_start_of_timestep})
 
         active_fill_level_target_profile = get_active_s2_message(timestep_end,
                                                                  lambda m: datetime.datetime.fromisoformat(
@@ -127,32 +129,39 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
             else:
                 actuate_fill_level = target_fill_level_range_at_end_of_timestep.stop - fill_level_if_no_action
 
-            LOGGER.debug(f'[{self.s2_device_model.id}] '
-                         f'Expected end fill level: {target_fill_level_range_at_end_of_timestep}\n'
-                         f'    Allowed fill range: {allowed_fill_level_range}\n'
-                         f'    Expected usage: {expected_usage_during_timestep}\n'
-                         f'    Expected leakage: {expected_leakage_during_timestep}\n'
-                         f'    Fill level on noop: {fill_level_if_no_action}\n'
-                         f'    Actuate fill level: {actuate_fill_level}')
+            LOGGER.debug('[%s] '
+                         'Expected end fill level: %s\n'
+                         '    Allowed fill range: %s\n'
+                         '    Expected usage: %s\n'
+                         '    Expected leakage: %s\n'
+                         '    Fill level on noop: %s\n'
+                         '    Actuate fill level: %s',
+                         self.s2_device_model.dev_model_id,
+                         target_fill_level_range_at_end_of_timestep,
+                         allowed_fill_level_range,
+                         expected_usage_during_timestep,
+                         expected_leakage_during_timestep,
+                         fill_level_if_no_action,
+                         actuate_fill_level)
 
             instructions = self.find_instructions_to_reach_fill_level_target(fill_level_at_start_of_timestep,
                                                                              actuate_fill_level,
                                                                              active_system_description,
                                                                              timestep_end - timestep_start,
                                                                              timestep_start)
-            LOGGER.debug(f'[{self.s2_device_model.id}] Resulting instructions: {instructions}')
-            LOGGER.debug(f'[{self.s2_device_model.id}] tick ends.')
+            LOGGER.debug('[%s] Resulting instructions: %s', self.s2_device_model.dev_model_id, instructions)
+            LOGGER.debug('[%s] tick ends.', self.s2_device_model.dev_model_id)
         else:
-            LOGGER.debug(f'[{self.s2_device_model.id}] No new instructions generated as:')
+            LOGGER.debug('[%s] No new instructions generated as:', self.s2_device_model.dev_model_id)
 
             if not active_system_description:
-                LOGGER.debug(f'[{self.s2_device_model.id}]     No active system description.')
+                LOGGER.debug('[%s]     No active system description.', self.s2_device_model.dev_model_id)
 
             if fill_level_at_start_of_timestep is None:
-                LOGGER.debug(f'[{self.s2_device_model.id}]     No fill level status available.')
+                LOGGER.debug('[%s]     No fill level status available.', self.s2_device_model.dev_model_id)
 
             if not active_fill_level_target_profile:
-                LOGGER.debug(f'[{self.s2_device_model.id}]     No active fill level target.')
+                LOGGER.debug('[%s]     No active fill level target.', self.s2_device_model.dev_model_id)
 
             instructions = []
 

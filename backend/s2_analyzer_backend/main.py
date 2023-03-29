@@ -10,9 +10,7 @@ from s2_analyzer_backend.async_application import AsyncApplications
 from s2_analyzer_backend.app_logging import LogLevel, setup_logging
 from s2_analyzer_backend.router import MessageRouter
 from s2_analyzer_backend.config import init_models
-
 from s2_analyzer_backend.model import ModelRegistry
-from s2_analyzer_backend.cem_model_simple.cem_model_simple import CEM
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +29,8 @@ def main():
     s2_validator = S2JsonSchemaValidator(s2_json_schemas_dir)
     s2_validator.setup()
 
-    mr = ModelRegistry()
-    msg_router = MessageRouter(s2_validator, mr)
+    model_registry = ModelRegistry()
+    msg_router = MessageRouter(s2_validator, model_registry)
 
     applications = AsyncApplications()
     applications.add_application(RestAPI('0.0.0.0', 8001, msg_router))
@@ -45,13 +43,10 @@ def main():
     signal.signal(signal.SIGTERM, handle_exit)
     signal.signal(signal.SIGQUIT, handle_exit)
 
-    # m = DummyModel('dummy_model', msg_router)
-    # m = CEM('dummy_model', msg_router)
-
     models = init_models(msg_router)
-    for m in models:
-        applications.add_application(m)
-        mr.add_model(m)
+    for model in models:
+        applications.add_application(model)
+        model_registry.add_model(model)
     applications.run_all()
 
 

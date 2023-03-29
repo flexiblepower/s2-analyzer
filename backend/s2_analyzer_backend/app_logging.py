@@ -7,23 +7,23 @@ LOG_LEVEL = None
 
 
 class LogLevel(Enum):
-    Debug = logging.DEBUG
-    Info = logging.INFO
-    Warning = logging.WARNING
-    Error = logging.ERROR
+    DEBUG = logging.DEBUG
+    INFO = logging.INFO
+    WARNING = logging.WARNING
+    ERROR = logging.ERROR
 
     @staticmethod
     def parse(value: str) -> 'LogLevel':
         lowered = value.lower()
 
         if lowered == 'debug':
-            result = LogLevel.Debug
+            result = LogLevel.DEBUG
         elif lowered == 'info':
-            result = LogLevel.Info
+            result = LogLevel.INFO
         elif lowered in ['warning', 'warn']:
-            result = LogLevel.Warning
+            result = LogLevel.WARNING
         elif lowered in ['err', 'error']:
-            result = LogLevel.Error
+            result = LogLevel.ERROR
         else:
             raise ValueError(f'Value {value} is not a valid log level.')
 

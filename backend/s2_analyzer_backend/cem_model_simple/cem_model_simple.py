@@ -21,8 +21,8 @@ class CEM(Model):
     message_router: 'MessageRouter'
     device_models_by_rm_ids: dict[str, DeviceModel]
 
-    def __init__(self, id: str, message_router: 'MessageRouter'):
-        super().__init__(id, message_router)
+    def __init__(self, model_id: str, message_router: 'MessageRouter'):
+        super().__init__(model_id, message_router)
         self.message_router = message_router
         self.device_models_by_rm_ids = {}
 
@@ -30,11 +30,11 @@ class CEM(Model):
         device_model = self.device_models_by_rm_ids.get(envelope.origin.origin_id)
 
         if not device_model:
-            LOGGER.error(f'Received a message from {envelope.origin} but this connection is unknown to CEM '
-                         f'model {self.id}.')
+            LOGGER.error('Received a message from %s but this connection is'
+                         'unknown to CEM model %s.', envelope.origin, self.model_id)
         else:
-            LOGGER.debug(f'Received message {envelope.id} with type {envelope.msg_type} from {envelope.origin} for '
-                         f'device {device_model.id}')
+            LOGGER.debug('Received message %s with type %s from %s for device %s', envelope.envelope_id,
+                         envelope.msg_type, envelope.origin, device_model.dev_model_id)
             await device_model.receive_envelope(envelope)
 
     def receive_new_connection(self, new_connection: 'Connection') -> bool:
@@ -43,17 +43,16 @@ class CEM(Model):
         :param new_connection: The new model connection with this CEM model as origin and the RM as destination.
         :return:
         """
-        if new_connection.destination_type.isRM():
-            LOGGER.info(f'CEM model {self.id} has received new connection from RM {new_connection.dest_id}.')
-            device_model_id = f'{self.id}->{new_connection.dest_id}'
+        if new_connection.destination_type.is_rm():
+            LOGGER.info('CEM model %s has received new connection from RM %s.', self.model_id, new_connection.dest_id)
+            device_model_id = f'{self.model_id}->{new_connection.dest_id}'
             self.device_models_by_rm_ids[new_connection.dest_id] = DeviceModel(device_model_id,
                                                                                new_connection,
                                                                                self.message_router)
             accepted = True
         else:
-            LOGGER.warning(f'CEM model {self.id} has received a CEM->CEM model connection '
-                           f'(CEM: {new_connection.dest_id}).'
-                           f'CEM to CEM connection is unsupported. Not accepting connection.')
+            LOGGER.warning('CEM model %s has received a CEM->CEM model connection (CEM: %s).'
+                           'CEM to CEM connection is unsupported. Not accepting connection.', self.model_id, new_connection.dest_id)
             accepted = False
 
         return accepted
@@ -61,11 +60,11 @@ class CEM(Model):
     def connection_has_closed(self, closed_connection: 'Connection', reason: 'ConnectionClosedReason') -> None:
         if closed_connection.dest_id in self.device_models_by_rm_ids:
             del self.device_models_by_rm_ids[closed_connection.dest_id]
-            LOGGER.info(f'CEM model {self.id} was notified that connection '
-                        f'from {closed_connection.dest_id} was closed due to {reason}.')
+            LOGGER.info('CEM model %s was notified that connection '
+                        'from %s was closed due to %s.', self.model_id, closed_connection.dest_id, reason)
         else:
-            LOGGER.warning(f'CEM model {self.id} was notified that unknown '
-                           f'connection {closed_connection.dest_id} was closed. Not doing anything...')
+            LOGGER.warning('CEM model %s was notified that unknown '
+                           'connection %s was closed. Not doing anything...', self.model_id, closed_connection.dest_id)
 
     async def entry(self) -> None:
         """Progress all device models each timestep."""
@@ -81,7 +80,7 @@ class CEM(Model):
 
             delay = timestep_end.timestamp() - time.time()
             if delay > 0:
-                LOGGER.debug(f'CEM model {self.id} will sleep for {delay} seconds until {timestep_end}.')
+                LOGGER.debug('CEM model %s will sleep for %s seconds until %s.', self.model_id, delay, timestep_end)
                 await asyncio.sleep(delay)
             timestep_start = datetime.datetime.now()
             timestep_end = timestep_start + CEM.SCHEDULE_INTERVAL

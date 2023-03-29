@@ -20,14 +20,14 @@ class ConnectionClosedReason(Enum):
 
 
 class Model(AsyncApplication):
-    id: str
+    model_id: str
     msg_router: "MessageRouter"
     _running: bool
     _task: asyncio.Task
 
-    def __init__(self, id: str, msg_router: "MessageRouter") -> None:
+    def __init__(self, model_id: str, msg_router: "MessageRouter") -> None:
         super().__init__()
-        self.id = id
+        self.model_id = model_id
         self.msg_router = msg_router
         self._running = False
 
@@ -36,15 +36,15 @@ class Model(AsyncApplication):
         self._task = loop.create_task(self.entry())
         try:
             await self._task
-        except asyncio.exceptions.CancelledError as e:
-            LOGGER.info(f'Shutdown {self.get_name()}.')
+        except asyncio.exceptions.CancelledError:
+            LOGGER.info('Shutdown %s.', self.get_name())
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
         self._task.cancel('Request to stop')
         self._running = False
 
     def get_name(self) -> "ApplicationName":
-        return self.id
+        return self.model_id
 
     @abc.abstractmethod
     async def entry(self) -> None:
@@ -66,30 +66,30 @@ class Model(AsyncApplication):
 class DummyModel(Model):
     _connections: "list[ModelConnection]"
 
-    def __init__(self, id: str, msg_router: "MessageRouter") -> None:
-        super().__init__(id, msg_router)
+    def __init__(self, model_id: str, msg_router: "MessageRouter") -> None:
+        super().__init__(model_id, msg_router)
         self._connections = []
 
     async def entry(self) -> None:
         while self._running:
             await asyncio.sleep(1)
-            for c in self._connections:
+            for connection in self._connections:
                 # await self.msg_router.route_s2_message(c, f"Hi {c.dest_id}, this is {c.origin_id}!")
-                await self.msg_router.route_s2_message(c, {"message_type": "FRBC.ActuatorStatus",
-                                                           "message_id": "1234",
-                                                           "active_operation_mode_id": "1234",
-                                                           "operation_mode_factor": 0.5,
-                                                           "previous_operation_mode_id": "4321"})
+                await self.msg_router.route_s2_message(connection, {"message_type": "FRBC.ActuatorStatus",
+                                                                    "message_id": "1234",
+                                                                    "active_operation_mode_id": "1234",
+                                                                    "operation_mode_factor": 0.5,
+                                                                    "previous_operation_mode_id": "4321"})
 
     async def receive_envelope(self, envelope: "Envelope") -> None:
-        print(f"Model {self.id} received following envelope: {envelope}")
+        print("Model %s received following envelope: %s", self.model_id, envelope)
 
     def receive_new_connection(self, new_connection: "ModelConnection") -> None:
-        LOGGER.info(f"Model {self.id}: received connection from {new_connection.dest_id}.")
+        LOGGER.info("Model %s: received connection from %s.", self.model_id, new_connection.dest_id)
         self._connections.append(new_connection)
 
     def connection_has_closed(self, closed_connection: "ModelConnection", reason: ConnectionClosedReason) -> None:
-        LOGGER.info(f"Model {self.id}: connection with {closed_connection.dest_id} has closed.")
+        LOGGER.info("Model %s: connection with %s has closed.", self.model_id, closed_connection.dest_id)
         self._connections.remove(closed_connection)
 
 
@@ -103,8 +103,8 @@ class ModelRegistry:
     def remove_model(self, model: Model) -> None:
         self.models.remove(model)
 
-    def lookup_by_id(self, id: str) -> 'Model|None':
-        for m in self.models:
-            if m.id == id:
-                return m
+    def lookup_by_id(self, model_id: str) -> 'Model|None':
+        for model in self.models:
+            if model.model_id == model_id:
+                return model
         return None
