@@ -1,5 +1,7 @@
 -c requirements.txt
 
 pytest
+pytest-coverage
+pytest-timer
 pylint
 mypy

@@ -9,7 +9,7 @@ import uvicorn
 
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.connection import WebSocketConnection, S2OriginType
-import s2_analyzer_backend.logging
+import s2_analyzer_backend.app_logging
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.router import MessageRouter
@@ -46,7 +46,7 @@ class RestAPI(AsyncApplication):
                                 host=self.listen_address,
                                 port=self.listen_port,
                                 loop="none",
-                                log_level=s2_analyzer_backend.logging.LOG_LEVEL.value)
+                                log_level=s2_analyzer_backend.app_logging.LOG_LEVEL.value)
         self.uvicorn_server = uvicorn.Server(config)
         # Prevent uvicorn from overwriting any signal handlers. Uvicorn does not yet has a nice way to do this.
         uvicorn.server.HANDLED_SIGNALS = ()

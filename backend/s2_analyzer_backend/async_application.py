@@ -68,4 +68,6 @@ class AsyncApplications:
 
     def stop(self):
         for application in self.applications.values():
+            LOGGER.debug(f'Stopping {application.get_name()}')
             application.stop(self.loop)
+        LOGGER.info('Stopped all applications')

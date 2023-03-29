@@ -10,6 +10,8 @@ attrs==22.1.0
     # via
     #   -c ./requirements.txt
     #   pytest
+coverage[toml]==7.2.1
+    # via pytest-cov
 dill==0.3.6
     # via pylint
 exceptiongroup==1.0.4
@@ -35,6 +37,17 @@ pluggy==1.0.0
 pylint==2.15.8
     # via -r ./dev-requirements.in
 pytest==7.2.0
+    # via
+    #   -r ./dev-requirements.in
+    #   pytest-cov
+    #   pytest-timer
+pytest-cov==4.0.0
+    # via pytest-cover
+pytest-cover==3.0.0
+    # via pytest-coverage
+pytest-coverage==0.0
+    # via -r ./dev-requirements.in
+pytest-timer==0.0.11
     # via -r ./dev-requirements.in
 tomli==2.0.1
     # via
