@@ -3,4 +3,4 @@ jsonschema~=4.17.3
 types-jsonschema~=4.17.0
 uvicorn~=0.20.0
 websockets~=10.4
-dataclass-wizard~=0.22.2
+dataclass-wizard[yaml]~=0.22.2
