@@ -3,6 +3,8 @@ import datetime
 import json
 import websockets
 
+import pytz
+
 
 async def main():
     async with websockets.connect("ws://localhost:8001/backend/rm/battery1/cem/dummy_model/ws") as websocket:
@@ -45,7 +47,7 @@ async def main():
         await websocket.send(json.dumps({
             'message_type': 'PowerMeasurement',
             'message_id': 'm5',
-            'measurement_timestamp': datetime.datetime.now().isoformat(),
+            'measurement_timestamp': datetime.datetime.now(tz=pytz.UTC).isoformat(),
             'values': [
                 {'commodity_quantity': 'ELECTRIC.POWER.L1', 'value': 30}
             ]
@@ -71,7 +73,7 @@ async def main():
         await websocket.send(json.dumps({
             'message_type': 'FRBC.SystemDescription',
             'message_id': 'm8',
-            'valid_from': datetime.datetime.now().isoformat(),
+            'valid_from': datetime.datetime.now(tz=pytz.UTC).isoformat(),
             'actuators': [{
                 'id': 'actuator1',
                 'diagnostic_label': 'charge_discharge_idle',
@@ -109,7 +111,7 @@ async def main():
         await websocket.send(json.dumps({
             'message_type': 'FRBC.FillLevelTargetProfile',
             'message_id': 'm9',
-            'start_time': datetime.datetime.now().isoformat(),
+            'start_time': datetime.datetime.now(tz=pytz.UTC).isoformat(),
             'elements': [{
                     'duration': 60,
                     'fill_level_range': {'start_of_range': 100, 'end_of_range': 100}
@@ -126,6 +128,6 @@ async def main():
         # Recv Instructions
         while True:
             instruction = await websocket.recv()
-            print(datetime.datetime.now().isoformat(), instruction)
+            print(datetime.datetime.now(tz=pytz.UTC).isoformat(), instruction)
 
 asyncio.run(main())

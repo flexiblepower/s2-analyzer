@@ -1,4 +1,7 @@
-# Prepation of development environment
+# S2 analyzer backend
+
+## Development workflow
+### Preparation of development environment
 ```bash
 python -m venv ./.venv
 . ./.venv/bin/activate
@@ -8,7 +11,7 @@ ci/install_dependencies.sh
 git submodule update --init --recursive
 ```
 
-# Updating dependencies
+### Updating dependencies
 After you change a dependency in `dev-requirements.in` or `requirements.in` you can update the pinned
 dependencies in `dev-requirements.txt` and `requirements.txt` with:
 ```bash
@@ -20,7 +23,7 @@ Finally, to install the new or updated dependencies:
 ci/install_dependencies.sh
 ```
 
-# Development tooling
+### Development tooling
 To unit test:
 ```bash
 ci/test_unit.sh
@@ -31,7 +34,7 @@ To typecheck:
 ci/typecheck.sh
 ```
 
-# Run the backend
+### Run the backend
 To run the backend locally:
 ```bash
 ./run.sh
