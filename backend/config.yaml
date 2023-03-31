@@ -1,0 +1,3 @@
+models:
+  - model_type: "CEM"
+    model_id: "dummy_model"

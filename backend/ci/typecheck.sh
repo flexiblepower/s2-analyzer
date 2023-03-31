@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 
-source .venv/bin/activate
-mypy ./s2_analyzer_backend/ ./test/
+. .venv/bin/activate
+python -m mypy ./s2_analyzer_backend/ ./test/
