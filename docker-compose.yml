@@ -1,0 +1,8 @@
+services:
+  backend:
+    image: s2-analyzer-backend
+    build: ./backend
+    ports:
+      - "8001:8001"
+    environment:
+      LOG_LEVEL: info

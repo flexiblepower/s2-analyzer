@@ -7,6 +7,7 @@ import uuid
 from s2_analyzer_backend.cem_model_simple.common import (CemModelS2DeviceControlStrategy,
                                                          NumericalRange,
                                                          get_active_s2_message)
+from s2_analyzer_backend.common import parse_timestamp_as_utc
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.cem_model_simple.device_model import DeviceModel
@@ -67,6 +68,9 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
     def handle_system_description(self, envelope: 'Envelope') -> None:
         self.system_descriptions.append(envelope.msg)
+        LOGGER.info('Device model %s received a system description which is valid from %s',
+                    self.s2_device_model.dev_model_id,
+                    envelope.msg['valid_from'])
 
     def handle_actuator_status(self, envelope: 'Envelope') -> None:
         actuator_id = envelope.msg['actuator_id']
@@ -87,11 +91,16 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
     def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> 'list[S2Message]':
         LOGGER.debug('[%s] tick starts.', self.s2_device_model.dev_model_id)
         active_system_description = get_active_s2_message(timestep_start,
-                                                          lambda m: datetime.datetime.fromisoformat(
-                                                              m['valid_from']),
+                                                          lambda m: parse_timestamp_as_utc(m['valid_from']),
                                                           self.system_descriptions)
+        if not active_system_description:
+            LOGGER.info('[%s] Did not have an active system description this tick.',
+                        self.s2_device_model.dev_model_id)
+            return []
+
         LOGGER.debug('[%s] Active system description: %s.',
-                     self.s2_device_model.dev_model_id, active_system_description)
+                     self.s2_device_model.dev_model_id,
+                     active_system_description)
         storage_description = active_system_description['storage']
         allowed_fill_level_range = storage_description['fill_level_range']
         fill_level_at_start_of_timestep = self.expected_fill_level_at_end_of_timestep
@@ -99,8 +108,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                      self.s2_device_model.dev_model_id, {fill_level_at_start_of_timestep})
 
         active_fill_level_target_profile = get_active_s2_message(timestep_end,
-                                                                 lambda m: datetime.datetime.fromisoformat(
-                                                                     m['start_time']),
+                                                                 lambda m: parse_timestamp_as_utc(m['start_time']),
                                                                  self.fill_level_target_profiles)
 
         if active_system_description and fill_level_at_start_of_timestep is not None and active_fill_level_target_profile:
@@ -108,7 +116,6 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                 fill_level_at_start_of_timestep,
                 timestep_end,
                 active_fill_level_target_profile)
-            print(expected_fill_level_range_at_end_of_timestep, allowed_fill_level_range)
             target_fill_level_range_at_end_of_timestep = range(max(allowed_fill_level_range['start_of_range'],
                                                                    expected_fill_level_range_at_end_of_timestep.start),
                                                                min(allowed_fill_level_range['end_of_range'],
@@ -173,7 +180,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                                    timestep_end: datetime.datetime,
                                                    active_fill_level_target_profile: 'S2Message') -> NumericalRange:
         expected_fill_level_at_end = None
-        current_start = datetime.datetime.fromisoformat(active_fill_level_target_profile['start_time'])
+        current_start = parse_timestamp_as_utc(active_fill_level_target_profile['start_time'])
         for fill_level_element in active_fill_level_target_profile['elements']:
             duration = datetime.timedelta(seconds=fill_level_element['duration'])
             current_end = current_start + duration
@@ -197,7 +204,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                            timestep_end: datetime.datetime) -> float:
         expected_usage = 0.0
         for usage_forecast in self.usage_forecasts:
-            current_start = datetime.datetime.fromisoformat(usage_forecast['start_time'])
+            current_start = parse_timestamp_as_utc(usage_forecast['start_time'])
 
             for usage_element in usage_forecast['elements']:
                 duration = datetime.timedelta(milliseconds=usage_element['duration'])
@@ -220,8 +227,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                              timestep_end: datetime.datetime) -> float:
         expected_leakage = 0.0
         active_leakage_behaviour = get_active_s2_message(timestep_start,
-                                                         lambda m: datetime.datetime.fromisoformat(
-                                                             m['valid_from']),
+                                                         lambda m: parse_timestamp_as_utc(m['valid_from']),
                                                          self.leakage_behaviours)
         if active_leakage_behaviour:
             for leakage_element in active_leakage_behaviour['elements']:
