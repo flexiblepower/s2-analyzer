@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 import logging
 from s2_analyzer_backend.envelope import Envelope
-from s2_analyzer_backend.connection import ConnectionType, ModelConnection, S2OriginType
+from s2_analyzer_backend.connection import ConnectionType, ModelConnection
 from s2_analyzer_backend.model import ConnectionClosedReason
 
 if TYPE_CHECKING:
@@ -28,23 +28,23 @@ class MessageRouter():
         dest_id = origin.dest_id
         dest = self.get_reverse_connection(origin.origin_id, origin.dest_id)
         if dest is None:
-            LOGGER.error(f"Destination connection is unavailable: {dest_id}")
+            LOGGER.error("Destination connection is unavailable: %s", dest_id)
             return False
-        else:
-            message_type = self.s2_validator.get_message_type(s2_msg)
-            envelope = Envelope(origin, dest, message_type, s2_msg)
-            # Add a destination_type
-            await self.route_envelope(envelope)
-            return True
+        message_type = self.s2_validator.get_message_type(s2_msg)
+        if message_type is None:
+            raise ValueError('Unknown message type')
+        envelope = Envelope(origin, dest, message_type, s2_msg)
+        # Add a destination_type
+        await self.route_envelope(envelope)
+        return True
 
     async def route_envelope(self, envelope: Envelope) -> bool:
 
         validation_error = self.s2_validator.validate(envelope.msg, envelope.msg_type)
         if validation_error is None:
-            LOGGER.debug(f'{envelope.origin.origin_id} send valid message: {envelope.msg}')
+            LOGGER.debug('%s send valid message: %s', envelope.origin.origin_id, envelope.msg)
         else:
-            LOGGER.warning(f'{envelope.origin.origin_id} send invalid message: {envelope.msg}\n'
-                           f'Error: {validation_error}')
+            LOGGER.warning('%s send invalid message: %s\n Error: %s', envelope.origin.origin_id, envelope.msg, validation_error)
 
         conn = envelope.dest
 
@@ -52,21 +52,19 @@ class MessageRouter():
 
         if dest_type == ConnectionType.WEBSOCKET:
             return await conn.send_envelope(envelope)
-        elif dest_type == ConnectionType.MODEL:
+        if dest_type == ConnectionType.MODEL:
             envelope.val = validation_error
             return await conn.send_envelope(envelope)
-        else:
-            raise RuntimeError("Connection type not recognized.")
+        raise RuntimeError("Connection type not recognized.")
 
     def receive_new_connection(self, conn: "Connection") -> None:
         self.connections[(conn.origin_id, conn.dest_id)] = conn
-       
+
         model = self.model_registry.lookup_by_id(conn.dest_id)
         if model:
             model_conn = ModelConnection(conn.dest_id, conn.origin_id, conn.s2_origin_type.reverse(), self, model)
             self.connections[(model_conn.origin_id, model_conn.dest_id)] = model_conn
             model.receive_new_connection(model_conn)
-
 
     def connection_has_closed(self, conn: "Connection") -> None:
         del self.connections[(conn.origin_id, conn.dest_id)]
@@ -74,4 +72,7 @@ class MessageRouter():
         model = self.model_registry.lookup_by_id(conn.dest_id)
         if model:
             model_conn = self.get_reverse_connection(conn.origin_id, conn.dest_id)
-            model.connection_has_closed(model_conn, ConnectionClosedReason.DISCONNECT)
+            if isinstance(model_conn, ModelConnection):
+                model.connection_has_closed(model_conn, ConnectionClosedReason.DISCONNECT)
+            else:
+                raise ValueError("Unexpected destination connection type")

@@ -1,14 +1,14 @@
-from typing import TYPE_CHECKING
 import asyncio
-import json
 import logging
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from fastapi import FastAPI, WebSocket, APIRouter, WebSocketDisconnect, WebSocketException
+from fastapi import FastAPI, WebSocket, APIRouter, WebSocketDisconnect
 import uvicorn
+import uvicorn.server
 
 from s2_analyzer_backend.async_application import AsyncApplication
-from s2_analyzer_backend.connection import WebSocketConnection, S2OriginType
+from s2_analyzer_backend.connection import WebSocketConnection
+from s2_analyzer_backend.origin_type import S2OriginType
 import s2_analyzer_backend.app_logging
 
 if TYPE_CHECKING:
@@ -62,9 +62,9 @@ class RestAPI(AsyncApplication):
     async def get_root(self) -> str:
         return 'Hello world!'
 
-    async def receive_new_rm_connection(self, ws: WebSocket, rm_id: str, cem_id: str) -> None:
+    async def receive_new_rm_connection(self, websocket: WebSocket, rm_id: str, cem_id: str) -> None:
         # Creates the WebsocketConnection instance
-        conn = WebSocketConnection(rm_id, cem_id, S2OriginType.RM, self.msg_router, ws)
+        conn = WebSocketConnection(rm_id, cem_id, S2OriginType.RM, self.msg_router, websocket)
         try:
             await conn.accept()
             # Notify MessageRouter
@@ -74,11 +74,11 @@ class RestAPI(AsyncApplication):
         # If closed, notify MessageRouter
         except WebSocketDisconnect:
             self.msg_router.connection_has_closed(conn)
-            LOGGER.info(f'{conn.s2_origin_type.name} {conn.origin_id} disconnected.')
+            LOGGER.info('%s %s disconnected.', conn.s2_origin_type.name, conn.origin_id)
 
-    async def receive_new_cem_connection(self, ws: WebSocket, cem_id: str, rm_id: str) -> None:
+    async def receive_new_cem_connection(self, websocket: WebSocket, cem_id: str, rm_id: str) -> None:
         # Creates the WebsocketConnection instance
-        conn = WebSocketConnection(cem_id, rm_id, S2OriginType.CEM, self.msg_router, ws)
+        conn = WebSocketConnection(cem_id, rm_id, S2OriginType.CEM, self.msg_router, websocket)
         try:
             await conn.accept()
             # Notify MessageRouter
@@ -88,4 +88,4 @@ class RestAPI(AsyncApplication):
         # If closed, notify MessageRouter
         except WebSocketDisconnect:
             self.msg_router.connection_has_closed(conn)
-            LOGGER.info(f'{conn.s2_origin_type.name} {conn.origin_id} disconnected.')
+            LOGGER.info('%s %s disconnected.', conn.s2_origin_type.name, conn.origin_id)
