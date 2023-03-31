@@ -11,5 +11,6 @@ RUN pip3 install -r /app/s2_analyzer_backend/requirements.txt
 COPY ./s2_analyzer_backend/ /app/s2_analyzer_backend/
 COPY ./s2-ws-json/          /app/s2-ws-json/
 COPY ./docker_run.sh        /app/
+COPY ./deployment/          /app/
 
 CMD ["/app/docker_run.sh"]
