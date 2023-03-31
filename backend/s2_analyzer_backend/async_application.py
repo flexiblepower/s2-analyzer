@@ -49,7 +49,7 @@ class AsyncApplications:
         try:
             await application.create_main_task(self.loop)
         except Exception as exc:  # pylint: disable=broad-except
-            LOGGER.error(f'Application {application.get_name()} crashed with exception!')
+            LOGGER.error('Application %s crashed with exception!', application.get_name())
             LOGGER.error(''.join(traceback.format_exception(None, exc, exc.__traceback__)))
 
     async def _run_all_until_done(self) -> None:
@@ -59,15 +59,15 @@ class AsyncApplications:
     def run_all(self):
         asyncio.set_event_loop(self.loop)
         try:
-            LOGGER.debug(f'Starting eventloop {self.loop} in async applications.')
+            LOGGER.debug('Starting eventloop %s in async applications.', {self.loop})
             self.loop.run_until_complete(self._run_all_until_done())
         finally:
-            LOGGER.debug(f'Closing eventloop {self.loop} in async applications.')
+            LOGGER.debug('Closing eventloop %s in async applications.', self.loop)
             self.loop.close()
         asyncio.set_event_loop(None)
 
     def stop(self):
         for application in self.applications.values():
-            LOGGER.debug(f'Stopping {application.get_name()}')
+            LOGGER.debug('Stopping %s', application.get_name())
             application.stop(self.loop)
         LOGGER.info('Stopped all applications')
