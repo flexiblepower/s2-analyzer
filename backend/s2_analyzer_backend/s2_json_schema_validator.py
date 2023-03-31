@@ -2,6 +2,7 @@ import json
 import logging
 from typing import TYPE_CHECKING, Optional
 import jsonschema
+import jsonschema.validators
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -31,7 +32,7 @@ class S2JsonSchemaValidator:
         for schema_file in self.dir_to_s2_json_schemas.glob('**/*.schema.json'):
             if schema_file.is_file():
                 LOGGER.info('Reading in S2 schema %s', schema_file)
-                with open(schema_file) as opened_schema_file:
+                with open(schema_file, encoding='utf-8') as opened_schema_file:
                     json_schema = json.loads(opened_schema_file.read())
 
                 message_type = json_schema.get('properties', {}).get('message_type', {}).get('const', {})
