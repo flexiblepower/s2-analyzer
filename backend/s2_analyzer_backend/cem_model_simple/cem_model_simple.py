@@ -5,6 +5,7 @@ import time
 from typing import TYPE_CHECKING
 
 from s2_analyzer_backend.cem_model_simple.device_model import DeviceModel
+from s2_analyzer_backend.common import now_as_utc
 from s2_analyzer_backend.model import Model
 
 if TYPE_CHECKING:
@@ -68,7 +69,7 @@ class CEM(Model):
 
     async def entry(self) -> None:
         """Progress all device models each timestep."""
-        timestep_start = datetime.datetime.now()
+        timestep_start = now_as_utc()
         timestep_end = timestep_start + CEM.SCHEDULE_INTERVAL
 
         while self._running:
@@ -82,5 +83,5 @@ class CEM(Model):
             if delay > 0:
                 LOGGER.debug('CEM model %s will sleep for %s seconds until %s.', self.model_id, delay, timestep_end)
                 await asyncio.sleep(delay)
-            timestep_start = datetime.datetime.now()
+            timestep_start = now_as_utc()
             timestep_end = timestep_start + CEM.SCHEDULE_INTERVAL
