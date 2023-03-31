@@ -6,12 +6,14 @@ from s2_analyzer_backend.cem_model_simple.device_model import DeviceModel
 from s2_analyzer_backend.cem_model_simple.frbc_strategy import FRBCStrategy
 from s2_analyzer_backend.cem_model_simple.common import NumericalRange
 
+import pytz
+
 
 class FRBCStrategyTest(TestCase):
     def test__get_expected_fill_level_at_end_of_timestep__correct_100(self):
         # Arrange
         fill_level_at_start_of_timestep = 85.0
-        timestep_end = datetime(2009, 10, 12, 13, 45, 0, 0)
+        timestep_end = datetime(2009, 10, 12, 13, 45, 0, 0, tzinfo=pytz.UTC)
         fill_level_target_profile = {
             'message_type': 'FRBC.FillLevelTargetProfile',
             'message_id': 'm1',
@@ -35,7 +37,7 @@ class FRBCStrategyTest(TestCase):
     def test__get_expected_fill_level_at_end_of_timestep__correct_multiple_elements(self):
         # Arrange
         fill_level_at_start_of_timestep = 85.0
-        timestep_end = datetime(2009, 10, 12, 13, 45, 0, 0)
+        timestep_end = datetime(2009, 10, 12, 13, 45, 0, 0, tzinfo=pytz.UTC)
         fill_level_target_profile = {
             'message_type': 'FRBC.FillLevelTargetProfile',
             'message_id': 'm1',
@@ -63,7 +65,7 @@ class FRBCStrategyTest(TestCase):
     def test__get_expected_fill_level_at_end_of_timestep__correct_no_target_profile_elements(self):
         # Arrange
         fill_level_at_start_of_timestep = 85.0
-        timestep_end = datetime(2009, 10, 12, 13, 45, 0, 0)
+        timestep_end = datetime(2009, 10, 12, 13, 45, 0, 0, tzinfo=pytz.UTC)
         fill_level_target_profile = {
             'message_type': 'FRBC.FillLevelTargetProfile',
             'message_id': 'm1',
@@ -83,7 +85,7 @@ class FRBCStrategyTest(TestCase):
     def test__get_expected_fill_level_at_end_of_timestep__correct_target_profile_expired(self):
         # Arrange
         fill_level_at_start_of_timestep = 85.0
-        timestep_end = datetime(2009, 10, 12, 13, 45, 0, 0)
+        timestep_end = datetime(2009, 10, 12, 13, 45, 0, 0, tzinfo=pytz.UTC)
         fill_level_target_profile = {
             'message_type': 'FRBC.FillLevelTargetProfile',
             'message_id': 'm1',
@@ -111,7 +113,7 @@ class FRBCStrategyTest(TestCase):
     def test__get_expected_fill_level_at_end_of_timestep__correct_2nd_element(self):
         # Arrange
         fill_level_at_start_of_timestep = 85.0
-        timestep_end = datetime(2009, 10, 12, 13, 45, 0, 0)
+        timestep_end = datetime(2009, 10, 12, 13, 45, 0, 0, tzinfo=pytz.UTC)
         fill_level_target_profile = {
             'message_type': 'FRBC.FillLevelTargetProfile',
             'message_id': 'm1',
@@ -509,8 +511,8 @@ class FRBCStrategyTest(TestCase):
 
     def test__choose_operation_modes_to_reach_fill_level_target__correct_single_om(self):
         # Arrange
-        s2_device_model = DeviceModel('some-device', None, None)
-        frbc_strategy = FRBCStrategy(s2_device_model)
+        s2_device_model = DeviceModel('some-device', None, None, None)
+        frbc_strategy = FRBCStrategy(s2_device_model, None)
 
         current_fill_level = 85
         actuate_fill_level = -5
@@ -519,7 +521,7 @@ class FRBCStrategyTest(TestCase):
         system_description = {
             'message_type': 'FRBC.SystemDescription',
             'message_id': 'm8',
-            'valid_from': datetime.now().isoformat(),
+            'valid_from': datetime.now(tz=pytz.UTC).isoformat(),
             'actuators': [{
                 'id': 'actuator1',
                 'diagnostic_label': 'charge_discharge_idle',

@@ -10,11 +10,19 @@ S2Message = dict
 
 
 class Envelope:
-    def __init__(self, origin: "Connection", dest: "Connection", msg_type: S2MessageType, msg: S2Message, val: "ValidationError" = None) -> None:
+    def __init__(self,
+                 origin: "Connection",
+                 dest: "Connection",
+                 msg_type: S2MessageType,
+                 msg: S2Message,
+                 format_validation: "ValidationError" = None) -> None:
         self.id = uuid1()
         self.origin = origin
         self.dest = dest
         self.msg = msg
         self.msg_type = msg_type
-        self.val = val
-        self.is_validated = val is not None
+        self.format_validation = format_validation
+
+    @property
+    def is_format_valid(self) -> bool:
+        return self.format_validation is None

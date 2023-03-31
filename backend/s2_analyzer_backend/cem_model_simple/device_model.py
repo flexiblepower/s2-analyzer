@@ -7,6 +7,7 @@ from s2_analyzer_backend.cem_model_simple.common import (CemModelS2DeviceControl
                                                          ControlType,
                                                          S2DeviceInitializationState,
                                                          S2_VERSION)
+from s2_analyzer_backend.cem_model_simple.reception_status_awaiter import ReceptionStatusAwaiter
 from s2_analyzer_backend.cem_model_simple.strategies import SUPPORTED_CONTROL_TYPES
 from s2_analyzer_backend.connection import Connection
 from s2_analyzer_backend.envelope import Envelope, S2Message
@@ -20,6 +21,7 @@ class DeviceModel:
     id: str
     model_connection_to_rm: Connection
     message_router: MessageRouter
+    reception_status_awaiter: ReceptionStatusAwaiter
     initialization_state: S2DeviceInitializationState
     control_type: ControlType
     control_type_strategy: Optional[CemModelS2DeviceControlStrategy]
@@ -37,10 +39,12 @@ class DeviceModel:
     def __init__(self,
                  id: str,
                  model_connection_to_rm: Connection,
-                 message_router: MessageRouter):
+                 message_router: MessageRouter,
+                 reception_status_awaiter: ReceptionStatusAwaiter):
         self.id = id
         self.model_connection_to_rm = model_connection_to_rm
         self.message_router = message_router
+        self.reception_status_awaiter = reception_status_awaiter
         self.initialization_state = S2DeviceInitializationState.HandShake
         self.control_type = ControlType.NoSelection
         self.control_type_strategy = None
@@ -86,14 +90,14 @@ class DeviceModel:
                 'role': 'CEM',
                 'supported_protocol_versions': [S2_VERSION]
             }
-            await self.message_router.route_s2_message(self.model_connection_to_rm, self.handshake_send)
+            await self.send_and_await_reception_status(self.handshake_send)
 
             self.handshake_response_send = {
                 'message_type': 'HandshakeResponse',
                 'message_id': str(uuid.uuid4()),
                 'selected_protocol_version': S2_VERSION
             }
-            await self.message_router.route_s2_message(self.model_connection_to_rm, self.handshake_response_send)
+            await self.send_and_await_reception_status(self.handshake_response_send)
             self.initialization_state = S2DeviceInitializationState.SelectingControlType
         else:
             pass
@@ -108,17 +112,16 @@ class DeviceModel:
                                       if ct.value in available_control_types), None)
 
         if selected_control_type:
-            await self.message_router.route_s2_message(self.model_connection_to_rm, {
-                'message_type': 'SelectControlType',
-                'message_id': str(uuid.uuid4()),
-                'control_type': selected_control_type.value
-            })
+            selected_control_type_msg = {'message_type': 'SelectControlType',
+                                         'message_id': str(uuid.uuid4()),
+                                         'control_type': selected_control_type.value}
+            await self.send_and_await_reception_status(selected_control_type_msg)
             self.initialization_state = S2DeviceInitializationState.SelectedControlType
             self.control_type = selected_control_type
             control_type_strategy = SUPPORTED_CONTROL_TYPES.get(self.control_type)
             LOGGER.info(f'Model {self.id} has set control type {self.control_type}.')
             if control_type_strategy:
-                self.control_type_strategy = control_type_strategy(self)
+                self.control_type_strategy = control_type_strategy(self, self.reception_status_awaiter)
             LOGGER.debug(f'Model {self.id} has set control type strategy {self.control_type_strategy}.')
         else:
             pass
@@ -130,8 +133,16 @@ class DeviceModel:
     async def handle_power_measurement(self, envelope: Envelope) -> None:
         self.power_measurements_received.append(envelope.msg)
 
-    def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> list[S2Message]:
+    async def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> None:
         if self.control_type_strategy:
-            return self.control_type_strategy.tick(timestep_start, timestep_end)
-        else:
-            return []
+            await self.control_type_strategy.tick(timestep_start, timestep_end)
+
+    async def send_and_await_reception_status(self, s2_message: S2Message) -> S2Message:
+        return await self.reception_status_awaiter.send_and_await_reception_status(self.model_connection_to_rm,
+                                                                                   s2_message,
+                                                                                   self.message_router,
+                                                                                   True)
+
+    async def send_and_forget(self, s2_message: S2Message) -> None:
+        await self.message_router.route_s2_message(self.model_connection_to_rm,
+                                                   s2_message)

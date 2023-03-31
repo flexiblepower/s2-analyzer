@@ -1,3 +1,5 @@
+import asyncio
+import typing
 from typing import TYPE_CHECKING
 import logging
 from s2_analyzer_backend.envelope import Envelope
@@ -14,30 +16,34 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
-class MessageRouter():
+class MessageRouter:
 
     def __init__(self, s2_validator: "S2JsonSchemaValidator", model_registry: "ModelRegistry") -> None:
         self.connections: dict[tuple[str, str], "Connection"] = {}
         self.s2_validator = s2_validator
         self.model_registry: ModelRegistry = model_registry
+        self.background_tasks = set()
+
+    def perform_as_background_task(self, coroutine: typing.Coroutine) -> None:
+        task = asyncio.create_task(coroutine)
+        self.background_tasks.add(task)
+        task.add_done_callback(self.background_tasks.discard)
 
     def get_reverse_connection(self, origin_id: str, dest_id: str) -> "Connection | None":
         return self.connections.get((dest_id, origin_id))
 
-    async def route_s2_message(self, origin: "Connection", s2_msg: "S2Message") -> bool:
+    async def route_s2_message(self, origin: "Connection", s2_msg: "S2Message") -> None:
         dest_id = origin.dest_id
         dest = self.get_reverse_connection(origin.origin_id, origin.dest_id)
         if dest is None:
             LOGGER.error(f"Destination connection is unavailable: {dest_id}")
-            return False
         else:
             message_type = self.s2_validator.get_message_type(s2_msg)
             envelope = Envelope(origin, dest, message_type, s2_msg)
             # Add a destination_type
             await self.route_envelope(envelope)
-            return True
 
-    async def route_envelope(self, envelope: Envelope) -> bool:
+    async def route_envelope(self, envelope: Envelope) -> None:
 
         validation_error = self.s2_validator.validate(envelope.msg, envelope.msg_type)
         if validation_error is None:
@@ -51,10 +57,10 @@ class MessageRouter():
         dest_type = conn.get_connection_type()
 
         if dest_type == ConnectionType.WEBSOCKET:
-            return await conn.send_envelope(envelope)
+            self.perform_as_background_task(conn.send_envelope(envelope))
         elif dest_type == ConnectionType.MODEL:
-            envelope.val = validation_error
-            return await conn.send_envelope(envelope)
+            envelope.format_validation = validation_error
+            self.perform_as_background_task(conn.send_envelope(envelope))
         else:
             raise RuntimeError("Connection type not recognized.")
 
@@ -66,7 +72,6 @@ class MessageRouter():
             model_conn = ModelConnection(conn.dest_id, conn.origin_id, conn.s2_origin_type.reverse(), self, model)
             self.connections[(model_conn.origin_id, model_conn.dest_id)] = model_conn
             model.receive_new_connection(model_conn)
-
 
     def connection_has_closed(self, conn: "Connection") -> None:
         del self.connections[(conn.origin_id, conn.dest_id)]

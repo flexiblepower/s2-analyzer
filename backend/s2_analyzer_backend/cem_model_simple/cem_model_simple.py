@@ -4,6 +4,7 @@ import logging
 import time
 
 from s2_analyzer_backend.cem_model_simple.device_model import DeviceModel
+from s2_analyzer_backend.cem_model_simple.reception_status_awaiter import ReceptionStatusAwaiter
 from s2_analyzer_backend.common import now_as_utc
 from s2_analyzer_backend.connection import Connection, S2OriginType, ConnectionClosedReason
 from s2_analyzer_backend.envelope import Envelope
@@ -18,11 +19,13 @@ class CEM(Model):
 
     message_router: MessageRouter
     device_models_by_rm_ids: dict[str, DeviceModel]
+    reception_status_awaiter: ReceptionStatusAwaiter
 
     def __init__(self, id: str, message_router: MessageRouter):
         super().__init__(id, message_router)
         self.message_router = message_router
         self.device_models_by_rm_ids = {}
+        self.reception_status_awaiter = ReceptionStatusAwaiter()
 
     async def receive_envelope(self, envelope: Envelope) -> None:
         device_model = self.device_models_by_rm_ids.get(envelope.origin.origin_id)
@@ -30,9 +33,30 @@ class CEM(Model):
         if not device_model:
             LOGGER.error(f'Received a message from {envelope.origin} but this connection is unknown to CEM '
                          f'model {self.id}.')
+        elif not envelope.is_format_valid:
+            if 'message_id' in envelope.msg:
+                LOGGER.error('[CEM model %s] received an format invalid message from %s. Sending reception status '
+                             'and ignore.',
+                             self.id,
+                             envelope.origin.origin_id)
+                await device_model.send_and_forget({'message_type': 'ReceptionStatus',
+                                                    'subject_message_id': envelope.msg['message_id'],
+                                                    'status': 'INVALID_MESSAGE'})
+            else:
+                LOGGER.error('[CEM model %s] received an format-invalid message from %s without a message id. '
+                             'Ignoring.',
+                             self.id,
+                             envelope.origin.origin_id)
+        elif envelope.msg_type == 'ReceptionStatus':
+            LOGGER.debug(f'Received reception status for {envelope.msg["subject_message_id"]} from {envelope.origin} '
+                         f'for device {device_model.id}')
+            await self.reception_status_awaiter.receive_reception_status(envelope.msg)
         else:
             LOGGER.debug(f'Received message {envelope.id} with type {envelope.msg_type} from {envelope.origin} for '
                          f'device {device_model.id}')
+            await device_model.send_and_forget({'message_type': 'ReceptionStatus',
+                                                'subject_message_id': envelope.msg['message_id'],
+                                                'status': 'OK'})
             await device_model.receive_envelope(envelope)
 
     def receive_new_connection(self, new_connection: Connection) -> bool:
@@ -46,7 +70,8 @@ class CEM(Model):
             device_model_id = f'{self.id}->{new_connection.dest_id}'
             self.device_models_by_rm_ids[new_connection.dest_id] = DeviceModel(device_model_id,
                                                                                new_connection,
-                                                                               self.message_router)
+                                                                               self.message_router,
+                                                                               self.reception_status_awaiter)
             accepted = True
         else:
             LOGGER.warning(f'CEM model {self.id} has received a CEM->CEM model connection '
@@ -71,11 +96,9 @@ class CEM(Model):
         timestep_end = timestep_start + CEM.SCHEDULE_INTERVAL
 
         while self._running:
-            for device_model in self.device_models_by_rm_ids.values():
-                new_messages = device_model.tick(timestep_start, timestep_end)
-
-                for new_message in new_messages:
-                    await self.message_router.route_s2_message(device_model.model_connection_to_rm, new_message)
+            ticks = [device_model.tick(timestep_start, timestep_end)
+                     for device_model in self.device_models_by_rm_ids.values()]
+            await asyncio.gather(*ticks)
 
             delay = timestep_end.timestamp() - time.time()
             if delay > 0:
