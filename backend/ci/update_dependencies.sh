@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
 
-pip-compile -o ./requirements.txt ./requirements.in
-pip-compile -o ./dev-requirements.txt ./dev-requirements.in
+. .venv/bin/activate
+python -m piptools compile -o ./requirements.txt ./requirements.in
+python -m piptools compile -o ./dev-requirements.txt ./dev-requirements.in
