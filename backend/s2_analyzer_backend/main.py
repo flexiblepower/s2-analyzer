@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 import os
 import signal
+import threading
 
 from s2_analyzer_backend.s2_json_schema_validator import S2JsonSchemaValidator
 from s2_analyzer_backend.rest_api import RestAPI
@@ -37,7 +38,7 @@ def main():
 
     def handle_exit(sig, frame):
         LOGGER.info("Received stop from signal to stop.")
-        APPLICATIONS.stop()
+        threading.Thread(target=APPLICATIONS.stop).start()
 
     signal.signal(signal.SIGINT, handle_exit)
     signal.signal(signal.SIGTERM, handle_exit)

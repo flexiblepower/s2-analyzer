@@ -36,8 +36,9 @@ class Model(AsyncApplication):
         self._task = loop.create_task(self.entry())
         try:
             await self._task
-        except asyncio.exceptions.CancelledError:
+        except asyncio.exceptions.CancelledError as e:
             LOGGER.info('Shutdown %s.', self.get_name())
+            raise e
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
         self._task.cancel('Request to stop')
