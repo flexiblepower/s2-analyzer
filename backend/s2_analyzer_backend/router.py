@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from s2_analyzer_backend.envelope import S2Message
     from s2_analyzer_backend.s2_json_schema_validator import S2JsonSchemaValidator
     from s2_analyzer_backend.model import ModelRegistry
+    from s2_analyzer_backend.async_application import AsyncApplications
 
 
 LOGGER = logging.getLogger(__name__)
@@ -18,16 +19,21 @@ LOGGER = logging.getLogger(__name__)
 
 class MessageRouter:
 
+    ##def __init__(self, s2_validator: "S2JsonSchemaValidator", model_registry: "ModelRegistry", apps: "AsyncApplications") -> None:
     def __init__(self, s2_validator: "S2JsonSchemaValidator", model_registry: "ModelRegistry") -> None:
         self.connections: dict[tuple[str, str], "Connection"] = {}
         self.s2_validator = s2_validator
         self.model_registry: ModelRegistry = model_registry
         self.background_tasks = set()
+        ##self._queue_dict: dict[str, asyncio.Queue] = {}
 
     def perform_as_background_task(self, coroutine: typing.Coroutine) -> None:
         task = asyncio.create_task(coroutine)
         self.background_tasks.add(task)
         task.add_done_callback(self.background_tasks.discard)
+
+    # def get_queue(self, conn_id: str) -> asyncio.Queue:
+    #     return self._queue_dict.setdefault(conn_id, asyncio.Queue())
 
     def get_reverse_connection(self, origin_id: str, dest_id: str) -> "Connection | None":
         return self.connections.get((dest_id, origin_id))
@@ -37,6 +43,9 @@ class MessageRouter:
         dest = self.get_reverse_connection(origin.origin_id, origin.dest_id)
         if dest is None:
             LOGGER.error("Destination connection is unavailable: %s", dest_id)
+            ##LOGGER.error("Destination connection is unavailable: %s. Buffering message.", dest_id)
+            ##q = self._queue_dict.setdefault(dest_id, asyncio.Queue())
+            ##await q.put((origin, s2_msg))
         else:
             message_type = self.s2_validator.get_message_type(s2_msg)
             if message_type is None:

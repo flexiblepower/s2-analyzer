@@ -13,6 +13,7 @@ from s2_analyzer_backend.config import init_models
 from s2_analyzer_backend.model import ModelRegistry
 
 LOGGER = logging.getLogger(__name__)
+APPLICATIONS = AsyncApplications()
 
 
 def main():
@@ -32,12 +33,11 @@ def main():
     model_registry = ModelRegistry()
     msg_router = MessageRouter(s2_validator, model_registry)
 
-    applications = AsyncApplications()
-    applications.add_application(RestAPI('0.0.0.0', 8001, msg_router))
+    APPLICATIONS.add_and_start_application(RestAPI('0.0.0.0', 8001, msg_router))
 
     def handle_exit(sig, frame):
         LOGGER.info("Received stop from signal to stop.")
-        applications.stop()
+        APPLICATIONS.stop()
 
     signal.signal(signal.SIGINT, handle_exit)
     signal.signal(signal.SIGTERM, handle_exit)
@@ -45,9 +45,9 @@ def main():
 
     models = init_models(msg_router)
     for model in models:
-        applications.add_application(model)
+        APPLICATIONS.add_and_start_application(model)
         model_registry.add_model(model)
-    applications.run_all()
+    APPLICATIONS.run_all()
 
 
 if __name__ == '__main__':

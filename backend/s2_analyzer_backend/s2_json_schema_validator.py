@@ -6,6 +6,7 @@ import jsonschema.validators
 
 if TYPE_CHECKING:
     from pathlib import Path
+    from s2_analyzer_backend.envelope import S2Message
 
 LOGGER = logging.getLogger(__name__)
 MessageType = str
@@ -61,5 +62,5 @@ class S2JsonSchemaValidator:
 
         return result
 
-    def get_message_type(self, message) -> Optional[MessageType]:
+    def get_message_type(self, message: "S2Message") -> Optional[MessageType]:
         return message.get('message_type')
