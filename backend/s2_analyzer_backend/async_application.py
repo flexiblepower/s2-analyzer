@@ -1,6 +1,7 @@
 import abc
 import asyncio
 import logging
+import threading
 import traceback
 from typing import TYPE_CHECKING
 
@@ -44,6 +45,8 @@ class AsyncApplication(abc.ABC):
 
 
 class AsyncApplications:
+    STOP_TIMEOUT = 5.0  # seconds
+
     loop: asyncio.AbstractEventLoop
     applications: dict[str, AsyncApplication]
     pending_tasks: dict[str, asyncio.Task]
@@ -73,36 +76,48 @@ class AsyncApplications:
         new_task = application.create_and_schedule_main_task(self.loop)
         self.pending_tasks[application.get_name()] = new_task
 
-    async def stop_and_remove_application(self, application: AsyncApplication):
-        application.stop(self.loop)
+    def stop_and_remove_application(self, application: AsyncApplication):
         name = application.get_name()
+        LOGGER.debug('Notifying %s to stop', name)
+        self.loop.call_soon_threadsafe(application.stop, self.loop)
+
+        LOGGER.debug('Waiting for %s to stop within %s seconds', name, AsyncApplications.STOP_TIMEOUT)
+        event = threading.Event()
+
+        def is_stopped_callback(*args, **kwargs):
+            event.set()
+
+        pending_task = self.pending_tasks.get(name)
+        if pending_task:
+            pending_task.add_done_callback(is_stopped_callback)
+            if not event.wait(timeout=AsyncApplications.STOP_TIMEOUT):
+                LOGGER.warning('Application %s did not shutdown gracefully within the timeout period and was killed.', name)
+                pending_task.cancel()
 
         if name in self.applications:
             del self.applications[name]
+        if name in self.pending_tasks:
+            del self.pending_tasks[name]
 
     def run_all(self):
         asyncio.set_event_loop(self.loop)
         try:
             LOGGER.debug('Starting eventloop %s in async applications.', {self.loop})
             self.loop.run_forever()
-            # TODO Start what is not yet started
-            # TODO If loop already started, start the new AsyncApplication in add_and_start_async_application
         finally:
             LOGGER.debug('Closing eventloop %s in async applications.', self.loop)
             self.loop.close()
         asyncio.set_event_loop(None)
 
     def stop(self):
-        for name, application in self.applications.items():
-            LOGGER.debug('Stopping %s', name)
-            application.stop(self.loop)
-        from threading import Event
-        for name, pending_task in self.pending_tasks.items():
-            
-            event = Event()
-            LOGGER.debug('Waiting for %s', name)
-            pending_task.add_done_callback(lambda x: event.set())
-            event.wait()
+        """Stop all applications in the eventloop.
+
+        Must be run from another thread than the asynchronuous thread as it contains blocking waits.
+        """
+        for application in list(self.applications.values()):
+            self.stop_and_remove_application(application)
+
         LOGGER.info('Stopped all applications')
-        self.loop.stop()
+        self.loop.call_soon_threadsafe(self.loop.stop)
+        LOGGER.info('Stopped eventloop')
         # Bonus attempt: Add a create_stop_task in AsyncApplication, and run those here with blocking await while run_all will run with run_forever.

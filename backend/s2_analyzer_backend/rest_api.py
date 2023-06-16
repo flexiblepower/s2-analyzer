@@ -57,7 +57,7 @@ class RestAPI(AsyncApplication):
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
         self.uvicorn_server.should_exit = True
-        # self.uvicorn_server.force_exit = True
+        #self.uvicorn_server.force_exit = True
 
     async def get_root(self) -> str:
         return 'Hello world!'
