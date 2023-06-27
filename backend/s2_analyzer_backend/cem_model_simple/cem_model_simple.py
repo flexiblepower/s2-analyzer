@@ -23,21 +23,30 @@ class CEM(Model):
     message_router: 'MessageRouter'
     device_models_by_rm_ids: dict[str, DeviceModel]
     reception_status_awaiter: ReceptionStatusAwaiter
+    _queue: 'asyncio.Queue[Envelope]'
 
     def __init__(self, model_id: str, message_router: 'MessageRouter'):
         super().__init__(model_id, message_router)
         self.message_router = message_router
         self.device_models_by_rm_ids = {}
         self.reception_status_awaiter = ReceptionStatusAwaiter()
+        self._queue = asyncio.Queue()
 
     async def receive_envelope(self, envelope: 'Envelope') -> None:
+        await self._queue.put(envelope)
+
+    async def process_envelope(self, envelope: 'Envelope') -> None:
+        LOGGER.debug("HIIIIIIIIIIIIIIII!!!!111!1!!")
         device_model = self.device_models_by_rm_ids.get(envelope.origin.origin_id)
+        LOGGER.debug("device_model: %s", device_model)
 
         if not device_model:
+            LOGGER.debug("Path1")
             LOGGER.error('Received a message from %s but this connection is unknown to CEM model %s.',
                          envelope.origin,
                          self.model_id)
         elif not envelope.is_format_valid:
+            LOGGER.debug("Path2")
             if 'message_id' in envelope.msg:
                 LOGGER.error('[CEM model %s] received an format invalid message from %s. Sending reception status '
                              'and ignore.',
@@ -52,12 +61,14 @@ class CEM(Model):
                              self.model_id,
                              envelope.origin.origin_id)
         elif envelope.msg_type == 'ReceptionStatus':
+            LOGGER.debug("Path3")
             LOGGER.debug('Received reception status for %s from %s for device %s',
                          envelope.msg["subject_message_id"],
                          envelope.origin,
                          device_model.dev_model_id)
             await self.reception_status_awaiter.receive_reception_status(envelope.msg)
         else:
+            LOGGER.debug("Path4")
             LOGGER.debug('Received message %s with type %s from %s for device %s',
                          envelope.envelope_id,
                          envelope.msg_type,
@@ -99,6 +110,14 @@ class CEM(Model):
                            'connection %s was closed. Not doing anything...', self.model_id, closed_connection.dest_id)
 
     async def entry(self) -> None:
+        await asyncio.gather(self.entry_receive_messages(), self.entry_tick())
+
+    async def entry_receive_messages(self) -> None:
+        while self._running:
+            envelope = await self._queue.get()
+            await self.process_envelope(envelope)
+
+    async def entry_tick(self) -> None:
         """Progress all device models each timestep."""
         timestep_start = now_as_utc()
         timestep_end = timestep_start + CEM.SCHEDULE_INTERVAL

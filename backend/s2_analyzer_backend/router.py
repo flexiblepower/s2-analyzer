@@ -5,13 +5,13 @@ import logging
 from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.connection import ConnectionType, ModelConnection
 from s2_analyzer_backend.model import ConnectionClosedReason
+from s2_analyzer_backend.globals import BUILDERS
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.connection import Connection
     from s2_analyzer_backend.envelope import S2Message
     from s2_analyzer_backend.s2_json_schema_validator import S2JsonSchemaValidator
     from s2_analyzer_backend.model import ModelRegistry
-    from s2_analyzer_backend.async_application import AsyncApplications
 
 
 LOGGER = logging.getLogger(__name__)
@@ -25,52 +25,62 @@ class MessageRouter:
         self.s2_validator = s2_validator
         self.model_registry: ModelRegistry = model_registry
         self.background_tasks = set()
-        ##self._queue_dict: dict[str, asyncio.Queue] = {}
+        self._queue_dict: dict[str, asyncio.Queue] = {}
 
     def perform_as_background_task(self, coroutine: typing.Coroutine) -> None:
         task = asyncio.create_task(coroutine)
         self.background_tasks.add(task)
         task.add_done_callback(self.background_tasks.discard)
 
-    # def get_queue(self, conn_id: str) -> asyncio.Queue:
-    #     return self._queue_dict.setdefault(conn_id, asyncio.Queue())
+    def get_queue(self, conn_id: str) -> asyncio.Queue:
+        return self._queue_dict.setdefault(conn_id, asyncio.Queue())
 
     def get_reverse_connection(self, origin_id: str, dest_id: str) -> "Connection | None":
         return self.connections.get((dest_id, origin_id))
 
     async def route_s2_message(self, origin: "Connection", s2_msg: "S2Message") -> None:
+
+        # Find destination
         dest_id = origin.dest_id
         dest = self.get_reverse_connection(origin.origin_id, origin.dest_id)
-        if dest is None:
-            LOGGER.error("Destination connection is unavailable: %s", dest_id)
-            ##LOGGER.error("Destination connection is unavailable: %s. Buffering message.", dest_id)
-            ##q = self._queue_dict.setdefault(dest_id, asyncio.Queue())
-            ##await q.put((origin, s2_msg))
+
+        # Determine msg type
+        message_type = self.s2_validator.get_message_type(s2_msg)
+        if message_type is None:
+            raise ValueError('Unknown message type')
+
+        # Validate msg
+        validation_error = self.s2_validator.validate(s2_msg, message_type)
+        if validation_error is None:
+            LOGGER.debug('%s send valid message: %s', origin.origin_id, s2_msg)
         else:
-            message_type = self.s2_validator.get_message_type(s2_msg)
-            if message_type is None:
-                raise ValueError('Unknown message type')
-            envelope = Envelope(origin, dest, message_type, s2_msg)
-            # Add a destination_type
+            LOGGER.warning('%s send invalid message: %s\n Error: %s', origin.origin_id, s2_msg, validation_error)
+
+        # Assemble envelope
+        envelope = Envelope(origin, dest, message_type, s2_msg, validation_error)
+
+        # Buffer or Route
+        if dest is None:
+            # LOGGER.error("Destination connection is unavailable: %s", dest_id)
+            LOGGER.error("Destination connection is unavailable: %s. Buffering message.", dest_id)
+            queue = self._queue_dict.setdefault(dest_id, asyncio.Queue())
+            await queue.put(envelope)
+        else:
             await self.route_envelope(envelope)
 
     async def route_envelope(self, envelope: Envelope) -> None:
 
-        validation_error = self.s2_validator.validate(envelope.msg, envelope.msg_type)
-        if validation_error is None:
-            LOGGER.debug('%s send valid message: %s', envelope.origin.origin_id, envelope.msg)
-        else:
-            LOGGER.warning('%s send invalid message: %s\n Error: %s', envelope.origin.origin_id, envelope.msg, validation_error)
-
         conn = envelope.dest
+
+        if conn is None:
+            raise ValueError('Destination connection is unavailable. This envelope should not be routed.')
 
         dest_type = conn.get_connection_type()
 
-        if dest_type == ConnectionType.WEBSOCKET:
-            self.perform_as_background_task(conn.send_envelope(envelope))
-        elif dest_type == ConnectionType.MODEL:
-            envelope.format_validation = validation_error
-            self.perform_as_background_task(conn.send_envelope(envelope))
+        if dest_type == ConnectionType.WEBSOCKET or dest_type == ConnectionType.MODEL:
+            LOGGER.debug(f"ENVELOPE {envelope} IS FORWARDED TO CONNECT {conn}")
+            #self.perform_as_background_task(conn.send_envelope(envelope))
+            await conn.send_envelope(envelope)
         else:
             raise RuntimeError("Connection type not recognized.")
 
@@ -79,7 +89,7 @@ class MessageRouter:
 
         model = self.model_registry.lookup_by_id(conn.dest_id)
         if model:
-            model_conn = ModelConnection(conn.dest_id, conn.origin_id, conn.s2_origin_type.reverse(), self, model)
+            model_conn = BUILDERS.build_model_connection(conn.dest_id, conn.origin_id, conn.s2_origin_type.reverse(), self, model)
             self.connections[(model_conn.origin_id, model_conn.dest_id)] = model_conn
             model.receive_new_connection(model_conn)
 

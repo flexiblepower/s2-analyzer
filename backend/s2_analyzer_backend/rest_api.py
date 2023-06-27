@@ -2,12 +2,12 @@ import asyncio
 import logging
 from typing import Optional, TYPE_CHECKING
 
-from fastapi import FastAPI, WebSocket, APIRouter, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, APIRouter
 import uvicorn
 import uvicorn.server
 
 from s2_analyzer_backend.async_application import AsyncApplication
-from s2_analyzer_backend.connection import WebSocketConnection
+from s2_analyzer_backend.globals import BUILDERS
 from s2_analyzer_backend.origin_type import S2OriginType
 import s2_analyzer_backend.app_logging
 
@@ -53,9 +53,11 @@ class RestAPI(AsyncApplication):
         await self.uvicorn_server.serve()
 
     def get_name(self) -> "ApplicationName":
-        return 'S2 CEM Server'
+        return 'S2 REST API Server'
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
+        if self.uvicorn_server is None:
+            raise RuntimeError("Stopping uvicorn failed: there is no uvicorn running!")
         self.uvicorn_server.should_exit = True
         #self.uvicorn_server.force_exit = True
 
@@ -63,29 +65,23 @@ class RestAPI(AsyncApplication):
         return 'Hello world!'
 
     async def receive_new_rm_connection(self, websocket: WebSocket, rm_id: str, cem_id: str) -> None:
-        # Creates the WebsocketConnection instance
-        conn = WebSocketConnection(rm_id, cem_id, S2OriginType.RM, self.msg_router, websocket)
         try:
-            await conn.accept()
-            # Notify MessageRouter
-            self.msg_router.receive_new_connection(conn)
-            # Start listening for new packets, notify WebsocketConnection on any new data's
-            await conn.receive_msg()
-        # If closed, notify MessageRouter
-        except WebSocketDisconnect:
-            self.msg_router.connection_has_closed(conn)
-            LOGGER.info('%s %s disconnected.', conn.s2_origin_type.name, conn.origin_id)
+            await websocket.accept()
+            LOGGER.info('Received connection from rm %s to cem %s.', rm_id, cem_id)
+        except WebSocketException:
+            LOGGER.exception('Connection from %s to %s had an exception while accepting.', rm_id, cem_id)
+
+        # Creates the WebsocketConnection instance
+        conn = BUILDERS.build_ws_connection(rm_id, cem_id, S2OriginType.RM, self.msg_router, websocket)
+        await conn.wait_till_stopped()
 
     async def receive_new_cem_connection(self, websocket: WebSocket, cem_id: str, rm_id: str) -> None:
-        # Creates the WebsocketConnection instance
-        conn = WebSocketConnection(cem_id, rm_id, S2OriginType.CEM, self.msg_router, websocket)
         try:
-            await conn.accept()
-            # Notify MessageRouter
-            self.msg_router.receive_new_connection(conn)
-            # Start listening for new packets, notify WebsocketConnection on any new data's
-            await conn.receive_msg()
-        # If closed, notify MessageRouter
-        except WebSocketDisconnect:
-            self.msg_router.connection_has_closed(conn)
-            LOGGER.info('%s %s disconnected.', conn.s2_origin_type.name, conn.origin_id)
+            await websocket.accept()
+            LOGGER.info('Received connection from rm %s to cem %s.', rm_id, cem_id)
+        except WebSocketException:
+            LOGGER.exception('Connection from %s to %s had an exception while accepting.', rm_id, cem_id)
+
+        # Creates the WebsocketConnection instance
+        conn = BUILDERS.build_ws_connection(cem_id, rm_id, S2OriginType.CEM, self.msg_router, websocket)
+        await conn.wait_till_stopped()

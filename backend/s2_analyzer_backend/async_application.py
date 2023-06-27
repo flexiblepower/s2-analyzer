@@ -2,16 +2,8 @@ import abc
 import asyncio
 import logging
 import threading
+import typing
 import traceback
-from typing import TYPE_CHECKING
-
-from s2_analyzer_backend.connection import WebSocketConnection
-from s2_analyzer_backend.connection import ModelConnection
-
-if TYPE_CHECKING:
-    from s2_analyzer_backend.origin_type import S2OriginType
-    from s2_analyzer_backend.router import MessageRouter
-    from fastapi import WebSocket
 
 LOGGER = logging.getLogger(__name__)
 ApplicationName = str
@@ -22,7 +14,7 @@ class AsyncApplication(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
+    async def main_task(self, loop: asyncio.AbstractEventLoop) -> typing.Coroutine:
         pass
 
     @abc.abstractmethod
@@ -33,15 +25,22 @@ class AsyncApplication(abc.ABC):
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
         pass
 
-    async def _run_application(self, loop: asyncio.AbstractEventLoop):
-        try:
-            await self.main_task(loop)
-        except Exception as exc:  # pylint: disable=broad-except
-            LOGGER.error('Application %s crashed with exception!', self.get_name())
-            LOGGER.error(''.join(traceback.format_exception(None, exc, exc.__traceback__)))
-
     def create_and_schedule_main_task(self, loop: asyncio.AbstractEventLoop) -> asyncio.Task:
-        return loop.create_task(self._run_application(loop))
+        main_coroutine = self.main_task(loop)
+    
+        async def execute_main_task():
+            try:
+                await main_coroutine
+            except asyncio.exceptions.CancelledError as ex:
+                LOGGER.info('Shutdown %s.', self.get_name())
+                raise ex
+            except Exception as exc:  # pylint: disable=broad-except
+                LOGGER.error('Application %s crashed with exception!', self.get_name())
+                LOGGER.error(''.join(traceback.format_exception(None, exc, exc.__traceback__)))
+
+        main_task = loop.create_task(execute_main_task())
+
+        return main_task
 
 
 class AsyncApplications:
@@ -55,21 +54,6 @@ class AsyncApplications:
         self.loop = asyncio.new_event_loop()
         self.applications = {}
         self.pending_tasks = {}
-
-    # def build_ws_connection(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', websocket: 'WebSocket') -> 'WebSocketConnection':
-    #     c = WebSocketConnection(origin_id, dest_id, origin_type, msg_router, websocket)
-    #     self.add_and_start_application(c)
-    #     '''
-    #     Somewhere in code:
-    #         msg_router.receive_new_connection(c)
-    #         c.link_queue(existing_inbox)
-    #     '''
-        
-    #     # TODO c.start()
-    #     return c
-
-    # def build_model_connection(self) -> 'ModelConnection':
-    #     pass
 
     def add_and_start_application(self, application: AsyncApplication) -> None:
         self.applications[application.get_name()] = application
@@ -120,4 +104,7 @@ class AsyncApplications:
         LOGGER.info('Stopped all applications')
         self.loop.call_soon_threadsafe(self.loop.stop)
         LOGGER.info('Stopped eventloop')
-        # Bonus attempt: Add a create_stop_task in AsyncApplication, and run those here with blocking await while run_all will run with run_forever.
+
+
+APPLICATIONS = AsyncApplications()
+# Bonus attempt: Add a create_stop_task in AsyncApplication, and run those here with blocking await while run_all will run with run_forever.
