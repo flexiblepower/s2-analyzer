@@ -72,7 +72,9 @@ class DeviceModel:
 
     async def receive_envelope(self, envelope: 'Envelope') -> None:
         handle = self.s2_msg_type_to_callable.get(envelope.msg_type)
+        LOGGER.debug("I AM OVEREHERE NOW")
         if handle:
+            LOGGER.debug(f"HANDLING MESSAGE WITH HANDLE {handle}, {envelope.msg_type}")
             await handle(envelope)
         elif self.control_type_strategy:
             LOGGER.debug('CEM device model %s forwarded envelope to control strategy %s',
@@ -92,8 +94,9 @@ class DeviceModel:
                 'role': 'CEM',
                 'supported_protocol_versions': [S2_VERSION]
             }
+            LOGGER.debug("SHOULD BE OVERHERE NOW")
             await self.send_and_await_reception_status(self.handshake_send)
-
+            LOGGER.debug("RECEIVED THE ACK TO MY HANDSHAKE")
             self.handshake_response_send = {
                 'message_type': 'HandshakeResponse',
                 'message_id': str(uuid.uuid4()),

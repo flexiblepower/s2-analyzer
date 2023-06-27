@@ -12,7 +12,7 @@ S2Message = dict
 class Envelope:
     def __init__(self,
                  origin: "Connection",
-                 dest: "Connection",
+                 dest: "Connection | None",
                  msg_type: S2MessageType,
                  msg: S2Message,
                  format_validation: "FormatValidationError | None" = None) -> None:
