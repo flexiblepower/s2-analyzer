@@ -69,7 +69,6 @@ class MessageRouter:
             await self.route_envelope(envelope)
 
     async def route_envelope(self, envelope: Envelope) -> None:
-
         conn = envelope.dest
 
         if conn is None:
@@ -78,8 +77,7 @@ class MessageRouter:
         dest_type = conn.get_connection_type()
 
         if dest_type == ConnectionType.WEBSOCKET or dest_type == ConnectionType.MODEL:
-            LOGGER.debug(f"ENVELOPE {envelope} IS FORWARDED TO CONNECT {conn}")
-            #self.perform_as_background_task(conn.send_envelope(envelope))
+            LOGGER.debug(f"Envelope is forwarded to {conn}:  {envelope}")
             await conn.send_envelope(envelope)
         else:
             raise RuntimeError("Connection type not recognized.")

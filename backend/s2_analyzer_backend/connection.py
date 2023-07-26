@@ -63,18 +63,24 @@ class Connection(AsyncApplication, ABC):
         await self._queue.put(envelope)
 
     def get_name(self) -> 'ApplicationName':
-        return f"Connection from {self.origin_id} to {self.dest_id}"
+        return str(self)
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
-        if self._main_task:
+        print(self, self._main_task.done(), self._main_task.cancelled())
+        if self._main_task and not self._main_task.done() and not self._main_task.cancelled():
             LOGGER.info('Stopping connection from %s to %s', self.origin_id, self.dest_id)
             self._main_task.cancel('Request to stop')
+        else:
+            LOGGER.warning('Connection %s was already stopped!', self)
 
 
 class WebSocketConnection(Connection):
     def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', websocket: 'WebSocket'):
         super().__init__(origin_id, dest_id, origin_type, msg_router)
         self.websocket = websocket
+
+    def __str__(self):
+        return f'Websocket connection {self.origin_id}->{self.dest_id}'
 
     def get_connection_type(self):
         return ConnectionType.WEBSOCKET
@@ -84,51 +90,37 @@ class WebSocketConnection(Connection):
             async with asyncio.TaskGroup() as tg:
                 tg.create_task(self.receiver())
                 tg.create_task(self.sender())
-            #await asyncio.gather(self.receiver(), self.sender(), return_exceptions=True)
-        except WebSocketDisconnect:
-            print('WEBSOCKET DISCONNECT DID BUBBLE UP!')
-            threading.Thread(target=APPLICATIONS.stop_and_remove_application,args=(self,)).start()
-            self.msg_router.connection_has_closed(self)
-            LOGGER.info('%s %s disconnected.',
-                        self.s2_origin_type.name,
-                        self.origin_id)
-        except Exception as e:
-            print('CONNECTION MAIN TASK EXCEPTION')
-            import traceback
-            traceback.print_exception(e)
-            raise e
+        except ExceptionGroup as exc_group:
+            for exc in exc_group.exceptions:
+                if isinstance(exc, WebSocketDisconnect):
+                    threading.Thread(target=APPLICATIONS.stop_and_remove_application, args=(self,)).start()
+                    self.msg_router.connection_has_closed(self)
+                    LOGGER.info('%s %s disconnected.',
+                                self.s2_origin_type.name,
+                                self.origin_id)
+                else:
+                    raise exc
 
     async def receiver(self) -> None:
         while self._running:
             message_str = None
             try:
-                print('BEFORE READ')
                 message_str = await self.websocket.receive_text()
-                print('AFTER READ')
                 LOGGER.debug('%s sent the message: %s', self.origin_id, message_str)
                 message = json.loads(message_str)
                 await self.msg_router.route_s2_message(self, message)
-                print('AFTER ROUTE READ')
             except WebSocketException:
                 LOGGER.exception('Connection to %s %s had an exception while receiving.',
                                 self.s2_origin_type.name, self.origin_id)
             except json.JSONDecodeError:
                 LOGGER.exception('Error decoding message: %s', message_str)
-            except Exception as e:
-                print('SOMETHING HAPPENED ON CONNECTION', self, e)
-                import traceback
-                traceback.print_exception(e)
-                raise e
 
     async def sender(self) -> None:
         while self._running:
-            LOGGER.debug("START OF SENDING LOOP")
             envelope = await self._queue.get()
 
             try:
-                print('SENDING ENVELOPE', envelope)
                 await self.websocket.send_text(json.dumps(envelope.msg))
-                print('AFTER SEND')
                 self._queue.task_done()
             except ConnectionClosedOK:
                 LOGGER.warning('Could not send envelope to %s %s as connection was already closed.',
@@ -136,8 +128,6 @@ class WebSocketConnection(Connection):
             except WebSocketException:
                 LOGGER.exception('Connection to %s %s had an exception while sending.',
                                 self.s2_origin_type.name, self.origin_id)
-            LOGGER.debug("END OF SENDING LOOP")
-        LOGGER.debug("TERMINATED SENDING LOOP")
 
 
 class ModelConnection(Connection, AsyncSelectable['Envelope']):
@@ -156,6 +146,9 @@ class ModelConnection(Connection, AsyncSelectable['Envelope']):
         self.s2_messages = asyncio.Queue()
         self.reception_status_awaiter = ReceptionStatusAwaiter()
 
+    def __str__(self):
+        return f'Model connection {self.origin_id}->{self.dest_id}'
+
     def get_connection_type(self):
         return ConnectionType.MODEL
     
@@ -173,8 +166,9 @@ class ModelConnection(Connection, AsyncSelectable['Envelope']):
                          envelope.dest)
             await self.reception_status_awaiter.receive_reception_status(envelope.msg)
         else:
-            LOGGER.debug('Envelope %s is not a reception status so forwarded to s2 messages queue to be retrieved by '
-                         'model',
+            LOGGER.debug('[%s] Envelope %s is not a reception status so forwarded to s2 messages queue to be retrieved '
+                         'by model',
+                         self,
                          envelope)
             await self.s2_messages.put(envelope)
 

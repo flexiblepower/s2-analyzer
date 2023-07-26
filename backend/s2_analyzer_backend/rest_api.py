@@ -60,7 +60,6 @@ class RestAPI(AsyncApplication):
         if self.uvicorn_server is None:
             raise RuntimeError("Stopping uvicorn failed: there is no uvicorn running!")
         self.uvicorn_server.should_exit = True
-        #self._main_task.cancel('Stop asap')
         #self.uvicorn_server.force_exit = True
 
     async def get_root(self) -> str:
@@ -75,15 +74,7 @@ class RestAPI(AsyncApplication):
 
         # Creates the WebsocketConnection instance
         conn = BUILDERS.build_ws_connection(rm_id, cem_id, S2OriginType.RM, self.msg_router, websocket)
-        try:
-            await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)
-        except Exception as e:
-            print('SOMETHING HAPPENED!', e)
-            raise e
-        print('RM CONNECTION HAS ENDED WOOOO')
-        #
-        # while True:
-        #     print(await websocket.receive_text())
+        await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)
 
     async def receive_new_cem_connection(self, websocket: WebSocket, cem_id: str, rm_id: str) -> None:
         try:
@@ -94,12 +85,4 @@ class RestAPI(AsyncApplication):
 
         # Creates the WebsocketConnection instance
         conn = BUILDERS.build_ws_connection(cem_id, rm_id, S2OriginType.CEM, self.msg_router, websocket)
-        try:
-            await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)
-        except Exception as e:
-            print('SOMETHING HAPPENED!', e)
-            raise e
-        print('CEM CONNECTION HAS ENDED WOOOO')
-
-        # while True:
-        #     print(await websocket.receive_text())
+        await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)

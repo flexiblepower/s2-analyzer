@@ -43,9 +43,9 @@ class AsyncApplication(abc.ABC):
         self._running = True
         try:
             await self.main_task(loop)
-            LOGGER.info('Shutdown %s by termination.', self.get_name())
+            LOGGER.info('Shutdown completed for %s by termination.', self.get_name())
         except asyncio.exceptions.CancelledError as ex:
-            LOGGER.info('Shutdown %s by cancelling the task.', self.get_name())
+            LOGGER.info('Shutdown completed for %s by cancelling the task.', self.get_name())
             raise ex  # Python requires this exception to bubble up
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error('Application %s crashed with exception!', self.get_name())
@@ -151,7 +151,8 @@ class AsyncApplications:
 
         Must be run from another thread than the asynchronuous thread as it contains blocking waits.
         """
-        for application in list(self.applications.values()):
+        while self.applications:  # Use a while as one application may stop another which updates this list
+            application = list(self.applications.values())[0]
             self.stop_and_remove_application(application)
 
         LOGGER.info('Stopped all applications')
