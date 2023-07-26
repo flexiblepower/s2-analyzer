@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import logging
+import threading
 import time
 from typing import TYPE_CHECKING
 
@@ -55,7 +56,8 @@ class CEM(Model):
     def connection_has_closed(self, closed_connection: 'Connection', reason: 'ConnectionClosedReason') -> None:
         if closed_connection.dest_id in self.device_models_by_rm_ids:
             device_model = self.device_models_by_rm_ids[closed_connection.dest_id]
-            APPLICATIONS.stop_and_remove_application(device_model)
+            threading.Thread(target=APPLICATIONS.stop_and_remove_application, args=(device_model.model_connection_to_rm,)).start()
+            threading.Thread(target=APPLICATIONS.stop_and_remove_application, args=(device_model,)).start()
             del self.device_models_by_rm_ids[closed_connection.dest_id]
             LOGGER.info('CEM model %s was notified that connection '
                         'from %s was closed due to %s.', self.model_id, closed_connection.dest_id, reason)

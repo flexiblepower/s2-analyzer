@@ -65,11 +65,15 @@ class DeviceModel(AsyncApplication):
             'PowerMeasurement': self.handle_power_measurement,
         }
 
+    def __str__(self):
+        return self.dev_model_id
+
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         LOGGER.info('Started device model %s', self)
         while self._running:
+            print('BEFORE RETRIEVE', self.model_connection_to_rm)
             envelope = await self.model_connection_to_rm.retrieve_next_envelope()
-
+            print('AFTER RETRIEVE')
             if not envelope.is_format_valid:
                 if 'message_id' in envelope.msg:
                     LOGGER.error('[Device model %s] received an format invalid message from %s. '
@@ -99,11 +103,11 @@ class DeviceModel(AsyncApplication):
         return f'Device model {self.dev_model_id} connected to {self.model_connection_to_rm}'
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
-        LOGGER.info('Stopping device model %s...', self)
         if self._main_task:
-            LOGGER.info('Stopping device model %s', self.dev_model_id)
+            LOGGER.info('Stopping device model %s...', self.dev_model_id)
             self._main_task.cancel('Request to stop')
-        LOGGER.info('Stopped device model %s', self)
+        else:
+            LOGGER.warning('Device model %s is already stopped!', self.dev_model_id)
 
     @property
     def rm_id(self):
@@ -111,9 +115,7 @@ class DeviceModel(AsyncApplication):
 
     async def receive_s2_envelope(self, envelope: 'Envelope') -> None:
         handle = self.s2_msg_type_to_callable.get(envelope.msg_type)
-        LOGGER.debug("I AM OVEREHERE NOW")
         if handle:
-            LOGGER.debug(f"HANDLING MESSAGE WITH HANDLE {handle}, {envelope.msg_type}")
             await handle(envelope)
         elif self.control_type_strategy:
             LOGGER.debug('CEM device model %s forwarded envelope to control strategy %s',
@@ -133,9 +135,7 @@ class DeviceModel(AsyncApplication):
                 'role': 'CEM',
                 'supported_protocol_versions': [S2_VERSION]
             }
-            LOGGER.debug("SHOULD BE OVERHERE NOW")
             await self.model_connection_to_rm.send_and_await_reception_status(self.handshake_send)
-            LOGGER.debug("RECEIVED THE ACK TO MY HANDSHAKE")
             self.handshake_response_send = {
                 'message_type': 'HandshakeResponse',
                 'message_id': str(uuid.uuid4()),
