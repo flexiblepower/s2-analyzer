@@ -66,7 +66,6 @@ class Connection(AsyncApplication, ABC):
         return str(self)
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
-        print(self, self._main_task.done(), self._main_task.cancelled())
         if self._main_task and not self._main_task.done() and not self._main_task.cancelled():
             LOGGER.info('Stopping connection from %s to %s', self.origin_id, self.dest_id)
             self._main_task.cancel('Request to stop')
