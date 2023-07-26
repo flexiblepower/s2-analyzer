@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import itertools
 import logging
@@ -7,6 +8,7 @@ import uuid
 from s2_analyzer_backend.cem_model_simple.common import (CemModelS2DeviceControlStrategy,
                                                          NumericalRange,
                                                          get_active_s2_message)
+from s2_analyzer_backend.cem_model_simple.reception_status_awaiter import ReceptionStatusAwaiter
 from s2_analyzer_backend.common import parse_timestamp_as_utc
 
 if TYPE_CHECKING:
@@ -21,6 +23,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
     DELAY_IN_INSTRUCTIONS = datetime.timedelta(seconds=2)
 
     s2_device_model: 'DeviceModel'
+    reception_status_awaiter: ReceptionStatusAwaiter
 
     system_descriptions: 'list[S2Message]'
     actuator_status_per_actuator_id: 'dict[str, S2Message]'
@@ -35,8 +38,9 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
     s2_msg_type_to_callable: 'dict[str, Callable[[Envelope], None]]'
 
-    def __init__(self, s2_device_model: 'DeviceModel'):
+    def __init__(self, s2_device_model: 'DeviceModel', reception_status_awaiter: ReceptionStatusAwaiter):
         self.s2_device_model = s2_device_model
+        self.reception_status_awaiter = reception_status_awaiter
 
         self.s2_msg_type_to_callable = {
             'FRBC.SystemDescription': self.handle_system_description,
@@ -88,7 +92,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
     def handle_storage_status(self, envelope: 'Envelope') -> None:
         self.expected_fill_level_at_end_of_timestep = envelope.msg['present_fill_level']
 
-    def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> 'list[S2Message]':
+    async def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime):
         LOGGER.debug('[%s] tick starts.', self.s2_device_model.dev_model_id)
         active_system_description = get_active_s2_message(timestep_start,
                                                           lambda m: parse_timestamp_as_utc(m['valid_from']),
@@ -96,7 +100,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         if not active_system_description:
             LOGGER.info('[%s] Did not have an active system description this tick.',
                         self.s2_device_model.dev_model_id)
-            return []
+            return
 
         LOGGER.debug('[%s] Active system description: %s.',
                      self.s2_device_model.dev_model_id,
@@ -172,8 +176,8 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
             instructions = []
 
-        return instructions
-        # TODO UNIT TESTSSSSSSS
+        await asyncio.gather(*[self.s2_device_model.send_and_await_reception_status(instruction)
+                               for instruction in instructions])
 
     @staticmethod
     def get_expected_fill_level_at_end_of_timestep(fill_level_at_start_of_timestep: float,

@@ -6,21 +6,43 @@ import websockets
 import pytz
 
 
+async def send_message_and_receive_ack(websocket, log_msg: str, msg: dict):
+    print(datetime.datetime.now(tz=pytz.UTC).isoformat(), f'Sending {msg["message_type"]}.')
+    await websocket.send(json.dumps(msg))
+    reception_status = await websocket.recv()
+    print(datetime.datetime.now(tz=pytz.UTC).isoformat(), f'Received RS {msg["message_type"]}', reception_status)
+
+
+async def receive_message_and_ack(websocket, log_msg: str):
+    msg = json.loads(await websocket.recv())
+    print(datetime.datetime.now(tz=pytz.UTC).isoformat(), f'Received {msg["message_type"]}', msg)
+    reception_status = {
+        'message_type': 'ReceptionStatus',
+        'subject_message_id': msg['message_id'],
+        'status': 'OK'
+    }
+    await websocket.send(json.dumps(reception_status))
+    print(datetime.datetime.now(tz=pytz.UTC).isoformat(), f'Send RS {msg["message_type"]}', reception_status)
+
+
 async def main():
     async with websockets.connect("ws://localhost:8001/backend/rm/battery1/cem/dummy_model/ws") as websocket:
-        # Send Handshake
-        await websocket.send(json.dumps({
+        # Send Handshake & recv ReceptionStatus
+        await send_message_and_receive_ack(websocket, "Handshake", {
             'message_type': 'Handshake',
             'message_id': 'm1',
             'role': 'RM',
             'supported_protocol_versions': ['0.0.1-beta']
-        }))
+        })
 
-        # Recv HandshakeResponse
-        print(await websocket.recv())
+        # Recv Handshake & send ReceptionStatus
+        await receive_message_and_ack(websocket, "Handshake")
+
+        # Recv HandshakeResponse & send ReceptionStatus
+        await receive_message_and_ack(websocket, "HandshakeResponse")
 
         # Send ResourceManagerDetails
-        await websocket.send(json.dumps({
+        await send_message_and_receive_ack(websocket, "ResourceManagerDetails", {
             'message_type': 'ResourceManagerDetails',
             'message_id': 'm3',
             'resource_id': 'battery1',
@@ -38,39 +60,39 @@ async def main():
             'currency': 'EUR',
             'provides_forecast': False,
             'provides_power_measurement_types': ['ELECTRIC.POWER.L1']
-        }))
+        })
 
-        # Recv SelectControlType (expect FRBC)
-        print(await websocket.recv())
+        # Recv SelectControlType (expect FRBC) & ReceptionStatus
+        await receive_message_and_ack(websocket, "SelectControlType (expect FRBC)")
 
         # Send PowerMeasurement
-        await websocket.send(json.dumps({
+        await send_message_and_receive_ack(websocket, "PowerMeasurement", {
             'message_type': 'PowerMeasurement',
             'message_id': 'm5',
             'measurement_timestamp': datetime.datetime.now(tz=pytz.UTC).isoformat(),
             'values': [
                 {'commodity_quantity': 'ELECTRIC.POWER.L1', 'value': 30}
             ]
-        }))
+        })
 
         # Send ActuatorStatus
-        await websocket.send(json.dumps({
+        await send_message_and_receive_ack(websocket, "FRBC.ActuatorStatus", {
             'message_type': 'FRBC.ActuatorStatus',
             'message_id': 'm6',
             'actuator_id': 'actuator1',
             'active_operation_mode_id': 'om0',
             'operation_mode_factor': 0.5
-        }))
+        })
 
         # Send StorageStatus
-        await websocket.send(json.dumps({
+        await send_message_and_receive_ack(websocket, "FRBC.StorageStatus", {
             'message_type': 'FRBC.StorageStatus',
             'message_id': 'm7',
             'present_fill_level': 85
-        }))
+        })
 
         # Send SystemDescription
-        await websocket.send(json.dumps({
+        await send_message_and_receive_ack(websocket, "FRBC.SystemDescription", {
             'message_type': 'FRBC.SystemDescription',
             'message_id': 'm8',
             'valid_from': datetime.datetime.now(tz=pytz.UTC).isoformat(),
@@ -105,10 +127,10 @@ async def main():
                 'provides_usage_forecast': False,
                 'fill_level_range': {'start_of_range': 0, 'end_of_range': 100}
             }
-        }))
+        })
 
         # Send Fill Level Target profile
-        await websocket.send(json.dumps({
+        await send_message_and_receive_ack(websocket, "FRBC.FillLevelTargetProfile", {
             'message_type': 'FRBC.FillLevelTargetProfile',
             'message_id': 'm9',
             'start_time': datetime.datetime.now(tz=pytz.UTC).isoformat(),
@@ -123,11 +145,10 @@ async def main():
                     'fill_level_range': {'start_of_range': 30, 'end_of_range': 60}
                 }
             ]
-        }))
+        })
 
         # Recv Instructions
         while True:
-            instruction = await websocket.recv()
-            print(datetime.datetime.now(tz=pytz.UTC).isoformat(), instruction)
+            await receive_message_and_ack(websocket, "Instruction")
 
 asyncio.run(main())

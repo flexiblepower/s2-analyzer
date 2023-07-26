@@ -51,8 +51,11 @@ pyproject-hooks==1.0.0
 pytest==7.2.0
     # via
     #   -r ./dev-requirements.in
+    #   pytest-asyncio
     #   pytest-cov
     #   pytest-timer
+pytest-asyncio==0.21.0
+    # via -r ./dev-requirements.in
 pytest-cov==4.0.0
     # via pytest-cover
 pytest-cover==3.0.0

@@ -32,7 +32,7 @@ class CemModelS2DeviceControlStrategy(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime):
+    async def tick(self, timestep_start: datetime.datetime, timestep_end: datetime.datetime) -> None:
         pass
 
 

@@ -4,5 +4,6 @@ pip-tools
 pytest
 pytest-coverage
 pytest-timer
+pytest-asyncio
 pylint
 mypy
