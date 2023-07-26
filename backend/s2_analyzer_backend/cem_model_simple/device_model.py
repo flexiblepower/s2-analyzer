@@ -71,9 +71,8 @@ class DeviceModel(AsyncApplication):
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         LOGGER.info('Started device model %s', self)
         while self._running:
-            print('BEFORE RETRIEVE', self.model_connection_to_rm)
             envelope = await self.model_connection_to_rm.retrieve_next_envelope()
-            print('AFTER RETRIEVE')
+
             if not envelope.is_format_valid:
                 if 'message_id' in envelope.msg:
                     LOGGER.error('[Device model %s] received an format invalid message from %s. '
