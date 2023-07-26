@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from s2_analyzer_backend.model import Model
     from fastapi import WebSocket
 
+
 class Builders:
     def __init__(self, context: 'AsyncApplications') -> None:
           self.context = context

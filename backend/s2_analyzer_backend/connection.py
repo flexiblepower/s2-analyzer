@@ -5,16 +5,17 @@ import asyncio
 import json
 import logging
 import threading
-import typing
 from fastapi import WebSocketException, WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedOK
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.async_application import APPLICATIONS
+from s2_analyzer_backend.async_selectable import AsyncSelectable
+from s2_analyzer_backend.reception_status_awaiter import ReceptionStatusAwaiter
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
     from s2_analyzer_backend.router import MessageRouter
-    from s2_analyzer_backend.envelope import Envelope
+    from s2_analyzer_backend.envelope import Envelope, S2Message
     from s2_analyzer_backend.model import Model
     from s2_analyzer_backend.origin_type import S2OriginType
     from s2_analyzer_backend.async_application import ApplicationName
@@ -34,17 +35,15 @@ class Connection(AsyncApplication, ABC):
     s2_origin_type: 'S2OriginType'
     msg_router: 'MessageRouter'
     _queue: 'asyncio.Queue[Envelope]'
-    _task: 'None | asyncio.Task'
     _running: bool
 
     def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter'):
+        super().__init__()
         self.origin_id = origin_id
         self.dest_id = dest_id
         self.s2_origin_type = origin_type
         self.msg_router = msg_router
         self._queue = msg_router.get_queue(origin_id)
-        self._running = False
-        self._task = None
         self.get_old_messages()
 
     def get_old_messages(self):
@@ -63,28 +62,13 @@ class Connection(AsyncApplication, ABC):
     async def send_envelope(self, envelope: "Envelope") -> None:
         await self._queue.put(envelope)
 
-    async def main_task(self, loop: asyncio.AbstractEventLoop) -> typing.Coroutine:
-        return self._entry()
-
-    async def _entry(self) -> None:
-        self._running = True
-        await self.entry()
-
-    @abstractmethod
-    async def entry(self) -> None:
-        pass
-
     def get_name(self) -> 'ApplicationName':
         return f"Connection from {self.origin_id} to {self.dest_id}"
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
-        self._task.cancel('Request to stop')
-        self._running = False
-
-    async def wait_till_stopped(self, timeout: 'None | float'=None) -> None:
-        await asyncio.wait(self._task,
-                           timeout=timeout,
-                           return_when=asyncio.ALL_COMPLETED)
+        if self._main_task:
+            LOGGER.info('Stopping connection from %s to %s', self.origin_id, self.dest_id)
+            self._main_task.cancel('Request to stop')
 
 
 class WebSocketConnection(Connection):
@@ -95,29 +79,46 @@ class WebSocketConnection(Connection):
     def get_connection_type(self):
         return ConnectionType.WEBSOCKET
     
-    async def entry(self) -> None:
+    async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         try:
-            await asyncio.gather(self.receiver(), self.sender())
+            async with asyncio.TaskGroup() as tg:
+                tg.create_task(self.receiver())
+                tg.create_task(self.sender())
+            #await asyncio.gather(self.receiver(), self.sender(), return_exceptions=True)
         except WebSocketDisconnect:
+            print('WEBSOCKET DISCONNECT DID BUBBLE UP!')
             threading.Thread(target=APPLICATIONS.stop_and_remove_application,args=(self,)).start()
             self.msg_router.connection_has_closed(self)
             LOGGER.info('%s %s disconnected.',
                         self.s2_origin_type.name,
                         self.origin_id)
+        except Exception as e:
+            print('CONNECTION MAIN TASK EXCEPTION')
+            import traceback
+            traceback.print_exception(e)
+            raise e
 
     async def receiver(self) -> None:
         while self._running:
             message_str = None
             try:
+                print('BEFORE READ')
                 message_str = await self.websocket.receive_text()
+                print('AFTER READ')
                 LOGGER.debug('%s sent the message: %s', self.origin_id, message_str)
                 message = json.loads(message_str)
                 await self.msg_router.route_s2_message(self, message)
+                print('AFTER ROUTE READ')
             except WebSocketException:
                 LOGGER.exception('Connection to %s %s had an exception while receiving.',
                                 self.s2_origin_type.name, self.origin_id)
             except json.JSONDecodeError:
                 LOGGER.exception('Error decoding message: %s', message_str)
+            except Exception as e:
+                print('SOMETHING HAPPENED ON CONNECTION', self, e)
+                import traceback
+                traceback.print_exception(e)
+                raise e
 
     async def sender(self) -> None:
         while self._running:
@@ -125,7 +126,9 @@ class WebSocketConnection(Connection):
             envelope = await self._queue.get()
 
             try:
+                print('SENDING ENVELOPE', envelope)
                 await self.websocket.send_text(json.dumps(envelope.msg))
+                print('AFTER SEND')
                 self._queue.task_done()
             except ConnectionClosedOK:
                 LOGGER.warning('Could not send envelope to %s %s as connection was already closed.',
@@ -137,29 +140,58 @@ class WebSocketConnection(Connection):
         LOGGER.debug("TERMINATED SENDING LOOP")
 
 
-class ModelConnection(Connection):
-    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', model: 'Model'):
+class ModelConnection(Connection, AsyncSelectable['Envelope']):
+    model: 'Model'
+    reception_status_messages: asyncio.Queue['Envelope']
+    reception_status_awaiter: ReceptionStatusAwaiter
+
+    def __init__(self,
+                 origin_id: str,
+                 dest_id: str,
+                 origin_type: 'S2OriginType',
+                 msg_router: 'MessageRouter',
+                 model: 'Model'):
         super().__init__(origin_id, dest_id, origin_type, msg_router)
         self.model = model
-        self.background_tasks = set()
-    
-    def perform_as_background_task(self, coroutine: typing.Coroutine) -> None:
-        task = asyncio.create_task(coroutine)
-        self.background_tasks.add(task)
-        task.add_done_callback(self.background_tasks.discard)
+        self.s2_messages = asyncio.Queue()
+        self.reception_status_awaiter = ReceptionStatusAwaiter()
 
     def get_connection_type(self):
         return ConnectionType.MODEL
     
-    async def entry(self) -> None:
+    async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         while self._running:
-            await self.sender()
+            await self.route_reception_status_messages()
 
-    async def sender(self) -> None:
-        envelope: "Envelope" = await self._queue.get()
-        LOGGER.debug("BEFORE RECEIVE")
-        self.perform_as_background_task(self.model.receive_envelope(envelope))
-        LOGGER.debug(f"RECEIVED at model connection {envelope}")
+    async def route_reception_status_messages(self) -> None:
+        envelope = await self._queue.get()
+
+        if envelope.msg_type == 'ReceptionStatus':
+            LOGGER.debug('Received reception status for %s from %s for device %s which is forwarded to awaiter',
+                         envelope.msg["subject_message_id"],
+                         envelope.origin,
+                         envelope.dest)
+            await self.reception_status_awaiter.receive_reception_status(envelope.msg)
+        else:
+            LOGGER.debug('Envelope %s is not a reception status so forwarded to s2 messages queue to be retrieved by '
+                         'model',
+                         envelope)
+            await self.s2_messages.put(envelope)
+
+    async def retrieve_next_envelope(self) -> 'Envelope':
+        return await self.s2_messages.get()
+
+    async def send_and_await_reception_status(self, s2_message: 'S2Message') -> 'S2Message':
+        return await self.reception_status_awaiter.send_and_await_reception_status(self,
+                                                                                   s2_message,
+                                                                                   self.msg_router,
+                                                                                   True)
+
+    async def send_and_forget(self, s2_message: 'S2Message') -> None:
+        await self.msg_router.route_s2_message(self, s2_message)
+
+    async def select_task(self) -> 'Envelope':
+        return await self.retrieve_next_envelope()
 
 
 class ConnectionType(Enum):

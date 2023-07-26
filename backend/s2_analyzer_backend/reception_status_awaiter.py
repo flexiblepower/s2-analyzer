@@ -1,20 +1,22 @@
 import asyncio
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
-from s2_analyzer_backend.connection import Connection
 from s2_analyzer_backend.envelope import S2Message
-from s2_analyzer_backend.router import MessageRouter
+
+if TYPE_CHECKING:
+    from s2_analyzer_backend.connection import Connection
+    from s2_analyzer_backend.router import MessageRouter
 
 
 class ReceptionStatusAwaiter:
-    received: dict[str, S2Message]
+    received: dict[str, 'S2Message']
     awaiting: dict[str, asyncio.Event]
 
     def __init__(self):
         self.received = {}
         self.awaiting = {}
 
-    async def wait_for_reception_status(self, message_id: str) -> Optional[S2Message]:
+    async def wait_for_reception_status(self, message_id: str) -> Optional['S2Message']:
         if message_id in self.received:
             reception_status = self.received[message_id]
         else:
@@ -33,10 +35,10 @@ class ReceptionStatusAwaiter:
         return reception_status
 
     async def send_and_await_reception_status(self,
-                                              origin: Connection,
-                                              s2_msg: S2Message,
-                                              router: MessageRouter,
-                                              raise_on_error: bool) -> S2Message:
+                                              origin: 'Connection',
+                                              s2_msg: 'S2Message',
+                                              router: 'MessageRouter',
+                                              raise_on_error: bool) -> 'S2Message':
         await router.route_s2_message(origin, s2_msg)
         reception_status = await self.wait_for_reception_status(s2_msg['message_id'])
         status = reception_status['status']
@@ -46,7 +48,7 @@ class ReceptionStatusAwaiter:
 
         return reception_status
 
-    async def receive_reception_status(self, reception_status: S2Message) -> None:
+    async def receive_reception_status(self, reception_status: 'S2Message') -> None:
         if reception_status.get('message_type') != 'ReceptionStatus':
             raise RuntimeError(f'Expected a ReceptionStatus but received message {reception_status}')
         message_id = reception_status['subject_message_id']
