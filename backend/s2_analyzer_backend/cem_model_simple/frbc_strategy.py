@@ -8,8 +8,8 @@ import uuid
 from s2_analyzer_backend.cem_model_simple.common import (CemModelS2DeviceControlStrategy,
                                                          NumericalRange,
                                                          get_active_s2_message)
-from s2_analyzer_backend.cem_model_simple.reception_status_awaiter import ReceptionStatusAwaiter
 from s2_analyzer_backend.common import parse_timestamp_as_utc
+from s2_analyzer_backend.connection import ModelConnection
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.cem_model_simple.device_model import DeviceModel
@@ -23,7 +23,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
     DELAY_IN_INSTRUCTIONS = datetime.timedelta(seconds=2)
 
     s2_device_model: 'DeviceModel'
-    reception_status_awaiter: ReceptionStatusAwaiter
+    connection: ModelConnection
 
     system_descriptions: 'list[S2Message]'
     actuator_status_per_actuator_id: 'dict[str, S2Message]'
@@ -38,9 +38,9 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
     s2_msg_type_to_callable: 'dict[str, Callable[[Envelope], None]]'
 
-    def __init__(self, s2_device_model: 'DeviceModel', reception_status_awaiter: ReceptionStatusAwaiter):
+    def __init__(self, s2_device_model: 'DeviceModel', connection: ModelConnection):
         self.s2_device_model = s2_device_model
-        self.reception_status_awaiter = reception_status_awaiter
+        self.connection = connection
 
         self.s2_msg_type_to_callable = {
             'FRBC.SystemDescription': self.handle_system_description,
@@ -176,7 +176,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
             instructions = []
 
-        await asyncio.gather(*[self.s2_device_model.send_and_await_reception_status(instruction)
+        await asyncio.gather(*[self.connection.send_and_await_reception_status(instruction)
                                for instruction in instructions])
 
     @staticmethod

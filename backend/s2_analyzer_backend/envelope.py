@@ -1,3 +1,5 @@
+import uuid
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import uuid1
 
@@ -8,8 +10,15 @@ if TYPE_CHECKING:
 S2MessageType = str
 S2Message = dict
 
-
+@dataclass
 class Envelope:
+    envelope_id: uuid.UUID
+    origin: 'Connection'
+    dest: 'Connection | None'
+    msg_type: S2MessageType
+    msg: S2Message
+    format_validation: 'FormatValidationError | None'
+
     def __init__(self,
                  origin: "Connection",
                  dest: "Connection | None",
