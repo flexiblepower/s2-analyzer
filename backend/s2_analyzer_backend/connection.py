@@ -43,13 +43,7 @@ class Connection(AsyncApplication, ABC):
         self.dest_id = dest_id
         self.s2_origin_type = origin_type
         self.msg_router = msg_router
-        self._queue = msg_router.get_queue(origin_id)
-        self.get_old_messages()
-
-    def get_old_messages(self):
-        while not self._queue.empty():
-            envelope: 'Envelope' = self._queue.get_nowait()
-            envelope.dest = self
+        self._queue = asyncio.Queue()
 
     @abstractmethod
     def get_connection_type(self):
@@ -59,7 +53,7 @@ class Connection(AsyncApplication, ABC):
     def destination_type(self):
         return self.s2_origin_type.reverse()
 
-    async def send_envelope(self, envelope: "Envelope") -> None:
+    async def receive_envelope(self, envelope: "Envelope") -> None:
         await self._queue.put(envelope)
 
     def get_name(self) -> 'ApplicationName':
@@ -105,7 +99,7 @@ class WebSocketConnection(Connection):
             message_str = None
             try:
                 message_str = await self.websocket.receive_text()
-                LOGGER.debug('%s sent the message: %s', self.origin_id, message_str)
+                LOGGER.debug('%s received message across websocket to %s: %s', self.origin_id, self.dest_id, message_str)
                 message = json.loads(message_str)
                 await self.msg_router.route_s2_message(self, message)
             except WebSocketException:
@@ -119,6 +113,7 @@ class WebSocketConnection(Connection):
             envelope = await self._queue.get()
 
             try:
+                LOGGER.debug('%s sent message across websocket to %s: %s', self.dest_id, self.origin_id, envelope)
                 await self.websocket.send_text(json.dumps(envelope.msg))
                 self._queue.task_done()
             except ConnectionClosedOK:

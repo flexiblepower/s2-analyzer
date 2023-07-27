@@ -70,19 +70,19 @@ class RestAPI(AsyncApplication):
             await websocket.accept()
             LOGGER.info('Received connection from rm %s to cem %s.', rm_id, cem_id)
         except WebSocketException:
-            LOGGER.exception('Connection from %s to %s had an exception while accepting.', rm_id, cem_id)
+            LOGGER.exception('RM WS connection from %s to %s had an exception while accepting.', rm_id, cem_id)
 
         # Creates the WebsocketConnection instance
-        conn = BUILDERS.build_ws_connection(rm_id, cem_id, S2OriginType.RM, self.msg_router, websocket)
+        conn = await BUILDERS.build_ws_connection(rm_id, cem_id, S2OriginType.RM, self.msg_router, websocket)
         await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)
 
     async def receive_new_cem_connection(self, websocket: WebSocket, cem_id: str, rm_id: str) -> None:
         try:
             await websocket.accept()
-            LOGGER.info('Received connection from rm %s to cem %s.', rm_id, cem_id)
+            LOGGER.info('Received connection from cem %s to rm %s.', cem_id, rm_id)
         except WebSocketException:
-            LOGGER.exception('Connection from %s to %s had an exception while accepting.', rm_id, cem_id)
+            LOGGER.exception('CEM WS connection from %s to %s had an exception while accepting.', cem_id, rm_id)
 
         # Creates the WebsocketConnection instance
-        conn = BUILDERS.build_ws_connection(cem_id, rm_id, S2OriginType.CEM, self.msg_router, websocket)
+        conn = await BUILDERS.build_ws_connection(cem_id, rm_id, S2OriginType.CEM, self.msg_router, websocket)
         await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)

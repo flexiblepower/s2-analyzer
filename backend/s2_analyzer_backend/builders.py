@@ -14,29 +14,17 @@ class Builders:
     def __init__(self, context: 'AsyncApplications') -> None:
           self.context = context
 
-    def build_ws_connection(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', websocket: 'WebSocket') -> 'WebSocketConnection':
+    async def build_ws_connection(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', websocket: 'WebSocket') -> 'WebSocketConnection':
         conn = WebSocketConnection(origin_id, dest_id, origin_type, msg_router, websocket)
         # Notify MessageRouter
-        msg_router.receive_new_connection(conn)
+        await msg_router.receive_new_connection(conn)
         self.context.add_and_start_application(conn)
-        '''
-        Somewhere in code:
-            msg_router.receive_new_connection(c)
-            c.link_queue(existing_inbox)
-        '''
 
-        # TODO c.start()
         return conn
 
-    def build_model_connection(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', model: 'Model') -> 'ModelConnection':
+    async def build_model_connection(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', model: 'Model') -> 'ModelConnection':
         conn = ModelConnection(origin_id, dest_id, origin_type, msg_router, model)
-        msg_router.receive_new_connection(conn)
+        await msg_router.receive_new_connection(conn)
         self.context.add_and_start_application(conn)
-        '''
-        Somewhere in code:
-            msg_router.receive_new_connection(c)
-            c.link_queue(existing_inbox)
-        '''
 
-        # TODO c.start()
         return conn
