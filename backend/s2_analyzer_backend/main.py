@@ -3,10 +3,11 @@ import logging
 from pathlib import Path
 import os
 import signal
+import threading
 
 from s2_analyzer_backend.s2_json_schema_validator import S2JsonSchemaValidator
 from s2_analyzer_backend.rest_api import RestAPI
-from s2_analyzer_backend.async_application import AsyncApplications
+from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.app_logging import LogLevel, setup_logging
 from s2_analyzer_backend.router import MessageRouter
 from s2_analyzer_backend.config import init_models
@@ -32,12 +33,11 @@ def main():
     model_registry = ModelRegistry()
     msg_router = MessageRouter(s2_validator, model_registry)
 
-    applications = AsyncApplications()
-    applications.add_application(RestAPI('0.0.0.0', 8001, msg_router))
+    APPLICATIONS.add_and_start_application(RestAPI('0.0.0.0', 8001, msg_router))
 
     def handle_exit(sig, frame):
         LOGGER.info("Received stop from signal to stop.")
-        applications.stop()
+        threading.Thread(target=APPLICATIONS.stop).start()
 
     signal.signal(signal.SIGINT, handle_exit)
     signal.signal(signal.SIGTERM, handle_exit)
@@ -45,9 +45,9 @@ def main():
 
     models = init_models(msg_router)
     for model in models:
-        applications.add_application(model)
+        APPLICATIONS.add_and_start_application(model)
         model_registry.add_model(model)
-    applications.run_all()
+    APPLICATIONS.run_all()
 
 
 if __name__ == '__main__':
