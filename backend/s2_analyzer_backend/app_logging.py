@@ -3,9 +3,6 @@ import logging
 import sys
 
 
-LOG_LEVEL = None
-
-
 class LogLevel(Enum):
     DEBUG = logging.DEBUG
     INFO = logging.INFO
@@ -28,6 +25,9 @@ class LogLevel(Enum):
             raise ValueError(f'Value {value} is not a valid log level.')
 
         return result
+
+
+LOG_LEVEL = LogLevel.DEBUG
 
 
 def setup_logging(log_level: LogLevel):

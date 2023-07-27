@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import json
-import websockets
+import websockets.client as ws
 
 import pytz
 
@@ -26,7 +26,7 @@ async def receive_message_and_ack(websocket, log_msg: str):
 
 
 async def main():
-    async with websockets.connect("ws://localhost:8001/backend/rm/battery1/cem/dummy_model/ws") as websocket:
+    async with ws.connect("ws://localhost:8001/backend/rm/battery1/cem/dummy_model/ws") as websocket:
         # Send Handshake & recv ReceptionStatus
         await send_message_and_receive_ack(websocket, "Handshake", {
             'message_type': 'Handshake',
