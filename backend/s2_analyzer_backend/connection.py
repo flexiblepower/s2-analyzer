@@ -77,7 +77,7 @@ class WebSocketConnection(Connection):
 
     def get_connection_type(self):
         return ConnectionType.WEBSOCKET
-    
+
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         try:
             async with asyncio.TaskGroup() as tg:
@@ -92,7 +92,7 @@ class WebSocketConnection(Connection):
                                 self.s2_origin_type.name,
                                 self.origin_id)
                 else:
-                    raise exc
+                    raise exc from exc_group
 
     async def receiver(self) -> None:
         while self._running:
@@ -145,7 +145,7 @@ class ModelConnection(Connection, AsyncSelectable['Envelope']):
 
     def get_connection_type(self):
         return ConnectionType.MODEL
-    
+
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         while self._running:
             await self.route_reception_status_messages()

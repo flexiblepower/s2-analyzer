@@ -14,7 +14,3 @@ async def timer_test():
 
 
 asyncio.get_event_loop().run_until_complete(asyncio.gather(test(), timer_test()))
-
-
-
-
