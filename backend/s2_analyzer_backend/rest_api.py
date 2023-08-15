@@ -2,7 +2,6 @@ import asyncio
 import logging
 from typing import Optional, TYPE_CHECKING
 
-import typing
 from fastapi import FastAPI, WebSocket, APIRouter, WebSocketException
 import uvicorn
 import uvicorn.server

@@ -1,5 +1,4 @@
 import asyncio
-import typing
 from typing import TYPE_CHECKING
 import logging
 from s2_analyzer_backend.envelope import Envelope
@@ -84,7 +83,7 @@ class MessageRouter:
         dest_type = conn.get_connection_type()
 
         if dest_type == ConnectionType.WEBSOCKET or dest_type == ConnectionType.MODEL:
-            LOGGER.debug(f"Envelope is forwarded to {conn}:  {envelope}")
+            LOGGER.debug("Envelope is forwarded to %s: %s", conn, envelope)
             await conn.receive_envelope(envelope)
         else:
             raise RuntimeError("Connection type not recognized.")

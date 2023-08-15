@@ -2,7 +2,6 @@ import abc
 import asyncio
 import logging
 import threading
-import typing
 import traceback
 
 LOGGER = logging.getLogger(__name__)

@@ -55,10 +55,9 @@ class ReceptionStatusAwaiter:
 
         if message_id in self.received:
             raise RuntimeError(f'ReceptationStatus for message_subject_id {message_id} has already been received!')
-        else:
-            self.received[message_id] = reception_status
-            awaiting = self.awaiting.get(message_id)
+        self.received[message_id] = reception_status
+        awaiting = self.awaiting.get(message_id)
 
-            if awaiting:
-                awaiting.set()
-                del self.awaiting[message_id]
+        if awaiting:
+            awaiting.set()
+            del self.awaiting[message_id]
