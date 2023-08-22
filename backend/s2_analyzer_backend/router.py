@@ -5,6 +5,7 @@ from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.connection import ConnectionType, ModelConnection
 from s2_analyzer_backend.model import ConnectionClosedReason
 from s2_analyzer_backend.globals import BUILDERS
+from s2_analyzer_backend.history import MESSAGE_HISTORY_REGISTRY
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.connection import Connection
@@ -38,6 +39,7 @@ class MessageRouter:
         buffered_messages = []
         while not buffer_queue.empty():
             buffered_messages.append(buffer_queue.get_nowait())
+            buffer_queue.task_done()
 
         return buffered_messages
 
@@ -101,7 +103,14 @@ class MessageRouter:
         model = self.model_registry.lookup_by_id(conn.dest_id)
         if model:
             model_conn = await BUILDERS.build_model_connection(conn.dest_id, conn.origin_id, conn.s2_origin_type.reverse(), self, model)
-            self.connections[(model_conn.origin_id, model_conn.dest_id)] = model_conn
+            msg_history = model_conn.msg_history
+            async def model_conn_handler():
+                await model_conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)
+                msg_history.notify_terminated_conn(model_conn.origin_id)
+                MESSAGE_HISTORY_REGISTRY.remove_log(msg_history)
+
+            asyncio.create_task(model_conn_handler())
+
             model.receive_new_connection(model_conn)
 
     def connection_has_closed(self, conn: "Connection") -> None:
