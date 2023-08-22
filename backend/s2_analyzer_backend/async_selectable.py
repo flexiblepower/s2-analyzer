@@ -14,7 +14,7 @@ class AsyncSelectable(ABC, Generic[S]):
     async def select_task(self) -> 'S':
         pass
 
-    def _set_last_select_result(self, select_result: 'S') -> None:
+    def set_last_select_result(self, select_result: 'S') -> None:
         if self._select_result is not None:
             raise RuntimeError(f'Cannot set the last select result as it is still set with an unretrieved '
                                f'value {self._select_result}')
@@ -60,7 +60,7 @@ class AsyncSelect(Generic[S]):
             completed_selectable = self._task_for_selectable.inverse[complete_task]
             del self._task_for_selectable[completed_selectable]
             completed_selectables.append(completed_selectable)
-            completed_selectable._set_last_select_result(complete_task.result())
+            completed_selectable.set_last_select_result(complete_task.result())
 
         pending_selectables = []
         for pending_task in pending:
