@@ -56,7 +56,7 @@ class MessageHistory(AsyncApplication):
             self._cem_terminated = True
         if conn_id == self.rm:
             self._rm_terminated = True
-        
+
         if self._cem_terminated and self._rm_terminated:
             threading.Thread(target=APPLICATIONS.stop_and_remove_application, args=(self,)).start()
 
@@ -76,9 +76,9 @@ class MessageHistoryRegistry():
             msg_history = MessageHistory(cem, rm)
             self._logs[log_key] = msg_history
             return msg_history, True
-        else:
-            msg_history = self._logs[log_key]
-            return msg_history, False
+        
+        msg_history = self._logs[log_key]
+        return msg_history, False
 
     def remove_log(self, msg_history: MessageHistory) -> bool:
         if msg_history in self._logs.inverse:

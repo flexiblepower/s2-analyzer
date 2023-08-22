@@ -7,10 +7,10 @@ def now_as_utc() -> datetime.datetime:
 
 
 def parse_timestamp_as_utc(timestamp_str: str) -> datetime.datetime:
-    dt = datetime.datetime.fromisoformat(timestamp_str)
+    date_time = datetime.datetime.fromisoformat(timestamp_str)
 
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=pytz.UTC)
+    if date_time.tzinfo is None:
+        date_time = date_time.replace(tzinfo=pytz.UTC)
     else:
-        dt = dt.astimezone(pytz.UTC)
-    return dt
+        date_time = date_time.astimezone(pytz.UTC)
+    return date_time
