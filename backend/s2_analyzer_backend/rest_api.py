@@ -9,7 +9,6 @@ import uvicorn.server
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.globals import BUILDERS
 from s2_analyzer_backend.origin_type import S2OriginType
-from s2_analyzer_backend.history import MESSAGE_HISTORY_REGISTRY
 import s2_analyzer_backend.app_logging
 
 if TYPE_CHECKING:
@@ -74,10 +73,7 @@ class RestAPI(AsyncApplication):
 
         # Creates the WebsocketConnection instance
         conn = await BUILDERS.build_ws_connection(rm_id, cem_id, S2OriginType.RM, self.msg_router, websocket)
-        msg_history = conn.msg_history
         await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)
-        msg_history.notify_terminated_conn(rm_id)
-        MESSAGE_HISTORY_REGISTRY.remove_log(msg_history)
 
     async def receive_new_cem_connection(self, websocket: WebSocket, cem_id: str, rm_id: str) -> None:
         try:
@@ -88,7 +84,4 @@ class RestAPI(AsyncApplication):
 
         # Creates the WebsocketConnection instance
         conn = await BUILDERS.build_ws_connection(cem_id, rm_id, S2OriginType.CEM, self.msg_router, websocket)
-        msg_history = conn.msg_history
         await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)
-        msg_history.notify_terminated_conn(cem_id)
-        MESSAGE_HISTORY_REGISTRY.remove_log(msg_history)
