@@ -25,6 +25,8 @@ class Builders:
         await msg_router.receive_new_connection(conn)
         self.context.add_and_start_application(conn)
 
+        msg_history.add_connection(conn)
+
         return conn
 
     async def build_model_connection(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', model: 'Model') -> 'ModelConnection':
@@ -35,5 +37,7 @@ class Builders:
         conn = ModelConnection(origin_id, dest_id, origin_type, msg_router, msg_history, model)
         await msg_router.receive_new_connection(conn)
         self.context.add_and_start_application(conn)
+
+        msg_history.add_connection(conn)
 
         return conn

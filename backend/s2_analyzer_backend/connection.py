@@ -96,6 +96,8 @@ class WebSocketConnection(Connection):
                                 self.origin_id)
                 else:
                     raise exc from exc_group
+        finally:
+            self.msg_history.notify_terminated_conn(self)
 
     async def receiver(self) -> None:
         while self._running:
@@ -103,6 +105,7 @@ class WebSocketConnection(Connection):
             try:
                 message_str = await self.websocket.receive_text()
                 LOGGER.debug('%s received message across websocket to %s: %s', self.origin_id, self.dest_id, message_str)
+                self.msg_history.receive_line(f"[Message received][Sender: {self.s2_origin_type.value} {self.origin_id}][Receiver: {self.destination_type.value} {self.dest_id}] Message: {message_str}")
                 message = json.loads(message_str)
                 await self.msg_router.route_s2_message(self, message)
             except WebSocketException:
@@ -151,8 +154,11 @@ class ModelConnection(Connection, AsyncSelectable['Envelope']):
         return ConnectionType.MODEL
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
-        while self._running:
-            await self.route_reception_status_messages()
+        try:
+            while self._running:
+                await self.route_reception_status_messages()
+        finally:
+            self.msg_history.notify_terminated_conn(self)
 
     async def route_reception_status_messages(self) -> None:
         envelope = await self._queue.get()
@@ -177,10 +183,10 @@ class ModelConnection(Connection, AsyncSelectable['Envelope']):
     async def send_and_await_reception_status(self, s2_message: 'S2Message') -> 'S2Message':
         return await self.reception_status_awaiter.send_and_await_reception_status(self,
                                                                                    s2_message,
-                                                                                   self.msg_router,
                                                                                    True)
 
     async def send_and_forget(self, s2_message: 'S2Message') -> None:
+        self.msg_history.receive_line(f"[Message received][Sender: {self.s2_origin_type.value} {self.origin_id}][Receiver: {self.destination_type.value} {self.dest_id}] Message: {s2_message}")
         await self.msg_router.route_s2_message(self, s2_message)
 
     async def select_task(self) -> 'Envelope':
