@@ -7,3 +7,4 @@ pytz
 dataclass-wizard[yaml]~=0.22.2
 bidict~=0.22.1
 aiofiles~=23.2.1
+s2-python~=0.0.2
