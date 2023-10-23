@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING
 from dataclasses import dataclass, field
 from dataclass_wizard import YAMLWizard
@@ -9,24 +10,36 @@ if TYPE_CHECKING:
     from s2_analyzer_backend.router import MessageRouter
     from s2_analyzer_backend.model import Model
 
-S2_MODEL_CONF = os.getenv('S2_MODEL_CONF', 'config.yaml')
-
+S2_ANALYZER_CONF = os.getenv('S2_ANALYZER_CONF', 'config.yaml')
 
 @dataclass
-class ModelConfig(YAMLWizard):
+class ModelConfig:
     model_type: 'S2OriginType'
     model_id: str
 
 
 @dataclass
-class ModelsConfig(YAMLWizard):
-    models: list[ModelConfig] = field(default_factory=list)
+class Config(YAMLWizard):
+    http_listen_address: str
+    http_port: int
+    connection_histories_dir: str
+    models: list[ModelConfig]
+
+    @property
+    def connection_histories_dir_path(self):
+        return Path(self.connection_histories_dir)
 
 
-def read_s2_model_conf() -> 'ModelsConfig':
-    result = ModelsConfig.from_yaml_file(S2_MODEL_CONF)
-    if isinstance(result, list):
-        return result[0]
+def read_s2_analyzer_conf() -> Config:
+    print(f"Reading configuration at {S2_ANALYZER_CONF}")
+    result = Config.from_yaml_file(S2_ANALYZER_CONF)
+
+    if not result.connection_histories_dir_path.exists():
+        result.connection_histories_dir_path.mkdir(parents=True, exist_ok=True)
+
+    if not result.connection_histories_dir_path.is_dir():
+        raise RuntimeError(f"Connection histories location ({result.connection_histories_dir}) should be a directory "
+                           f"and it isn't.")
     return result
 
 
@@ -36,11 +49,13 @@ def model_create(model: 'ModelConfig', router: 'MessageRouter') -> 'Model':
     raise RuntimeError()
 
 
-def init_models(router: 'MessageRouter') -> 'list[Model]':
+def init_models(router: 'MessageRouter', config: Config) -> 'list[Model]':
     result = []
-    config = read_s2_model_conf()
 
     model: 'ModelConfig'
     for model in config.models:
         result.append(model_create(model, router))
     return result
+
+
+CONFIG = read_s2_analyzer_conf()
