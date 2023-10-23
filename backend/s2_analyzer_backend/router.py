@@ -1,5 +1,4 @@
 import asyncio
-import typing
 from typing import TYPE_CHECKING
 import logging
 from s2_analyzer_backend.envelope import Envelope
@@ -39,6 +38,7 @@ class MessageRouter:
         buffered_messages = []
         while not buffer_queue.empty():
             buffered_messages.append(buffer_queue.get_nowait())
+            buffer_queue.task_done()
 
         return buffered_messages
 
@@ -62,6 +62,7 @@ class MessageRouter:
             LOGGER.debug('%s send valid message: %s', origin.origin_id, s2_msg)
         else:
             LOGGER.warning('%s send invalid message: %s\n Error: %s', origin.origin_id, s2_msg, validation_error)
+            origin.msg_history.receive_line(f"[Message validation not successful][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_msg)} Issue:\n{str(validation_error)}")
 
         # Assemble envelope
         envelope = Envelope(origin, dest, message_type, s2_msg, validation_error)
@@ -72,6 +73,7 @@ class MessageRouter:
             LOGGER.error("Connection %s->%s is unavailable. Buffering message.", dest_id, origin.origin_id)
             queue = self._get_buffer_queue(dest_id, origin.origin_id)
             await queue.put(envelope)
+            origin.msg_history.receive_line(f"[Message buffered][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_msg)}")
         else:
             await self.route_envelope(envelope)
 
@@ -84,13 +86,16 @@ class MessageRouter:
         dest_type = conn.get_connection_type()
 
         if dest_type == ConnectionType.WEBSOCKET or dest_type == ConnectionType.MODEL:
-            LOGGER.debug(f"Envelope is forwarded to {conn}:  {envelope}")
+            LOGGER.debug("Envelope is forwarded to %s: %s", conn, envelope)
+            conn.msg_history.receive_line(f"[Message forwarded][Sender: {conn.s2_origin_type.value} {conn.origin_id}][Receiver: {conn.destination_type.value} {conn.dest_id}] Message: {str(envelope.msg)}")
             await conn.receive_envelope(envelope)
         else:
             raise RuntimeError("Connection type not recognized.")
 
     async def receive_new_connection(self, conn: "Connection") -> None:
         self.connections[(conn.origin_id, conn.dest_id)] = conn
+        conn.msg_history.receive_line(f"Connection initiated from '{conn.origin_id}' to S2-analyzer.")
+
         buffered_messages = self._consume_buffer_queue(conn.origin_id, conn.dest_id)
 
         if buffered_messages:
@@ -102,16 +107,18 @@ class MessageRouter:
         model = self.model_registry.lookup_by_id(conn.dest_id)
         if model:
             model_conn = await BUILDERS.build_model_connection(conn.dest_id, conn.origin_id, conn.s2_origin_type.reverse(), self, model)
-            self.connections[(model_conn.origin_id, model_conn.dest_id)] = model_conn
             model.receive_new_connection(model_conn)
 
     def connection_has_closed(self, conn: "Connection") -> None:
         del self.connections[(conn.origin_id, conn.dest_id)]
+        conn.msg_history.receive_line(f"Connection from '{conn.origin_id}' to S2-analyzer has closed.")
 
         model = self.model_registry.lookup_by_id(conn.dest_id)
         if model:
             model_conn = self.get_reverse_connection(conn.origin_id, conn.dest_id)
             if isinstance(model_conn, ModelConnection):
                 model.connection_has_closed(model_conn, ConnectionClosedReason.DISCONNECT)
+                del self.connections[(model_conn.origin_id, model_conn.dest_id)]
+                model_conn.msg_history.receive_line(f"Connection from '{model_conn.origin_id}' to S2-analyzer has closed.")
             else:
                 raise ValueError("Unexpected destination connection type")

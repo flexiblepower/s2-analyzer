@@ -55,8 +55,8 @@ class S2JsonSchemaValidator:
             try:
                 jsonschema.validate(instance=message, schema=schema, resolver=self.resolver)
                 result = None
-            except jsonschema.ValidationError as e:
-                result = e
+            except jsonschema.ValidationError as ex:
+                result = ex
         else:
             result = FormatValidationError(f'There is no schema loaded for message type {message_type}.')
 

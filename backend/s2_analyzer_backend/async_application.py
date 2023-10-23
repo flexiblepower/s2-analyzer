@@ -2,7 +2,6 @@ import abc
 import asyncio
 import logging
 import threading
-import typing
 import traceback
 
 LOGGER = logging.getLogger(__name__)
@@ -93,7 +92,7 @@ class AsyncApplication(abc.ABC):
                                    timeout: 'None | float',
                                    kill_after_timeout: bool = False,
                                    raise_on_timeout: bool = False) -> None:
-        done, pending = await asyncio.wait([self._main_task],
+        _, pending = await asyncio.wait([self._main_task],
                                            timeout=timeout,
                                            return_when=asyncio.ALL_COMPLETED)
 
