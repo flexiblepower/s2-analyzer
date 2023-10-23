@@ -19,6 +19,7 @@ LOGGER = logging.getLogger(__name__)
 S2_MESSAGE_HISTORY_FILE_PREFIX = os.getenv('S2_MESSAGE_HISTORY_FILE_PREFIX', 'history')
 S2_MESSAGE_HISTORY_FILE_SUFFIX = os.getenv('S2_MESSAGE_HISTORY_FILE_SUFFIX', '.txt')
 
+
 class MessageHistory(AsyncApplication):
     cem: 'Optional[Connection]'
     rm: 'Optional[Connection]'
@@ -59,7 +60,7 @@ class MessageHistory(AsyncApplication):
             LOGGER.warning('Message history %s was already stopped!', self)
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
-        filename = f"{S2_MESSAGE_HISTORY_FILE_PREFIX}_{self._cem_id}_to_{self._rm_id}_{S2_MESSAGE_HISTORY_FILE_SUFFIX}"
+        filename = f"{S2_MESSAGE_HISTORY_FILE_PREFIX}_{self._cem_id}_to_{self._rm_id}{S2_MESSAGE_HISTORY_FILE_SUFFIX}"
         async with aiofiles.open(filename, mode='at+') as file:
             async def handle_line(line: str):
                 await file.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {line}\n")
@@ -130,5 +131,6 @@ class MessageHistoryRegistry():
         log_key = (cem, rm,)
         if log_key in self._logs:
             del self._logs[log_key]
+
 
 MESSAGE_HISTORY_REGISTRY = MessageHistoryRegistry()
