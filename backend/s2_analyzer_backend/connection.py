@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from s2_analyzer_backend.model import Model
     from s2_analyzer_backend.origin_type import S2OriginType
     from s2_analyzer_backend.async_application import ApplicationName
+    from s2_analyzer_backend.history import MessageHistory
 
 
 LOGGER = logging.getLogger(__name__)
@@ -35,14 +36,15 @@ class Connection(AsyncApplication, ABC):
     s2_origin_type: 'S2OriginType'
     msg_router: 'MessageRouter'
     _queue: 'asyncio.Queue[Envelope]'
-    _running: bool
+    msg_history: 'MessageHistory'
 
-    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter'):
+    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', msg_history: 'MessageHistory'):
         super().__init__()
         self.origin_id = origin_id
         self.dest_id = dest_id
         self.s2_origin_type = origin_type
         self.msg_router = msg_router
+        self.msg_history = msg_history
         self._queue = asyncio.Queue()
 
     @abstractmethod
@@ -68,8 +70,8 @@ class Connection(AsyncApplication, ABC):
 
 
 class WebSocketConnection(Connection):
-    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', websocket: 'WebSocket'):
-        super().__init__(origin_id, dest_id, origin_type, msg_router)
+    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', msg_history: 'MessageHistory', websocket: 'WebSocket'):
+        super().__init__(origin_id, dest_id, origin_type, msg_router, msg_history)
         self.websocket = websocket
 
     def __str__(self):
@@ -77,22 +79,25 @@ class WebSocketConnection(Connection):
 
     def get_connection_type(self):
         return ConnectionType.WEBSOCKET
-    
+
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         try:
-            async with asyncio.TaskGroup() as tg:
-                tg.create_task(self.receiver())
-                tg.create_task(self.sender())
+            async with asyncio.TaskGroup() as task_group:
+                task_group.create_task(self.receiver())
+                task_group.create_task(self.sender())
         except ExceptionGroup as exc_group:
             for exc in exc_group.exceptions:
                 if isinstance(exc, WebSocketDisconnect):
                     threading.Thread(target=APPLICATIONS.stop_and_remove_application, args=(self,)).start()
+                    #loop.run_in_executor(None, APPLICATIONS.stop_and_remove_application, self)
                     self.msg_router.connection_has_closed(self)
                     LOGGER.info('%s %s disconnected.',
                                 self.s2_origin_type.name,
                                 self.origin_id)
                 else:
-                    raise exc
+                    raise exc from exc_group
+        finally:
+            self.msg_history.notify_terminated_conn(self)
 
     async def receiver(self) -> None:
         while self._running:
@@ -100,6 +105,7 @@ class WebSocketConnection(Connection):
             try:
                 message_str = await self.websocket.receive_text()
                 LOGGER.debug('%s received message across websocket to %s: %s', self.origin_id, self.dest_id, message_str)
+                self.msg_history.receive_line(f"[Message received][Sender: {self.s2_origin_type.value} {self.origin_id}][Receiver: {self.destination_type.value} {self.dest_id}] Message: {message_str}")
                 message = json.loads(message_str)
                 await self.msg_router.route_s2_message(self, message)
             except WebSocketException:
@@ -134,8 +140,9 @@ class ModelConnection(Connection, AsyncSelectable['Envelope']):
                  dest_id: str,
                  origin_type: 'S2OriginType',
                  msg_router: 'MessageRouter',
+                 msg_history: 'MessageHistory',
                  model: 'Model'):
-        super().__init__(origin_id, dest_id, origin_type, msg_router)
+        super().__init__(origin_id, dest_id, origin_type, msg_router, msg_history)
         self.model = model
         self.s2_messages = asyncio.Queue()
         self.reception_status_awaiter = ReceptionStatusAwaiter()
@@ -145,10 +152,13 @@ class ModelConnection(Connection, AsyncSelectable['Envelope']):
 
     def get_connection_type(self):
         return ConnectionType.MODEL
-    
+
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
-        while self._running:
-            await self.route_reception_status_messages()
+        try:
+            while self._running:
+                await self.route_reception_status_messages()
+        finally:
+            self.msg_history.notify_terminated_conn(self)
 
     async def route_reception_status_messages(self) -> None:
         envelope = await self._queue.get()
@@ -165,6 +175,7 @@ class ModelConnection(Connection, AsyncSelectable['Envelope']):
                          self,
                          envelope)
             await self.s2_messages.put(envelope)
+        self._queue.task_done()
 
     async def retrieve_next_envelope(self) -> 'Envelope':
         return await self.s2_messages.get()
@@ -172,14 +183,16 @@ class ModelConnection(Connection, AsyncSelectable['Envelope']):
     async def send_and_await_reception_status(self, s2_message: 'S2Message') -> 'S2Message':
         return await self.reception_status_awaiter.send_and_await_reception_status(self,
                                                                                    s2_message,
-                                                                                   self.msg_router,
                                                                                    True)
 
     async def send_and_forget(self, s2_message: 'S2Message') -> None:
+        self.msg_history.receive_line(f"[Message received][Sender: {self.s2_origin_type.value} {self.origin_id}][Receiver: {self.destination_type.value} {self.dest_id}] Message: {s2_message}")
         await self.msg_router.route_s2_message(self, s2_message)
 
     async def select_task(self) -> 'Envelope':
-        return await self.retrieve_next_envelope()
+        envelope = await self.retrieve_next_envelope()
+        self.s2_messages.task_done()
+        return envelope
 
 
 class ConnectionType(Enum):

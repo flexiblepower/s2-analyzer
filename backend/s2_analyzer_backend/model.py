@@ -60,12 +60,12 @@ class DummyModel(Model):
         while self._running:
             await asyncio.sleep(1)
             for connection in self._connections:
-                # await self.msg_router.route_s2_message(c, f"Hi {c.dest_id}, this is {c.origin_id}!")
-                await self.msg_router.route_s2_message(connection, {"message_type": "FRBC.ActuatorStatus",
-                                                                    "message_id": "1234",
-                                                                    "active_operation_mode_id": "1234",
-                                                                    "operation_mode_factor": 0.5,
-                                                                    "previous_operation_mode_id": "4321"})
+                # await connection.send_and_forget(f"Hi {connection.dest_id}, this is {connection.origin_id}!")
+                await connection.send_and_forget({"message_type": "FRBC.ActuatorStatus",
+                                                  "message_id": "1234",
+                                                  "active_operation_mode_id": "1234",
+                                                  "operation_mode_factor": 0.5,
+                                                  "previous_operation_mode_id": "4321"})
 
     async def receive_task(self):
         select = AsyncSelect(self._connections)

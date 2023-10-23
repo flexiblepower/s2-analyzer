@@ -151,7 +151,6 @@ class ReceptionStatusAwaiterTest(IsolatedAsyncioTestCase):
     async def test__send_and_await_reception_status__receive_while_waiting(self):
         # Arrange
         conn = Mock()
-        router = self.router
         awaiter = ReceptionStatusAwaiter()
         message_id = '1'
         s2_message = {'message_type': 'Handshake',
@@ -163,7 +162,7 @@ class ReceptionStatusAwaiterTest(IsolatedAsyncioTestCase):
                                'status': 'OK'}
 
         # Act
-        wait_task = asyncio.create_task(awaiter.send_and_await_reception_status(conn, s2_message, router, True))
+        wait_task = asyncio.create_task(awaiter.send_and_await_reception_status(conn, s2_message, True))
         should_be_waiting_still = not wait_task.done()
         await awaiter.receive_reception_status(s2_reception_status)
         await wait_task
@@ -180,7 +179,6 @@ class ReceptionStatusAwaiterTest(IsolatedAsyncioTestCase):
     async def test__send_and_await_reception_status__receive_while_waiting_not_okay(self):
         # Arrange
         conn = Mock()
-        router = self.router
         awaiter = ReceptionStatusAwaiter()
         message_id = '1'
         s2_message = {'message_type': 'Handshake',
@@ -192,7 +190,7 @@ class ReceptionStatusAwaiterTest(IsolatedAsyncioTestCase):
                                'status': 'INVALID_MESSAGE'}
 
         # Act / Assert
-        wait_task = asyncio.create_task(awaiter.send_and_await_reception_status(conn, s2_message, router, True))
+        wait_task = asyncio.create_task(awaiter.send_and_await_reception_status(conn, s2_message, True))
         await awaiter.receive_reception_status(s2_reception_status)
 
         with self.assertRaises(RuntimeError):

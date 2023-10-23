@@ -4,8 +4,7 @@ from typing import Optional, TYPE_CHECKING
 from s2_analyzer_backend.envelope import S2Message
 
 if TYPE_CHECKING:
-    from s2_analyzer_backend.connection import Connection
-    from s2_analyzer_backend.router import MessageRouter
+    from s2_analyzer_backend.connection import ModelConnection
 
 
 class ReceptionStatusAwaiter:
@@ -35,11 +34,10 @@ class ReceptionStatusAwaiter:
         return reception_status
 
     async def send_and_await_reception_status(self,
-                                              origin: 'Connection',
+                                              origin: 'ModelConnection',
                                               s2_msg: 'S2Message',
-                                              router: 'MessageRouter',
                                               raise_on_error: bool) -> 'S2Message':
-        await router.route_s2_message(origin, s2_msg)
+        await origin.send_and_forget(s2_msg)
         reception_status = await self.wait_for_reception_status(s2_msg['message_id'])
         status = reception_status['status']
 
@@ -55,10 +53,9 @@ class ReceptionStatusAwaiter:
 
         if message_id in self.received:
             raise RuntimeError(f'ReceptationStatus for message_subject_id {message_id} has already been received!')
-        else:
-            self.received[message_id] = reception_status
-            awaiting = self.awaiting.get(message_id)
+        self.received[message_id] = reception_status
+        awaiting = self.awaiting.get(message_id)
 
-            if awaiting:
-                awaiting.set()
-                del self.awaiting[message_id]
+        if awaiting:
+            awaiting.set()
+            del self.awaiting[message_id]
