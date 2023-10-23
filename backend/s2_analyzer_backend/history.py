@@ -8,6 +8,7 @@ import aiofiles
 from bidict import bidict
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.async_application import APPLICATIONS
+from s2_analyzer_backend.config import CONFIG
 from s2_analyzer_backend.origin_type import S2OriginType
 
 if TYPE_CHECKING:
@@ -29,7 +30,7 @@ class MessageHistory(AsyncApplication):
     _cem_id: str
     _rm_id: str
 
-    def __init__(self, cem_id, rm_id) -> None:
+    def __init__(self, cem_id: str, rm_id: str) -> None:
         super().__init__()
         self.cem = None
         self.rm = None
@@ -61,7 +62,7 @@ class MessageHistory(AsyncApplication):
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         filename = f"{S2_MESSAGE_HISTORY_FILE_PREFIX}_{self._cem_id}_to_{self._rm_id}{S2_MESSAGE_HISTORY_FILE_SUFFIX}"
-        async with aiofiles.open(filename, mode='at+') as file:
+        async with aiofiles.open(CONFIG.connection_histories_dir_path / filename, mode='at+') as file:
             async def handle_line(line: str):
                 await file.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {line}\n")
                 await file.flush()
@@ -96,9 +97,11 @@ class MessageHistory(AsyncApplication):
             threading.Thread(target=APPLICATIONS.stop_and_remove_application, args=(self,)).start()
 
 
-class MessageHistoryRegistry():
+class MessageHistoryRegistry:
+    _logs: bidict[tuple[str, str], MessageHistory]
+
     def __init__(self) -> None:
-        self._logs: "bidict[tuple[str, str], MessageHistory]" = bidict()
+        self._logs = bidict()
 
     def add_log(self, origin: str, dest: str, origin_type: S2OriginType) -> tuple[MessageHistory, bool]:
         if origin_type.is_rm():
