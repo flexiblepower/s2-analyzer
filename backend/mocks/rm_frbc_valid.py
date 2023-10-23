@@ -26,11 +26,11 @@ async def receive_message_and_ack(websocket, log_msg: str):
 
 
 async def main():
-    async with ws.connect("ws://localhost:8001/backend/rm/battery1/cem/dummy_model/ws") as websocket:
+    async with ws.connect("ws://localhost:8001/backend/rm/battery1/cem/cem_mock/ws") as websocket:
         # Send Handshake & recv ReceptionStatus
         await send_message_and_receive_ack(websocket, "Handshake", {
             'message_type': 'Handshake',
-            'message_id': 'm1',
+            'message_id': '7dd55ca8-f15c-4cad-adf5-154d11a9a2e1',
             'role': 'RM',
             'supported_protocol_versions': ['0.0.1-beta']
         })
@@ -44,9 +44,9 @@ async def main():
         # Send ResourceManagerDetails
         await send_message_and_receive_ack(websocket, "ResourceManagerDetails", {
             'message_type': 'ResourceManagerDetails',
-            'message_id': 'm3',
-            'resource_id': 'battery1',
-            'name': 'Some Battery 1',
+            'message_id': '2d717c61-8500-4e8f-87a8-114b51acc08b',
+            'resource_id': '0309eaef-4fbb-4c9c-aa90-58bde4f4b07c',
+            'name': 'battery1',
             'roles': [{
                 'role': 'ENERGY_STORAGE',
                 'commodity': 'ELECTRICITY'
@@ -68,7 +68,7 @@ async def main():
         # Send PowerMeasurement
         await send_message_and_receive_ack(websocket, "PowerMeasurement", {
             'message_type': 'PowerMeasurement',
-            'message_id': 'm5',
+            'message_id': 'c18bfa3b-7bec-46e6-b859-cb8dec5f1023',
             'measurement_timestamp': datetime.datetime.now(tz=pytz.UTC).isoformat(),
             'values': [
                 {'commodity_quantity': 'ELECTRIC.POWER.L1', 'value': 30}
@@ -78,31 +78,31 @@ async def main():
         # Send ActuatorStatus
         await send_message_and_receive_ack(websocket, "FRBC.ActuatorStatus", {
             'message_type': 'FRBC.ActuatorStatus',
-            'message_id': 'm6',
-            'actuator_id': 'actuator1',
-            'active_operation_mode_id': 'om0',
+            'message_id': '207373ca-fa16-4677-9bcf-9bcc42870896',
+            'actuator_id': '69cb9071-9d77-40a6-a881-df429d5f562f',
+            'active_operation_mode_id': '3ce97655-91a1-487f-adce-26a86e282c1f',
             'operation_mode_factor': 0.5
         })
 
         # Send StorageStatus
         await send_message_and_receive_ack(websocket, "FRBC.StorageStatus", {
             'message_type': 'FRBC.StorageStatus',
-            'message_id': 'm7',
+            'message_id': '9a13c101-0795-473e-a238-2a0675b4708a',
             'present_fill_level': 85
         })
 
         # Send SystemDescription
         await send_message_and_receive_ack(websocket, "FRBC.SystemDescription", {
             'message_type': 'FRBC.SystemDescription',
-            'message_id': 'm8',
+            'message_id': 'e698768f-09e3-4328-9713-c2901e895492',
             'valid_from': datetime.datetime.now(tz=pytz.UTC).isoformat(),
             'actuators': [{
-                'id': 'actuator1',
+                'id': '69cb9071-9d77-40a6-a881-df429d5f562f',
                 'diagnostic_label': 'charge_discharge_idle',
                 'supported_commodities': ['ELECTRICITY'],
                 'operation_modes': [
                     {
-                        'id': 'om0',
+                        'id': '3ce97655-91a1-487f-adce-26a86e282c1f',
                         'diagnostic_label': 'charge_discharge_idle',
                         'elements': [{
                             'fill_level_range': {'start_of_range': 0, 'end_of_range': 100},
@@ -132,7 +132,7 @@ async def main():
         # Send Fill Level Target profile
         await send_message_and_receive_ack(websocket, "FRBC.FillLevelTargetProfile", {
             'message_type': 'FRBC.FillLevelTargetProfile',
-            'message_id': 'm9',
+            'message_id': '9aa7a698-a843-4e2d-affd-849110bf46af',
             'start_time': datetime.datetime.now(tz=pytz.UTC).isoformat(),
             'elements': [{
                     'duration': 60,

@@ -3,9 +3,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import uuid1
 
+from s2python.s2_validation_error import S2ValidationError
+
 if TYPE_CHECKING:
     from s2_analyzer_backend.connection import Connection
-    from s2_analyzer_backend.s2_json_schema_validator import FormatValidationError
 
 S2MessageType = str
 S2Message = dict
@@ -17,7 +18,7 @@ class Envelope:
     dest: 'Connection | None'
     msg_type: S2MessageType
     msg: S2Message
-    format_validation: 'FormatValidationError | None'
+    format_validation: 'S2ValidationError | None'
 
     def __init__(self,
                  origin: "Connection",

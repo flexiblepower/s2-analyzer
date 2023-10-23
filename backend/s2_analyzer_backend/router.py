@@ -1,6 +1,10 @@
 import asyncio
 from typing import TYPE_CHECKING
 import logging
+
+from s2python.s2_parser import S2Parser
+from s2python.s2_validation_error import S2ValidationError
+
 from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.connection import ConnectionType, ModelConnection
 from s2_analyzer_backend.model import ConnectionClosedReason
@@ -8,8 +12,6 @@ from s2_analyzer_backend.globals import BUILDERS
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.connection import Connection
-    from s2_analyzer_backend.envelope import S2Message
-    from s2_analyzer_backend.s2_json_schema_validator import S2JsonSchemaValidator
     from s2_analyzer_backend.model import ModelRegistry
 
 
@@ -18,13 +20,13 @@ LOGGER = logging.getLogger(__name__)
 
 class MessageRouter:
     connections: dict[tuple[str, str], "Connection"]
-    s2_validator: "S2JsonSchemaValidator"
+    s2_parser: "S2Parser"
     model_registry: "ModelRegistry"
     _buffer_queue_by_origin_dest_id: dict[tuple[str, str], asyncio.Queue]
 
-    def __init__(self, s2_validator: "S2JsonSchemaValidator", model_registry: "ModelRegistry") -> None:
+    def __init__(self, model_registry: "ModelRegistry") -> None:
         self.connections = {}
-        self.s2_validator = s2_validator
+        self.s2_parser = S2Parser()
         self.model_registry = model_registry
         self._buffer_queue_by_origin_dest_id = {}
 
@@ -45,27 +47,31 @@ class MessageRouter:
     def get_reverse_connection(self, origin_id: str, dest_id: str) -> "Connection | None":
         return self.connections.get((dest_id, origin_id))
 
-    async def route_s2_message(self, origin: "Connection", s2_msg: "S2Message") -> None:
+    async def route_s2_message(self, origin: "Connection", s2_json_msg: dict) -> None:
 
         # Find destination
         dest_id = origin.dest_id
         dest = self.get_reverse_connection(origin.origin_id, origin.dest_id)
 
         # Determine msg type
-        message_type = self.s2_validator.get_message_type(s2_msg)
+        message_type = self.s2_parser.get_message_type_from_dict(s2_json_msg)
         if message_type is None:
             raise ValueError('Unknown message type')
 
-        # Validate msg
-        validation_error = self.s2_validator.validate(s2_msg, message_type)
-        if validation_error is None:
-            LOGGER.debug('%s send valid message: %s', origin.origin_id, s2_msg)
-        else:
+        # Parse msg
+        validation_error = None
+        s2_msg = None
+        try:
+            s2_msg = self.s2_parser.parse_dict_as_any_message(s2_json_msg)
+        except S2ValidationError as e:
+            validation_error = e
             LOGGER.warning('%s send invalid message: %s\n Error: %s', origin.origin_id, s2_msg, validation_error)
-            origin.msg_history.receive_line(f"[Message validation not successful][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_msg)} Issue:\n{str(validation_error)}")
+            origin.msg_history.receive_line(f"[Message validation not successful][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_json_msg)} Issue:\n{str(validation_error)}")
+        else:
+            LOGGER.debug('%s send valid message: %s', origin.origin_id, s2_msg)
 
         # Assemble envelope
-        envelope = Envelope(origin, dest, message_type, s2_msg, validation_error)
+        envelope = Envelope(origin, dest, message_type, s2_json_msg, validation_error)
 
         # Buffer or Route
         if dest is None:
@@ -73,7 +79,7 @@ class MessageRouter:
             LOGGER.error("Connection %s->%s is unavailable. Buffering message.", dest_id, origin.origin_id)
             queue = self._get_buffer_queue(dest_id, origin.origin_id)
             await queue.put(envelope)
-            origin.msg_history.receive_line(f"[Message buffered][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_msg)}")
+            origin.msg_history.receive_line(f"[Message buffered][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_json_msg)}")
         else:
             await self.route_envelope(envelope)
 
