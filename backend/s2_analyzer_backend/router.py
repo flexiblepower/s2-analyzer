@@ -54,7 +54,7 @@ class MessageRouter:
         dest = self.get_reverse_connection(origin.origin_id, origin.dest_id)
 
         # Determine msg type
-        message_type = self.s2_parser.get_message_type_from_dict(s2_json_msg)
+        message_type = self.s2_parser.parse_message_type(s2_json_msg)
         if message_type is None:
             raise ValueError('Unknown message type')
 
@@ -62,7 +62,7 @@ class MessageRouter:
         validation_error = None
         s2_msg = None
         try:
-            s2_msg = self.s2_parser.parse_dict_as_any_message(s2_json_msg)
+            s2_msg = self.s2_parser.parse_as_any_message(s2_json_msg)
         except S2ValidationError as e:
             validation_error = e
             LOGGER.warning('%s send invalid message: %s\n Error: %s', origin.origin_id, s2_msg, validation_error)
@@ -83,6 +83,11 @@ class MessageRouter:
         else:
             await self.route_envelope(envelope)
 
+    async def _forward_envelope_to_connect(self, envelope: Envelope, conn: "Connection") -> None:
+        LOGGER.debug("Envelope is forwarded to %s: %s", conn, envelope)
+        conn.msg_history.receive_line(f"[Message forwarded][Sender: {conn.s2_origin_type.value} {conn.origin_id}][Receiver: {conn.destination_type.value} {conn.dest_id}] Message: {str(envelope.msg)}")
+        await conn.receive_envelope(envelope)
+
     async def route_envelope(self, envelope: Envelope) -> None:
         conn = envelope.dest
 
@@ -92,9 +97,7 @@ class MessageRouter:
         dest_type = conn.get_connection_type()
 
         if dest_type == ConnectionType.WEBSOCKET or dest_type == ConnectionType.MODEL:
-            LOGGER.debug("Envelope is forwarded to %s: %s", conn, envelope)
-            conn.msg_history.receive_line(f"[Message forwarded][Sender: {conn.s2_origin_type.value} {conn.origin_id}][Receiver: {conn.destination_type.value} {conn.dest_id}] Message: {str(envelope.msg)}")
-            await conn.receive_envelope(envelope)
+            await self._forward_envelope_to_connect(envelope, conn)
         else:
             raise RuntimeError("Connection type not recognized.")
 
@@ -108,7 +111,7 @@ class MessageRouter:
             LOGGER.info('[%s] connection receives %s buffered messages.', conn, len(buffered_messages))
 
         for message in buffered_messages:
-            await conn.receive_envelope(message)
+            await self._forward_envelope_to_connect(message, conn)
 
         model = self.model_registry.lookup_by_id(conn.dest_id)
         if model:
