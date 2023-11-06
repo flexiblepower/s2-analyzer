@@ -33,7 +33,7 @@ async def main():
         # Send Handshake & recv ReceptionStatus
         await send_message_and_receive_ack(websocket, "Handshake", {
             'message_type': 'Handshake',
-            'message_id': 'm1',
+            'message_id': '00ef6f72-257c-46a5-a656-07887903eb09',
             'role': 'CEM',
             'supported_protocol_versions': ['0.0.1-beta']
         })
@@ -41,7 +41,7 @@ async def main():
         # Send HandshakeResponse & recv ReceptionStatus
         await send_message_and_receive_ack(websocket, "HandshakeResponse", {
             'message_type': 'HandshakeResponse',
-            'message_id': 'm3',
+            'message_id': 'ae1b9d1c-c5ca-4ea7-aeb7-6521aa26a382',
             'selected_protocol_version': '0.0.1-beta'
         })
 
