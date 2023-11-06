@@ -40,7 +40,7 @@ pylint==3.0.2
     # via -r ./dev-requirements.in
 pyproject-hooks==1.0.0
     # via build
-pytest==7.4.2
+pytest==7.4.3
     # via
     #   -r ./dev-requirements.in
     #   pytest-asyncio
@@ -56,13 +56,13 @@ pytest-coverage==0.0
     # via -r ./dev-requirements.in
 pytest-timer==0.0.11
     # via -r ./dev-requirements.in
-tomlkit==0.12.1
+tomlkit==0.12.2
     # via pylint
 typing-extensions==4.8.0
     # via
     #   -c ./requirements.txt
     #   mypy
-wheel==0.41.2
+wheel==0.41.3
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
