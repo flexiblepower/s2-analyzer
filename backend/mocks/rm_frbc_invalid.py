@@ -4,7 +4,7 @@ import websockets.client as ws
 
 
 async def main():
-    async with ws.connect("ws://localhost:8001/backend/rm/battery1/cem/dummy_model/ws") as websocket:
+    async with ws.connect("ws://localhost:8001/backend/rm/battery2/cem/cem_mock/ws") as websocket:
         message = {'message_type': 'FRBC.ActuatorStatus',
                    'message_id': '1234',
                    # 'active_operation_mode_id': '1234', <-- Is missing. So invalid message
