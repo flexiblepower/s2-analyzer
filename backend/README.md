@@ -8,7 +8,9 @@ Per default, an FRBC CEM is available with the id `dummy_model`.
 To start the S2 analyzer using a docker container:
 ```bash
 mkdir connection_histories/
-docker run -p "8001:8001" -m "connection_histories/:/connection_histories" --rm tnoslafleur/s2-analyzer:0.0.1
+# Make any changes to deployment/config.yaml
+docker compose up --build
+# S2 analyzer is now available on port 8001
 ```
 
 An RM may then connect using the following url: `"ws://localhost:8001/backend/rm/battery1/cem/cem1/ws"`
