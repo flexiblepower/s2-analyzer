@@ -1,0 +1,5 @@
+enum RoleType{
+    ENERGY_PRODUCER,
+    ENERGY_CONSUMER,
+    ENERGY_STORAGE,
+}

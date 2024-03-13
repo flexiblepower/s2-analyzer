@@ -2,6 +2,6 @@ import MessageHeader from "./messageHeader"
 
 export default interface Handshake{
     header: MessageHeader
-    role: string
+    role: EnergyManagementRole
     supported_protocol_versions: string[]
 }

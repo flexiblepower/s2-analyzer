@@ -1,0 +1,4 @@
+enum SessionRequestType{
+    RECONNECT,
+    TERMINATE,
+}
