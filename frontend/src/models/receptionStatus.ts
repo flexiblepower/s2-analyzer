@@ -1,7 +1,8 @@
 import MessageHeader from "./messageHeader"
 
-export default interface Handshake{
+export default interface ReceptionStatus{
     header: MessageHeader
     subject_message_id: string
-    status: string
+    status: ReceptionStatusValues
+    diagnosic_label: string
 }

@@ -1,0 +1,4 @@
+enum EnergyManagementRole{
+    CEM,
+    RM,
+}
