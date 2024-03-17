@@ -1,8 +1,8 @@
 import PowerValue from "./dataStructures/powerValue"
 import MessageHeader from "./messageHeader"
 
-export default interface PowerMeasurment{
+export default interface PowerMeasurement{
     header: MessageHeader
-    measurment_timestamp: Date
+    measurement_timestamp: Date
     values: PowerValue[]
 }

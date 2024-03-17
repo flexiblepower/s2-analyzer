@@ -1,4 +1,5 @@
 import MessageHeader from "./messageHeader"
+import {InstructionStatus} from "./dataStructures/instructionStatus.ts";
 
 export default interface InstructionStatusUpdate{
     header: MessageHeader
