@@ -1,4 +1,4 @@
-import PowerForecastValue from "./powerForecast"
+import PowerForecastValue from "./powerForecastValue.ts";
 
 export default interface PowerForecastElement{
     duration: number

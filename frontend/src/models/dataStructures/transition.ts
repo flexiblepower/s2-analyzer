@@ -4,7 +4,7 @@ export default interface Transition{
     to: string
     start_timers: string[]
     blocking_timers: string[]
-    transition_costs: number
-    transition_duration: number
+    transition_costs: number |null
+    transition_duration: number | null
     abnormal_condition_only: boolean
 }
