@@ -8,3 +8,4 @@ backend/history_*_to_*.txt
 backend/connection_histories/
 
 frontend/node_modules/
+node_modules/
