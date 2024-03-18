@@ -1,45 +1,15 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-import asyncio
-import websockets
+import NavBar from "./components/NavBar/NavBar";
 
-async def receive_messages(uri):
-    async with websockets.connect(uri) as websocket:
-        while True:
-            message = await websocket.recv()
-            print(message)
-
-asyncio.run(receive_messages('ws://localhost:8000/ws'))
-
+/**
+ * The Visual Application that contains the page(s) (or components)
+ * @returns the Visual Application
+ */
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="min-h-screen bg-stephanie-color">
+      <NavBar />
+    </div>
+  );
 }
 
-export default App
+export default App;
