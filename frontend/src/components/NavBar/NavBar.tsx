@@ -2,6 +2,7 @@ import { useState } from "react";
 import tnologo from "../../assets/TNO-logo.svg";
 import s2logo from "../../assets/s2-analyzer-logo.png";
 import Terminal from "./NavBarItems/Terminal/Terminal";
+import OptionsMenu from "./NavBarItems/OptionsMenu/OptionsMenu";
 
 /**
  * The component for the Navigation Bar
@@ -52,8 +53,8 @@ function NavBar() {
           </div>
         </div>
       </nav>
-      {isVisibleTerminal && <Terminal></Terminal>}
-      {isVisibleOptions}
+      {isVisibleTerminal && <Terminal />}
+      {isVisibleOptions && <OptionsMenu />}
     </>
   );
 }
