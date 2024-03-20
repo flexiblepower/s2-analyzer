@@ -6,7 +6,7 @@ export default {
     extend: {
       colors:{
         "tno-blue": "#1A0DAB",
-        "stephanie-color": "#101014",
+        "stephanie-color": "#FFFFFF",
       }
     },
   },
