@@ -3,8 +3,7 @@ import MessageHeader from "./messageHeader"
 import {ControlType} from "./dataStructures/controlType.ts";
 import {CommodityQuantity} from "./dataStructures/commodityQuantity.ts";
 
-export default interface ResourceManagerDetails{
-    header: MessageHeader
+export default interface ResourceManagerDetails extends MessageHeader{
     resource_id: string
     name: string | null
     roles: Role[]

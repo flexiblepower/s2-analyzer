@@ -1,7 +1,6 @@
 import MessageHeader from "../messageHeader";
 
-export default interface Instruction{
-    header: MessageHeader
+export default interface Instruction extends MessageHeader{
     id: string
     actuator_id: string
     operation_mode: string
