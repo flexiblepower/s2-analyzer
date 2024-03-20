@@ -1,6 +1,5 @@
 import MessageHeader from "../messageHeader";
 
-export default interface StorageStatus{
-    header: MessageHeader
+export default interface StorageStatus extends MessageHeader{
     present_fill_level: number
 }
