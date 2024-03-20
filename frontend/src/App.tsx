@@ -1,4 +1,4 @@
-import NavBar from "./components/NavBar/NavBar";
+import Page from "./components/pages/Page";
 
 /**
  * The Visual Application that contains the page(s) (or components)
@@ -6,9 +6,7 @@ import NavBar from "./components/NavBar/NavBar";
  */
 function App() {
   return (
-    <div className="min-h-screen bg-stephanie-color">
-      <NavBar />
-    </div>
+    <Page/>
   );
 }
 
