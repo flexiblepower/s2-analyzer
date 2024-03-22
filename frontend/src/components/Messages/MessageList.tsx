@@ -1,8 +1,8 @@
 import MessageCard from "./MessageCard.tsx";
 import MessageHeader from "../../models/messageHeader.ts";
 
-interface props<T extends MessageHeader>{
-    messages: T[]
+interface props<T extends MessageHeader> {
+  messages: T[];
 }
 
 /**
@@ -10,19 +10,19 @@ interface props<T extends MessageHeader>{
  * @returns the MessageList
  */
 function MessageList<T extends MessageHeader>(props: props<T>) {
-
-    return (
-        <>
-            <div>
-                <ul>
-                    {props.messages.map((m, index)=>
-                        <li key={index} className="mt-4">
-                            <MessageCard<T> message={m}/>
-                        </li>)}
-                </ul>
-            </div>
-        </>
-    );
+  return (
+    <>
+      <div>
+        <ul>
+          {props.messages.map((m, index) => (
+            <li key={index} className="mt-4">
+              <MessageCard<T> message={m} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
 }
 
 export default MessageList;

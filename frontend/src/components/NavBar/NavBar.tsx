@@ -43,7 +43,7 @@ function NavBar() {
                   onClick={changeOptionsVisibility}
                   className="clickable-heading"
                 >
-                  <h1>Options</h1>
+                  <OptionsMenu/>
                 </div>
               </div>
             </div>
@@ -54,7 +54,6 @@ function NavBar() {
         </div>
       </nav>
       {isVisibleTerminal && <Terminal />}
-      {isVisibleOptions && <OptionsMenu />}
     </>
   );
 }
