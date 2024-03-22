@@ -1,13 +1,11 @@
-import Page from "./components/pages/Page";
+import Page from "./pages/Page";
 
 /**
  * The Visual Application that contains the page(s) (or components)
  * @returns the Visual Application
  */
 function App() {
-  return (
-    <Page/>
-  );
+  return <Page />;
 }
 
 export default App;
