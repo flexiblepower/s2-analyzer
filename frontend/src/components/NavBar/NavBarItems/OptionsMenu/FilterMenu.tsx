@@ -1,22 +1,45 @@
 import { useState } from "react";
+import MessageHeader from "../../../../models/messageHeader.ts";
 
 type SelectedFilters = {
-  REM: boolean;
-  CM: boolean;
+  CEM: boolean;
+  RM: boolean;
+  min: number | null;
+  max: number | null;
+  logs: boolean;
+  warnings: boolean;
 };
 
-function FilterMenu() {
+interface Props {
+  selected: (m:MessageHeader)=>boolean
+}
+
+function FilterMenu(props:Props) {
+
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
-    REM: false,
-    CM: false,
+    CEM: true,
+    RM: true,
+    min: null,
+    max: null,
+    logs: true,
+    warnings: true
   });
 
   const handleCheckboxChange = (option: keyof SelectedFilters) => {
     setSelectedFilters((prev) => ({
       ...prev,
       [option]: !prev[option],
-    }));
+    }))
+    updateFilter()
   };
+
+  const updateFilter = () => {
+    props.selected = (m:MessageHeader) => (
+        ((selectedFilters.CEM && m.sender=="CEM") || (selectedFilters.RM && m.sender=="RM")) &&
+        ((selectedFilters.min && selectedFilters.max) ? (m.time.getTime()>=selectedFilters.min && m.time.getTime()<=selectedFilters.max) : true) &&
+        ((selectedFilters.logs && m.message_id!=null) || (selectedFilters.warnings && m.message_id==null))
+    )
+  }
 
   return (
     <div className="relative inline-block text-left">
@@ -25,25 +48,25 @@ function FilterMenu() {
           <div className="flex items-center">
             <input
               type="checkbox"
-              id="REM"
-              checked={selectedFilters.REM}
-              onChange={() => handleCheckboxChange("REM")}
+              id="CEM"
+              checked={selectedFilters.CEM}
+              onChange={() => handleCheckboxChange("CEM")}
               className="mr-2 size-4"
             />
-            <label htmlFor="REM" className="text-lg text-gray-700">
-              REM
+            <label htmlFor="CEM" className="text-lg text-gray-700">
+              CEM
             </label>
           </div>
           <div className="flex items-center">
             <input
               type="checkbox"
-              id="CM"
-              checked={selectedFilters.CM}
-              onChange={() => handleCheckboxChange("CM")}
+              id="RM"
+              checked={selectedFilters.RM}
+              onChange={() => handleCheckboxChange("RM")}
               className="mr-2 size-4"
             />
-            <label htmlFor="CM" className="text-lg text-gray-700">
-              CM
+            <label htmlFor="RM" className="text-lg text-gray-700">
+              RM
             </label>
           </div>
         </div>

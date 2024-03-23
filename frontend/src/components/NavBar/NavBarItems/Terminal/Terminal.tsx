@@ -2,7 +2,7 @@ import { useState } from "react";
 import Terminal, { ColorMode, TerminalOutput } from "react-terminal-ui";
 import Draggable from "react-draggable";
 
-const TerminalController = (props = {}) => {
+const TerminalController = () => {
   const [isVisible, setIsVisible] = useState(true);
 
   if (!isVisible) {
@@ -18,7 +18,7 @@ const TerminalController = (props = {}) => {
 
   return (
     <Draggable handle=".handle">
-      <div className="container">
+      <div className="container fixed">
         <div
           className="handle"
           style={{ cursor: "move", backgroundColor: "#eee", padding: "14px" }}

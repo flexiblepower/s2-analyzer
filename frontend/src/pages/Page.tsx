@@ -4,6 +4,7 @@ import { EnergyManagementRole } from "../models/dataStructures/energyManagementR
 import MessageList from "../components/Messages/MessageList.tsx";
 import HandshakeResponse from "../models/handshakeResponse.ts";
 import MessageHeader from "../models/messageHeader.ts";
+import DeviceBox from "../components/devices/DeviceBox.tsx";
 
 const data1: Handshake = {
   time: new Date(),
@@ -29,23 +30,37 @@ const data2: HandshakeResponse = {
 const data3: MessageHeader = {
   time: new Date(),
   status: null,
-  sender: null,
+  sender: "RM",
   receiver: null,
   message_type: "Connection Lost",
   message_id: null,
 };
 
-const data = [data2, data3, data1];
+const data = [data2, data3, data1, data2, data3, data1, data2, data3, data1, data2, data3, data1, data2, data3, data1];
+const maxHeight: number = 750
+
+const selectedFilter:(m:MessageHeader)=>boolean =
+    ((m)=>(
+    (m.sender=="RM"||m.sender=="CEM") &&
+    (m.time.getTime()>0 && m.time.getTime()<1000000000000000) &&
+    (m.message_id!=null||m.message_id==null)))
 
 /**
  * The component for rendering the Single Page Application
  * @returns the Single Page Application
  */
 function Page() {
+
   return (
     <div className="min-h-screen bg-white">
-      <NavBar />
-      <MessageList<MessageHeader> messages={data}></MessageList>
+      <NavBar/>
+      <div className={"flex items-center justify-center"}>
+        <DeviceBox title={"CEM"} thickness={3} width={5} height={maxHeight}/>
+        <div style={{maxHeight: maxHeight, overflow: 'auto'}} className={"no-scrollbar"}>
+          <MessageList<MessageHeader> messages={data.filter(selectedFilter)}></MessageList>
+        </div>
+        <DeviceBox title={"RM"} thickness={3} width={5} height={maxHeight}/>
+      </div>
     </div>
   );
 }
