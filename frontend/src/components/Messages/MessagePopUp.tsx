@@ -21,6 +21,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                  fixed flex justify-center items-center transition-colors
                  ${props.trigger ? "visible" : "invisible"}
                  `}
+        style={{position: "fixed", top: "50%", bottom: "50%", left:"50%"}}
       >
         <div
           onClick={(e) => e.stopPropagation()}
