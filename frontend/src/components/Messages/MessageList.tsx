@@ -11,7 +11,6 @@ interface props<T extends MessageHeader> {
  */
 function MessageList<T extends MessageHeader>(props: props<T>) {
   return (
-    <>
       <div>
         <ul>
           {props.messages.map((m, index) => (
@@ -21,7 +20,6 @@ function MessageList<T extends MessageHeader>(props: props<T>) {
           ))}
         </ul>
       </div>
-    </>
   );
 }
 

@@ -22,12 +22,8 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
       <div className={"justify-center flex"}>
         <div>
           <table
-            className={`
-                        'items-center justify-center flex ${
-                          props.message.sender != null
-                            ? "text-blue-700"
-                            : "text-red-500"
-                        }`}
+            className={`'items-center justify-center flex 
+                          ${props.message.message_id != null ? "text-blue-700" : "text-red-500"}`}
           >
             <tbody>
               <tr>
@@ -47,16 +43,7 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
               </tr>
             </tbody>
           </table>
-          <img
-            src={
-              props.message.sender != null
-                ? props.message.sender == "RM"
-                  ? ArrowL
-                  : ArrowR
-                : Line
-            }
-            alt={props.message.sender?.toString()}
-          />
+          <img src={props.message.message_id != null ? props.message.sender == "RM" ? ArrowL : ArrowR : Line} alt={props.message.sender?.toString()}/>
           <p
             className={`${
               props.message.sender == "RM" ? "text-right" : "text-left"
