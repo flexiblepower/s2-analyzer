@@ -19,6 +19,11 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
 
   return (
     <>
+      <MessagePopUp<T>
+          trigger={isPopUpVisible}
+          setTrigger={setIsPopUpVisible}
+          message={props.message}
+      />
       <div className={"justify-center flex"}>
         <div>
           <table
@@ -60,11 +65,6 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
           </p>
         </div>
       </div>
-      <MessagePopUp<T>
-        trigger={isPopUpVisible}
-        setTrigger={setIsPopUpVisible}
-        message={props.message}
-      />
     </>
   );
 }
