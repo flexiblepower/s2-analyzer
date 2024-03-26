@@ -7,6 +7,8 @@ import MessageHeader from "../models/messageHeader.ts";
 import DeviceBox from "../components/devices/DeviceBox.tsx";
 import PowerForecast from "../models/powerForecast.ts";
 import {CommodityQuantity} from "../models/dataStructures/commodityQuantity.ts";
+import {parser} from '../parser/Parser.ts';
+import { MessageProvider,useMessages  } from '../parser/MessageContext';
 
 const data1: Handshake = {
   time: new Date(),
@@ -71,8 +73,10 @@ const data4: PowerForecast = {
       commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L1}]}]
 };
 
-const data = [data4, data2, data3, data1, data2, data3, data1, data2, data3, data1, data2, data3, data1, data2, data3, data1];
+//const data = [data4, data2, data3, data1, data2, data3, data1, data2, data3, data1, data2, data3, data1, data2, data3, data1];
 const maxHeight: number = 750
+//const parser = new Parser();
+const data = parser.getMessageList();
 
 const selectedFilter:(m:MessageHeader)=>boolean =
     ((m)=>(
@@ -87,6 +91,7 @@ const selectedFilter:(m:MessageHeader)=>boolean =
 function Page() {
 
   return (
+    <MessageProvider>
     <div className="min-h-screen bg-white">
       <NavBar/>
       <div className={"flex items-center justify-center"}>
@@ -97,6 +102,7 @@ function Page() {
         <DeviceBox title={"RM"} thickness={3} width={5} height={maxHeight}/>
       </div>
     </div>
+    </MessageProvider>
   );
 }
 

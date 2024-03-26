@@ -3,6 +3,7 @@ import tnologo from "../../assets/TNO-logo.svg";
 import s2logo from "../../assets/s2-analyzer-logo.png";
 import Terminal from "./NavBarItems/Terminal/Terminal";
 import OptionsMenu from "./NavBarItems/OptionsMenu/OptionsMenu";
+import {parser} from '../../parser/Parser.ts';
 
 /**
  * The component for the Navigation Bar
@@ -21,6 +22,10 @@ function NavBar() {
   const changeOptionsVisibility = () => {
     setIsVisibleOptions(!isVisibleOptions);
   };
+
+  const getFiles = () => {
+    parser.getLogFile();
+  }
 
   return (
     <>
@@ -44,6 +49,11 @@ function NavBar() {
                   className="clickable-heading"
                 >
                   <OptionsMenu/>
+                </div>
+              </div>
+              <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none">
+                <div onClick={getFiles}>
+                  <h1>Select Files to load</h1>
                 </div>
               </div>
             </div>
