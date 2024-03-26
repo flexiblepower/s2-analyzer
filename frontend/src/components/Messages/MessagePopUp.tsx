@@ -1,5 +1,7 @@
 import MessageHeader from "../../models/messageHeader.ts";
 import Draggable from "react-draggable";
+import PowerForecastGraph from "./special_popups/PowerForecastGraph.tsx";
+import PowerForecastElement from "../../models/dataStructures/powerForecastElement.ts";
 
 interface props<T extends MessageHeader> {
   trigger: boolean;
@@ -13,6 +15,14 @@ interface props<T extends MessageHeader> {
  */
 function MessagePopUp<T extends MessageHeader>(props: props<T>) {
   const keys = Object.keys(props.message) as (keyof T)[];
+
+  const handleSpecialMessage = () => {
+      if ("elements" in props.message && "start_time" in props.message) {
+          console.log(props.message.elements)
+          return <PowerForecastGraph data={props.message.elements as PowerForecastElement[]} start={props.message.start_time as Date}/>
+      }
+      return <></>;
+  }
 
   return (
     <Draggable>
@@ -56,12 +66,15 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                       {key.toString()}
                     </th>
                     <th className={"border-2 border-blue-900"}>
-                      {props.message[key]?.toString()}
+                        {typeof props.message[key] === 'object'
+                            ? JSON.stringify(props.message[key])
+                            : props.message[key]?.toString()}
                     </th>
                   </tr>
                 ))}
               </tbody>
             </table>
+              {handleSpecialMessage()}
           </div>
         </div>
       </div>

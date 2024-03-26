@@ -5,6 +5,8 @@ import MessageList from "../components/Messages/MessageList.tsx";
 import HandshakeResponse from "../models/handshakeResponse.ts";
 import MessageHeader from "../models/messageHeader.ts";
 import DeviceBox from "../components/devices/DeviceBox.tsx";
+import PowerForecast from "../models/powerForecast.ts";
+import {CommodityQuantity} from "../models/dataStructures/commodityQuantity.ts";
 
 const data1: Handshake = {
   time: new Date(),
@@ -36,7 +38,40 @@ const data3: MessageHeader = {
   message_id: null,
 };
 
-const data = [data2, data3, data1, data2, data3, data1, data2, data3, data1, data2, data3, data1, data2, data3, data1];
+const data4: PowerForecast = {
+  time: new Date(),
+  status: "forwarded",
+  sender: "RM",
+  receiver: "CEM",
+  message_type: "Power Forecast",
+  message_id: "edfafsafs3",
+  start_time: new Date(),
+  elements: [
+      {duration: 1000, power_values: [{value_upper_limit: 100,
+      value_upper_95PPR: 90,
+      value_upper_68PPR: 80,
+      value_expected: 70,
+      value_lower_68PPR: 60,
+      value_lower_95PPR: 50,
+      value_lower_limit: 60,
+      commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L1}, {value_upper_limit: 110,
+      value_upper_95PPR: 100,
+      value_upper_68PPR: 90,
+      value_expected: 80,
+      value_lower_68PPR: 70,
+      value_lower_95PPR: 60,
+      value_lower_limit: 50,
+      commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L1}, {value_upper_limit: 120,
+      value_upper_95PPR: 110,
+      value_upper_68PPR: 100,
+      value_expected: 90,
+      value_lower_68PPR: 80,
+      value_lower_95PPR: 70,
+      value_lower_limit: 60,
+      commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L1}]}]
+};
+
+const data = [data4, data2, data3, data1, data2, data3, data1, data2, data3, data1, data2, data3, data1, data2, data3, data1];
 const maxHeight: number = 750
 
 const selectedFilter:(m:MessageHeader)=>boolean =
