@@ -3,7 +3,7 @@ import Buffered from "../../assets/buffered.png";
 import Revoked from "../../assets/revoked.png";
 import Valid from "../../assets/valid.png";
 import ReceptionStatus from "../../models/receptionStatus.ts";
-import MessagePopUp from "./MessagePopUp.tsx";
+import MessagePopUp from "../popups/MessagePopUp.tsx";
 import {useState} from "react";
 
 interface props {

@@ -2,7 +2,7 @@ import { useState } from "react";
 import ArrowL from "../../assets/ArrowL.png";
 import ArrowR from "../../assets/ArrowR.png";
 import Line from "../../assets/line.png";
-import MessagePopUp from "./MessagePopUp.tsx";
+import MessagePopUp from "../popups/MessagePopUp.tsx";
 import MessageHeader from "../../models/messageHeader.ts";
 import ReceptionStatusIcon from "./ReceptionStatus.tsx";
 
