@@ -1,6 +1,8 @@
+import ReceptionStatus from "./receptionStatus.ts";
+
 export default interface MessageHeader{
    time: Date
-   status: string | null
+   status: ReceptionStatus | string
    sender: string | null
    receiver: string | null
    message_type: string

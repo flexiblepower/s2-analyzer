@@ -4,7 +4,7 @@ import ArrowR from "../../assets/ArrowR.png";
 import Line from "../../assets/line.png";
 import MessagePopUp from "./MessagePopUp.tsx";
 import MessageHeader from "../../models/messageHeader.ts";
-import ReceptionStatus from "./ReceptionStatus.tsx";
+import ReceptionStatusIcon from "./ReceptionStatus.tsx";
 
 interface props<T extends MessageHeader> {
   message: T;
@@ -42,13 +42,13 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
                 </th>
                 {props.message.status && (
                   <th>
-                    <ReceptionStatus status={props.message.status} />
+                    <ReceptionStatusIcon status={props.message.status} />
                   </th>
                 )}
               </tr>
             </tbody>
           </table>
-          <img src={props.message.message_id != null ? props.message.sender == "RM" ? ArrowL : ArrowR : Line} alt={props.message.sender?.toString()}/>
+          <img src={props.message.message_id != null ? props.message.sender?.split(' ')[0] == "RM" ? ArrowL : ArrowR : Line} alt={props.message.sender?.toString()}/>
           <p
             className={`${
               props.message.sender == "RM" ? "text-right" : "text-left"

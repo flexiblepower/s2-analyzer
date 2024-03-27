@@ -2,19 +2,16 @@ import { useState } from "react";
 import Terminal, { ColorMode, TerminalOutput } from "react-terminal-ui";
 import Draggable from "react-draggable";
 
-const TerminalController = () => {
+interface Props {
+    lines: string
+}
+
+function TerminalController(props: Props) {
   const [isVisible, setIsVisible] = useState(true);
 
   if (!isVisible) {
-    return null;
+      return null;
   }
-
-  const terminalOutput = `21/03/2024, 02:51 pm Handshake Sent {"status": "forwarded", "sender": "RM", "receiver": "CEM", "message_type": "Handshake", "message_id": "edfafsafs3", "role": "CEM", "supported_protocol_versions": null}
-  
-  \n21/03/2024, 02:51 pm Handshake Response Received {"status": "buffered", "sender": "CEM", "receiver": "RM", "message_type": "HandshakeResponse", "message_id": "edfafsafs3", "selected_protocol_version": "e"}
-  
-  \n21/03/2024, 02:51 pm Notification {"message_type": "Connection Lost"}
-  `;
 
   return (
     <Draggable handle=".handle">
@@ -56,11 +53,11 @@ const TerminalController = () => {
           name="Terminal"
           colorMode={ColorMode.Dark}
         >
-          <TerminalOutput>{terminalOutput}</TerminalOutput>
+          <TerminalOutput>{props.lines}</TerminalOutput>
         </Terminal>
       </div>
     </Draggable>
   );
-};
+}
 
 export default TerminalController;
