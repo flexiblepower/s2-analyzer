@@ -4,8 +4,7 @@ import MessageHeader from "../models/messageHeader.ts";
 import DeviceBox from "../components/devices/DeviceBox.tsx";
 import PowerForecast from "../models/powerForecast.ts";
 import {CommodityQuantity} from "../models/dataStructures/commodityQuantity.ts";
-import {MessageProvider} from '../parser/MessageContext';
-import {useState} from "react";
+import {useState, useRef} from "react";
 import UsageForecast from "../models/frbc/usageForecast.ts";
 
 const data4: PowerForecast = {
@@ -144,12 +143,11 @@ const data5: UsageForecast = {
  * @returns the Single Page Application
  */
 function Page() {
-    const maxHeight = 750;
+    const maxHeight = (useRef(window.innerHeight).current)*0.75;
     const [data, setData] = useState([] as MessageHeader[]);
     const [selectedFilter, setSelectedFilter] = useState(()=>{return (m: MessageHeader) => true});
     return (
-        <MessageProvider>
-            <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white">
             <NavBar filter={setSelectedFilter} messages={setData}/>
             <div className={"flex items-center justify-center"}>
                 <DeviceBox title={"CEM"} thickness={3} width={5} height={maxHeight}/>
@@ -158,8 +156,7 @@ function Page() {
                 </div>
                 <DeviceBox title={"RM"} thickness={3} width={5} height={maxHeight}/>
             </div>
-            </div>
-        </MessageProvider>
+        </div>
   );
 }
 
