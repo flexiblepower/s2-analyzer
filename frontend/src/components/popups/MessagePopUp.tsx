@@ -1,8 +1,8 @@
 import MessageHeader from "../../models/messageHeader.ts";
 import Draggable from "react-draggable";
-import PowerForecastGraph from "./special_popups/PowerForecastGraph.tsx";
+import PowerForecastGraph from "./PowerForecastGraph.tsx";
 import PowerForecastElement from "../../models/dataStructures/powerForecastElement.ts";
-import UsageForecastGraph from "./special_popups/UsageForecastGraph.tsx";
+import UsageForecastGraph from "./UsageForecastGraph.tsx";
 import UsageForecastElement from "../../models/dataStructures/frbc/usageForecastElement.ts";
 
 interface props<T extends MessageHeader> {
