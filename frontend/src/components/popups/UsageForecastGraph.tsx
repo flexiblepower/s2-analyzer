@@ -1,4 +1,4 @@
-import UsageForecastElement from "../../../models/dataStructures/frbc/usageForecastElement.ts";
+import UsageForecastElement from "../../models/dataStructures/frbc/usageForecastElement.ts";
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,

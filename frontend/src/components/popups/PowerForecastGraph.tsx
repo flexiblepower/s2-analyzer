@@ -1,4 +1,4 @@
-import PowerForecastElement from "../../../models/dataStructures/powerForecastElement.ts";
+import PowerForecastElement from "../../models/dataStructures/powerForecastElement.ts";
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -9,7 +9,7 @@ import {
     Legend,
     Tooltip
 } from "chart.js";
-import {CommodityQuantity} from "../../../models/dataStructures/commodityQuantity.ts";
+import {CommodityQuantity} from "../../models/dataStructures/commodityQuantity.ts";
 
 interface Props {
     data: PowerForecastElement[]

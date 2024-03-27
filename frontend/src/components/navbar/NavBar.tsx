@@ -1,8 +1,8 @@
 import { useState } from "react";
 import tnologo from "../../assets/TNO-logo.svg";
 import s2logo from "../../assets/s2-analyzer-logo.png";
-import Terminal from "./NavBarItems/Terminal/Terminal";
-import OptionsMenu from "./NavBarItems/OptionsMenu/OptionsMenu";
+import Terminal from "./navbar_items/terminal/Terminal";
+import OptionsMenu from "./navbar_items/optionsmenu/OptionsMenu";
 import {parser} from '../../parser/Parser.ts';
 import MessageHeader from "../../models/messageHeader.ts";
 

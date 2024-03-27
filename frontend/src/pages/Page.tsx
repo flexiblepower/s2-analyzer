@@ -1,5 +1,5 @@
-import NavBar from "../components/NavBar/NavBar.tsx";
-import MessageList from "../components/Messages/MessageList.tsx";
+import NavBar from "../components/navbar/NavBar.tsx";
+import MessageList from "../components/messages/MessageList.tsx";
 import MessageHeader from "../models/messageHeader.ts";
 import DeviceBox from "../components/devices/DeviceBox.tsx";
 import PowerForecast from "../models/powerForecast.ts";
