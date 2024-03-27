@@ -2,6 +2,8 @@ import MessageHeader from "../../models/messageHeader.ts";
 import Draggable from "react-draggable";
 import PowerForecastGraph from "./special_popups/PowerForecastGraph.tsx";
 import PowerForecastElement from "../../models/dataStructures/powerForecastElement.ts";
+import UsageForecastGraph from "./special_popups/UsageForecastGraph.tsx";
+import UsageForecastElement from "../../models/dataStructures/frbc/usageForecastElement.ts";
 
 interface props<T extends MessageHeader> {
   trigger: boolean;
@@ -17,11 +19,24 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
   const keys = Object.keys(props.message) as (keyof T)[];
 
   const handleSpecialMessage = () => {
-      if ("elements" in props.message && "start_time" in props.message) {
-          console.log(props.message.elements)
+      if (props.message.message_type == "PowerForecast") {
           return <PowerForecastGraph data={props.message.elements as PowerForecastElement[]} start={props.message.start_time as Date}/>
+      } else if (props.message.message_type == "UsageForecast") {
+          return <UsageForecastGraph data={props.message.elements as UsageForecastElement[]} start={props.message.start_time as Date}/>
       }
       return <></>;
+  }
+
+  const handleSpecialValue = (key: keyof T) => {
+      if (typeof props.message[key] === 'object') {
+          if (key=="status") {
+              return props.message.status.status
+          } else if (key=="elements") {
+              return "See graph below"
+          }
+          return JSON.stringify(props.message[key])
+      }
+      return props.message[key]?.toString()
   }
 
   return (
@@ -66,16 +81,16 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                       {key.toString()}
                     </th>
                     <th className={"border-2 border-blue-900"}>
-                        {typeof props.message[key] === 'object'
-                            ? JSON.stringify(props.message[key])
-                            : props.message[key]?.toString()}
+                        {handleSpecialValue(key)}
                     </th>
                   </tr>
                 ))}
               </tbody>
             </table>
-              {handleSpecialMessage()}
           </div>
+            <div>
+                {handleSpecialMessage()}
+            </div>
         </div>
       </div>
     </Draggable>

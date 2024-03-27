@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import MessageHeader from "../../../../models/messageHeader.ts";
 
 type SelectedFilters = {
@@ -11,7 +11,7 @@ type SelectedFilters = {
 };
 
 interface Props {
-  selected: (m:MessageHeader)=>boolean
+  selected: React.Dispatch<React.SetStateAction<(m: MessageHeader) => boolean>>
 }
 
 function FilterMenu(props:Props) {
@@ -34,11 +34,11 @@ function FilterMenu(props:Props) {
   };
 
   const updateFilter = () => {
-    props.selected = (m:MessageHeader) => (
+    props.selected((m:MessageHeader) => (
         ((selectedFilters.CEM && m.sender=="CEM") || (selectedFilters.RM && m.sender=="RM")) &&
         ((selectedFilters.min && selectedFilters.max) ? (m.time.getTime()>=selectedFilters.min && m.time.getTime()<=selectedFilters.max) : true) &&
         ((selectedFilters.logs && m.message_id!=null) || (selectedFilters.warnings && m.message_id==null))
-    )
+    ))
   }
 
   return (
