@@ -34,17 +34,17 @@ function NavBar(props:Props) {
                   <img src={tnologo} alt="TNO logo"/>
                 </div>
               </div>
-              <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none">
+              <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none hover:scale-110">
                 <div onClick={getFiles}>
                   <h1>Load File</h1>
                 </div>
               </div>
-              <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none">
+              <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none hover:scale-110">
                 <div onClick={() => setIsVisibleTerminal(!isVisibleTerminal)}>
                   <h1>Terminal</h1>
                 </div>
               </div>
-              <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none">
+              <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none hover:scale-110">
                 <div
                     onClick={() => setIsVisibleOptions(!isVisibleOptions)}
                     className="clickable-heading"
