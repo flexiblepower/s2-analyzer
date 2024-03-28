@@ -3,7 +3,7 @@ import ArrowL from "../../assets/ArrowL.png";
 import ArrowR from "../../assets/ArrowR.png";
 import Line from "../../assets/line.png";
 import MessagePopUp from "../popups/MessagePopUp.tsx";
-import MessageHeader from "../../models/messageHeader.ts";
+import MessageHeader from "../../models/messages/messageHeader.ts";
 import ReceptionStatusIcon from "./ReceptionStatus.tsx";
 
 interface props<T extends MessageHeader> {

@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import FilterMenu from "./FilterMenu";
-import MessageHeader from "../../../../models/messageHeader.ts";
+import MessageHeader from "../../../../models/messages/messageHeader.ts";
 
 interface Props {
   filter: React.Dispatch<React.SetStateAction<(m: MessageHeader) => boolean>>

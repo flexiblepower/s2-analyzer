@@ -4,7 +4,7 @@ import s2logo from "../../assets/s2-analyzer-logo.png";
 import Terminal from "./navbar_items/terminal/Terminal";
 import OptionsMenu from "./navbar_items/optionsmenu/OptionsMenu";
 import {parser} from '../../parser/Parser.ts';
-import MessageHeader from "../../models/messageHeader.ts";
+import MessageHeader from "../../models/messages/messageHeader.ts";
 
 interface Props {
   messages: React.Dispatch<React.SetStateAction<MessageHeader[]>>,

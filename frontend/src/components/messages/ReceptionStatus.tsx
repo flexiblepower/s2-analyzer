@@ -2,7 +2,7 @@ import Error from "../../assets/error.png";
 import Buffered from "../../assets/buffered.png";
 import Revoked from "../../assets/revoked.png";
 import Valid from "../../assets/valid.png";
-import ReceptionStatus from "../../models/receptionStatus.ts";
+import ReceptionStatus from "../../models/messages/receptionStatus.ts";
 import MessagePopUp from "../popups/MessagePopUp.tsx";
 import {useState} from "react";
 

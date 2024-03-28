@@ -1,4 +1,4 @@
-import MessageHeader from "../../models/messageHeader.ts";
+import MessageHeader from "../../models/messages/messageHeader.ts";
 import Draggable from "react-draggable";
 import PowerForecastGraph from "./PowerForecastGraph.tsx";
 import PowerForecastElement from "../../models/dataStructures/powerForecastElement.ts";

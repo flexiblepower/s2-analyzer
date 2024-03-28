@@ -1,11 +1,11 @@
 import NavBar from "../components/navbar/NavBar.tsx";
 import MessageList from "../components/messages/MessageList.tsx";
-import MessageHeader from "../models/messageHeader.ts";
+import MessageHeader from "../models/messages/messageHeader.ts";
 import DeviceBox from "../components/devices/DeviceBox.tsx";
-import PowerForecast from "../models/powerForecast.ts";
+import PowerForecast from "../models/messages/powerForecast.ts";
 import {CommodityQuantity} from "../models/dataStructures/commodityQuantity.ts";
 import {useState, useRef} from "react";
-import UsageForecast from "../models/frbc/usageForecast.ts";
+import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 
 const data4: PowerForecast = {
   time: new Date(),
