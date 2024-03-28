@@ -1,7 +1,7 @@
-import Role from "./dataStructures/role"
+import Role from "../dataStructures/role"
 import MessageHeader from "./messageHeader"
-import {ControlType} from "./dataStructures/controlType.ts";
-import {CommodityQuantity} from "./dataStructures/commodityQuantity.ts";
+import {ControlType} from "../dataStructures/controlType.ts";
+import {CommodityQuantity} from "../dataStructures/commodityQuantity.ts";
 
 export default interface ResourceManagerDetails extends MessageHeader{
     resource_id: string

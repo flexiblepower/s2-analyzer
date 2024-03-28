@@ -1,5 +1,5 @@
 import MessageCard from "./MessageCard.tsx";
-import MessageHeader from "../../models/messageHeader.ts";
+import MessageHeader from "../../models/messages/messageHeader.ts";
 
 interface props<T extends MessageHeader> {
   messages: T[];

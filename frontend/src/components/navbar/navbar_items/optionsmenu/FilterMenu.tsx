@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import MessageHeader from "../../../../models/messageHeader.ts";
+import MessageHeader from "../../../../models/messages/messageHeader.ts";
 
 type SelectedFilters = {
   CEM: boolean;

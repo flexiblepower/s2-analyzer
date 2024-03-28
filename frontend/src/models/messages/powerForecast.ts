@@ -1,4 +1,4 @@
-import PowerForecastElement from "./dataStructures/powerForecastElement"
+import PowerForecastElement from "../dataStructures/powerForecastElement"
 import MessageHeader from "./messageHeader"
 
 export default interface PowerForecast extends MessageHeader{
