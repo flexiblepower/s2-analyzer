@@ -1,4 +1,4 @@
-import {ReceptionStatusValues} from "../dataStructures/receptionStatusValues.ts";
+import {ReceptionStatusValues} from "./receptionStatusValues.ts";
 
 export default interface ReceptionStatus {
     time: Date

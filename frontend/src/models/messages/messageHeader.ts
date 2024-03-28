@@ -1,4 +1,4 @@
-import ReceptionStatus from "./receptionStatus.ts";
+import ReceptionStatus from "../dataStructures/receptionStatus.ts";
 
 export default interface MessageHeader{
    time: Date
