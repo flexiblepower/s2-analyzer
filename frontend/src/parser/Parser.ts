@@ -4,7 +4,7 @@ import HandshakeResponse from "../models/messages/handshakeResponse.ts";
 import InstructionStatusUpdate from "../models/messages/instructionStatusUpdate.ts";
 import PowerForecast from "../models/messages/powerForecast.ts";
 import PowerMeasurement from "../models/messages/powerMeasurement.ts";
-import ReceptionStatus from "../models/messages/receptionStatus.ts";
+import ReceptionStatus from "../models/dataStructures/receptionStatus.ts";
 import ResourceManagerDetails from "../models/messages/resourceManagerDetails.ts";
 import RevokeObject from "../models/messages/revokeObject.ts";
 import SelectControlType from "../models/messages/selectControlType.ts";
