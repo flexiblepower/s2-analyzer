@@ -2,11 +2,180 @@ import NavBar from "../components/navbar/NavBar.tsx";
 import MessageList from "../components/messages/MessageList.tsx";
 import MessageHeader from "../models/messages/messageHeader.ts";
 import DeviceBox from "../components/devices/DeviceBox.tsx";
-//import PowerForecast from "../models/messages/powerForecast.ts";
-//import { CommodityQuantity } from "../models/dataStructures/commodityQuantity.ts";
-import { useState, useRef} from "react";
-//import UsageForecast from "../models/messages/frbc/usageForecast.ts";
+import PowerForecast from "../models/messages/powerForecast.ts";
+import { CommodityQuantity } from "../models/dataStructures/commodityQuantity.ts";
+import { useState, useRef } from "react";
+import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 import { Filters } from "../models/filters.ts";
+
+const data4: PowerForecast = {
+  time: new Date(),
+  status: "forwarded",
+  sender: "RM",
+  receiver: "CEM",
+  message_type: "PowerForecast",
+  message_id: "edfafsafs3",
+  start_time: new Date(),
+  elements: [
+    {
+      duration: 100,
+      power_values: [
+        {
+          value_upper_limit: 100,
+          value_upper_95PPR: 90,
+          value_upper_68PPR: 80,
+          value_expected: 70,
+          value_lower_68PPR: 60,
+          value_lower_95PPR: 50,
+          value_lower_limit: 60,
+          commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L1,
+        },
+        {
+          value_upper_limit: 110,
+          value_upper_95PPR: 100,
+          value_upper_68PPR: 90,
+          value_expected: 80,
+          value_lower_68PPR: 70,
+          value_lower_95PPR: 60,
+          value_lower_limit: 50,
+          commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L2,
+        },
+        {
+          value_upper_limit: 120,
+          value_upper_95PPR: 110,
+          value_upper_68PPR: 100,
+          value_expected: 90,
+          value_lower_68PPR: 80,
+          value_lower_95PPR: 70,
+          value_lower_limit: 60,
+          commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L3,
+        },
+      ],
+    },
+    {
+      duration: 100,
+      power_values: [
+        {
+          value_upper_limit: 100,
+          value_upper_95PPR: 90,
+          value_upper_68PPR: 80,
+          value_expected: 70,
+          value_lower_68PPR: 60,
+          value_lower_95PPR: 50,
+          value_lower_limit: 60,
+          commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L1,
+        },
+        {
+          value_upper_limit: 110,
+          value_upper_95PPR: 100,
+          value_upper_68PPR: 90,
+          value_expected: 50,
+          value_lower_68PPR: 70,
+          value_lower_95PPR: 60,
+          value_lower_limit: 50,
+          commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L2,
+        },
+        {
+          value_upper_limit: 120,
+          value_upper_95PPR: 110,
+          value_upper_68PPR: 100,
+          value_expected: 100,
+          value_lower_68PPR: 80,
+          value_lower_95PPR: 70,
+          value_lower_limit: 60,
+          commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L3,
+        },
+      ],
+    },
+    {
+      duration: 100,
+      power_values: [
+        {
+          value_upper_limit: 100,
+          value_upper_95PPR: 90,
+          value_upper_68PPR: 80,
+          value_expected: 70,
+          value_lower_68PPR: 60,
+          value_lower_95PPR: 50,
+          value_lower_limit: 60,
+          commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L1,
+        },
+        {
+          value_upper_limit: 110,
+          value_upper_95PPR: 100,
+          value_upper_68PPR: 90,
+          value_expected: 80,
+          value_lower_68PPR: 70,
+          value_lower_95PPR: 60,
+          value_lower_limit: 50,
+          commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L2,
+        },
+        {
+          value_upper_limit: 120,
+          value_upper_95PPR: 110,
+          value_upper_68PPR: 100,
+          value_expected: 110,
+          value_lower_68PPR: 80,
+          value_lower_95PPR: 70,
+          value_lower_limit: 60,
+          commodity_quantity: CommodityQuantity.ELECTRIC_POWER_L3,
+        },
+      ],
+    },
+  ],
+};
+
+const data5: UsageForecast = {
+  time: new Date(),
+  status: "forwarded",
+  sender: "RM",
+  receiver: "CEM",
+  message_type: "UsageForecast",
+  message_id: "edfafsafs4",
+  start_time: new Date(),
+  elements: [
+    {
+      duration: 100,
+      usage_rate_upper_limit: 120,
+      usage_rate_upper_95PPR: 110,
+      usage_rate_upper_68PPR: 100,
+      usage_rate_expected: 110,
+      usage_rate_lower_68PPR: 80,
+      usage_rate_lower_95PPR: 70,
+      usage_rate_lower_limit: 60,
+    },
+    {
+      duration: 100,
+      usage_rate_upper_limit: 120,
+      usage_rate_upper_95PPR: 110,
+      usage_rate_upper_68PPR: 100,
+      usage_rate_expected: 50,
+      usage_rate_lower_68PPR: 80,
+      usage_rate_lower_95PPR: 70,
+      usage_rate_lower_limit: 60,
+    },
+    {
+      duration: 100,
+      usage_rate_upper_limit: 120,
+      usage_rate_upper_95PPR: 110,
+      usage_rate_upper_68PPR: 100,
+      usage_rate_expected: 60,
+      usage_rate_lower_68PPR: 80,
+      usage_rate_lower_95PPR: 70,
+      usage_rate_lower_limit: 60,
+    },
+    {
+      duration: 100,
+      usage_rate_upper_limit: 120,
+      usage_rate_upper_95PPR: 110,
+      usage_rate_upper_68PPR: 100,
+      usage_rate_expected: 110,
+      usage_rate_lower_68PPR: 80,
+      usage_rate_lower_95PPR: 70,
+      usage_rate_lower_limit: 60,
+    },
+  ],
+};
 
 /**
  * The component for rendering the Single Page Application
@@ -24,14 +193,16 @@ function Page() {
     warnings: true,
   });
 
+  // A function to handle changes of filters dynamically.
   const handleFilterChange = (newFilters: Filters) => {
     setSelectedFilters(newFilters);
   };
 
+  // Filtering the messages based on the selected filters.
   const filteredMessages = data.filter((m) => {
     return (
-      ((selectedFilters.CEM && m.sender?.includes("cem")) ||
-        (selectedFilters.RM && m.sender?.substring(0, 2) === "RM")) &&
+      ((selectedFilters.CEM && m.sender?.split(" ")[0] == "CEM") ||
+        (selectedFilters.RM && m.sender?.split(" ")[0] == "RM")) &&
       (selectedFilters.min && selectedFilters.max
         ? m.time.getTime() >= selectedFilters.min &&
           m.time.getTime() <= selectedFilters.max
@@ -40,9 +211,6 @@ function Page() {
         (selectedFilters.warnings && m.message_id === null))
     );
   });
-
-  console.log(filteredMessages);
-  console.log(data);
 
   return (
     <div className="min-h-screen bg-white">

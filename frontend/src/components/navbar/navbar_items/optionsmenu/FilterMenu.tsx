@@ -1,19 +1,27 @@
 import { Filters } from "../../../../models/filters";
 
+/**
+ * The properties for the FilterMenu component.
+ */
 interface FilterMenuProps {
   filters: Filters;
   onFilterChange: (filters: Filters) => void;
 }
 
-function FilterMenu({filters, onFilterChange}: FilterMenuProps) {
-
-  const handleCheckboxChange = (option:keyof Filters) => {
+/**
+ * The component for the Filter Menu.
+ * @param filters The applied filters.
+ * @param onFilterChange The function to change the filters.
+ * @returns the Filter Menu.
+ */
+function FilterMenu({ filters, onFilterChange }: FilterMenuProps) {
+  const handleCheckboxChange = (option: keyof Filters) => {
     const newFilters = {
-        ...filters,
-        [option]: !filters[option],
+      ...filters,
+      [option]: !filters[option],
     };
     onFilterChange(newFilters);
-};
+  };
 
   return (
     <div className="relative inline-block text-left">

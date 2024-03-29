@@ -2,15 +2,23 @@ import { useState } from "react";
 import Terminal, { ColorMode, TerminalOutput } from "react-terminal-ui";
 import Draggable from "react-draggable";
 
-interface Props {
-    lines: string
+/**
+ * The properties for the Terminal component.
+ */
+interface TerminalProps {
+  lines: string;
 }
 
-function TerminalController(props: Props) {
+/**
+ * The component for the Terminal.
+ * @param lines The lines to show in the terminal component.
+ * @returns the draggable Terminal component.
+ */
+function TerminalController(props: TerminalProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   if (!isVisible) {
-      return null;
+    return null;
   }
 
   return (
@@ -24,7 +32,7 @@ function TerminalController(props: Props) {
             onClick={() => setIsVisible(false)}
             style={{
               position: "absolute",
-              top:"5px",
+              top: "5px",
               right: "5px",
               float: "right",
               background: "none",
@@ -49,10 +57,7 @@ function TerminalController(props: Props) {
             </svg>
           </button>
         </div>
-        <Terminal
-          name="Terminal"
-          colorMode={ColorMode.Dark}
-        >
+        <Terminal name="Terminal" colorMode={ColorMode.Dark}>
           <TerminalOutput>{props.lines}</TerminalOutput>
         </Terminal>
       </div>
