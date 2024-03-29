@@ -9,7 +9,7 @@ import { Filters } from "../../models/filters.ts";
 
 interface NavBarProps {
   messages: React.Dispatch<React.SetStateAction<MessageHeader[]>>;
-  filters: Filters
+  filters: Filters;
   onFilterChange: (filters: Filters) => void;
 }
 
@@ -17,7 +17,7 @@ interface NavBarProps {
  * The component for the Navigation Bar
  * @returns the Navigation Bar
  */
-function NavBar({messages, filters, onFilterChange}: NavBarProps) {
+function NavBar({ messages, filters, onFilterChange }: NavBarProps) {
   const [isVisibleTerminal, setIsVisibleTerminal] = useState(false);
   const [isVisibleOptions, setIsVisibleOptions] = useState(false);
 
@@ -51,7 +51,10 @@ function NavBar({messages, filters, onFilterChange}: NavBarProps) {
                   onClick={() => setIsVisibleOptions(!isVisibleOptions)}
                   className="clickable-heading"
                 >
-                  <OptionsMenu filters={filters} onFilterChange={onFilterChange}/>
+                  <OptionsMenu
+                    filters={filters}
+                    onFilterChange={onFilterChange}
+                  />
                 </div>
               </div>
             </div>

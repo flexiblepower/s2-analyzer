@@ -116,7 +116,7 @@ export class Parser {
                 return {
                     time: new Date(dateTimeMatch[1]),
                     status: "",
-                    sender: match[1],
+                    sender: (match[1].toUpperCase().includes("CEM") ? "CEM " : "RM ") + match[1],
                     receiver: null,
                     message_type: "Connection Lost",
                     message_id: null
