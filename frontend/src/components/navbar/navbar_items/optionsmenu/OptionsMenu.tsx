@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import FilterMenu from "./FilterMenu";
-import { Filters } from "../../../../models/filters";
+import { Filters } from "../../../../models/dataStructures/filters";
 
 /**
  * The properties for the OptionsMenu component.
