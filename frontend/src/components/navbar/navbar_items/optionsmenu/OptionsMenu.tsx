@@ -1,12 +1,13 @@
 import React, {useState} from "react";
 import FilterMenu from "./FilterMenu";
-import MessageHeader from "../../../../models/messages/messageHeader.ts";
+import { Filters } from "../../../../models/filters";
 
-interface Props {
-  filter: React.Dispatch<React.SetStateAction<(m: MessageHeader) => boolean>>
+interface OptionsMenuProps {
+  filters: Filters;
+  onFilterChange: (filters: Filters) => void;
 }
 
-function OptionsMenu(props:Props) {
+function OptionsMenu({filters, onFilterChange}: OptionsMenuProps) {
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
@@ -60,7 +61,7 @@ function OptionsMenu(props:Props) {
       </div>
       {showFilterMenu && (
         <div className="relative ml-24">
-          <FilterMenu selected={props.filter}/>
+          <FilterMenu filters={filters} onFilterChange={onFilterChange}/>
         </div>
       )}
     </div>
