@@ -5,7 +5,7 @@ import Terminal from "./navbar_items/terminal/Terminal";
 import OptionsMenu from "./navbar_items/optionsmenu/OptionsMenu";
 import { parser } from "../../parser/Parser.ts";
 import MessageHeader from "../../models/messages/messageHeader.ts";
-import { Filters } from "../../models/filters.ts";
+import { Filters } from "../../models/dataStructures/filters.ts";
 
 interface NavBarProps {
   messages: React.Dispatch<React.SetStateAction<MessageHeader[]>>;

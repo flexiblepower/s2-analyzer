@@ -1,4 +1,4 @@
-import { Filters } from "../../../../models/filters";
+import { Filters } from "../../../../models/dataStructures/filters";
 
 /**
  * The properties for the FilterMenu component.

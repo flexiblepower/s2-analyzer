@@ -6,7 +6,7 @@ import PowerForecast from "../models/messages/powerForecast.ts";
 import { CommodityQuantity } from "../models/dataStructures/commodityQuantity.ts";
 import { useState, useRef } from "react";
 import UsageForecast from "../models/messages/frbc/usageForecast.ts";
-import { Filters } from "../models/filters.ts";
+import { Filters } from "../models/dataStructures/filters.ts";
 
 const data4: PowerForecast = {
   time: new Date(),
