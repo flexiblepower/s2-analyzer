@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ArrowL from "../../assets/ArrowL.png";
-import ArrowR from "../../assets/ArrowR.png";
+import ArrowR from "../../assets/ArrowR.png"
 import Line from "../../assets/line.png";
 import MessagePopUp from "../popups/MessagePopUp.tsx";
 import MessageHeader from "../../models/messages/messageHeader.ts";
