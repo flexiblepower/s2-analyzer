@@ -22,7 +22,7 @@ fastapi==0.101.1
     # via -r ./requirements.in
 h11==0.14.0
     # via uvicorn
-idna==3.4
+idna==3.7
     # via anyio
 jsonschema==4.17.3
     # via -r ./requirements.in
