@@ -1,11 +1,10 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 import tnologo from "../../assets/TNO-logo.svg";
-import s2logo from "../../assets/s2-analyzer-logo.png";
-import Terminal from "./navbar_items/terminal/Terminal";
-import OptionsMenu from "./navbar_items/optionsmenu/OptionsMenu";
-import { parser } from "../../parser/Parser.ts";
 import MessageHeader from "../../models/messages/messageHeader.ts";
 import { Filters } from "../../models/dataStructures/filters.ts";
+import { parser } from "../../parser/Parser.ts";
+import FilterMenu from './navbar_items/optionsmenu/FilterMenu.tsx';
+import SideComponent from '../sideComponent/sideComponent.tsx'; // Import SideComponent
 
 interface NavBarProps {
   messages: React.Dispatch<React.SetStateAction<MessageHeader[]>>;
@@ -13,60 +12,52 @@ interface NavBarProps {
   onFilterChange: (filters: Filters) => void;
 }
 
-/**
- * The component for the Navigation Bar
- * @returns the Navigation Bar
- */
-function NavBar({ messages, filters, onFilterChange }: NavBarProps) {
-  const [isVisibleTerminal, setIsVisibleTerminal] = useState(false);
+function NavigationBar({ messages, filters, onFilterChange }: NavBarProps) {
   const [isVisibleOptions, setIsVisibleOptions] = useState(false);
+  const [isSideComponentVisible, setIsSideComponentVisible] = useState(false); // State for SideComponent visibility
+
+  const toggleFilterOptions = () => {
+    setIsVisibleOptions(!isVisibleOptions);
+  };
 
   const getFiles = async () => {
     messages(await parser.parseLogFile());
   };
 
+  const toggleSideComponent = () => {
+    setIsSideComponentVisible(!isSideComponentVisible);
+  };
+
   return (
-    <>
-      <nav className="bg-gradient-to-r from-tno-blue to-blue-600">
-        <div className="max-w-max px-1 sm:px-6 lg:px-6">
-          <div className="relative flex h-24 items-center justify-between">
-            <div className="flex items-center justify-center sm:items-stretch sm:justify-end">
-              <div className="hidden sm:ml-6 sm:block">
-                <div className="flex space-x-4 mr-10">
-                  <img src={tnologo} alt="TNO logo" />
-                </div>
+    <nav className="bg-components-gray dark:bg-gray-900 fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
+      <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+        <a href="https://www.tno.nl/en/" className="flex items-center space-x-3 rtl:space-x-reverse">
+          <img src={tnologo} className="h-8" alt="TNO Logo" />
+        </a>
+        <div className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-sticky">
+          <ul className="flex flex-col p-4 md:p-0 mt-4 font-medium border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-components-gray dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+            <li>
+              <a href="#" className="block py-2 px-3 text-white rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-tno-blue md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700" onClick={toggleFilterOptions}>Filters</a>
+              <div className="clickable-heading">
+                <FilterMenu
+                  filters={filters}
+                  onFilterChange={onFilterChange}
+                  isVisible={isVisibleOptions}
+                />
               </div>
-              <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none hover:scale-110">
-                <div onClick={getFiles}>
-                  <h1>Load File</h1>
-                </div>
-              </div>
-              <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none hover:scale-110">
-                <div onClick={() => setIsVisibleTerminal(!isVisibleTerminal)}>
-                  <h1>Terminal</h1>
-                </div>
-              </div>
-              <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none hover:scale-110">
-                <div
-                  onClick={() => setIsVisibleOptions(!isVisibleOptions)}
-                  className="clickable-heading"
-                >
-                  <OptionsMenu
-                    filters={filters}
-                    onFilterChange={onFilterChange}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute right-0 top-0 flex items-center pr-6">
-            <img src={s2logo} alt="S2-Analyzer Logo" className="h-24" />
-          </div>
+            </li>
+            <li>
+              <a href="#" className="block py-2 px-3 text-white rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-tno-blue md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700" onClick={getFiles}>Load File</a>
+            </li>
+            <li>
+              <a href="#" className="block py-2 px-3 text-white rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-tno-blue md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700" onClick={toggleSideComponent}>Message List</a>
+            </li>
+          </ul>
         </div>
-      </nav>
-      {isVisibleTerminal && <Terminal lines={parser.getLines()} />}
-    </>
+      </div>
+      <SideComponent isVisible={isSideComponentVisible} /> {/* Render SideComponent with isVisible prop */}
+    </nav>
   );
 }
 
-export default NavBar;
+export default NavigationBar;

@@ -1,12 +1,13 @@
+import React, { useState, useRef } from 'react';
 import NavBar from "../components/navbar/NavBar.tsx";
 import MessageList from "../components/messages/MessageList.tsx";
 import MessageHeader from "../models/messages/messageHeader.ts";
 import DeviceBox from "../components/devices/DeviceBox.tsx";
 import PowerForecast from "../models/messages/powerForecast.ts";
 import { CommodityQuantity } from "../models/dataStructures/commodityQuantity.ts";
-import { useState, useRef } from "react";
 import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 import { Filters } from "../models/dataStructures/filters.ts";
+import SideComponent from "../components/sideComponent/sideComponent.tsx"
 
 const data4: PowerForecast = {
   time: new Date(),
@@ -193,16 +194,14 @@ function Page() {
     warnings: true,
   });
 
-  // A function to handle changes of filters dynamically.
   const handleFilterChange = (newFilters: Filters) => {
     setSelectedFilters(newFilters);
   };
 
-  // Filtering the messages based on the selected filters.
   const filteredMessages = data.filter((m) => {
     return (
-      ((selectedFilters.CEM && m.sender?.split(" ")[0] == "CEM") ||
-        (selectedFilters.RM && m.sender?.split(" ")[0] == "RM")) &&
+      ((selectedFilters.CEM && m.sender?.split(" ")[0] === "CEM") ||
+        (selectedFilters.RM && m.sender?.split(" ")[0] === "RM")) &&
       (selectedFilters.min && selectedFilters.max
         ? m.time.getTime() >= selectedFilters.min &&
           m.time.getTime() <= selectedFilters.max
