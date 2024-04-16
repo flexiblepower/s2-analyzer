@@ -1,20 +1,13 @@
+import React from 'react';
 import { Filters } from "../../../../models/dataStructures/filters";
 
-/**
- * The properties for the FilterMenu component.
- */
 interface FilterMenuProps {
   filters: Filters;
   onFilterChange: (filters: Filters) => void;
+  isVisible: boolean;
 }
 
-/**
- * The component for the Filter Menu.
- * @param filters The applied filters.
- * @param onFilterChange The function to change the filters.
- * @returns the Filter Menu.
- */
-function FilterMenu({ filters, onFilterChange }: FilterMenuProps) {
+function FilterMenu({ filters, onFilterChange, isVisible }: FilterMenuProps) {
   const handleCheckboxChange = (option: keyof Filters) => {
     const newFilters = {
       ...filters,
@@ -24,7 +17,7 @@ function FilterMenu({ filters, onFilterChange }: FilterMenuProps) {
   };
 
   return (
-    <div className="relative inline-block text-left">
+    <div className={`relative inline-block text-left ${isVisible ? 'block' : 'hidden'}`}>
       <div className="absolute mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5">
         <div className="py-4 px-4">
           <div className="flex items-center">
@@ -71,7 +64,7 @@ function FilterMenu({ filters, onFilterChange }: FilterMenuProps) {
               onChange={() => handleCheckboxChange("logs")}
               className="mr-2 size-4"
             />
-            <label htmlFor="warnings" className="text-lg text-gray-700">
+            <label htmlFor="logs" className="text-lg text-gray-700">
               Logs
             </label>
           </div>
