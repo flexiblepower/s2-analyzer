@@ -1,5 +1,4 @@
-import React from 'react';
-import { Filters } from "../../../../models/dataStructures/filters";
+import { Filters } from "../../../models/dataStructures/filters";
 
 interface FilterMenuProps {
   filters: Filters;

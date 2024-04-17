@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 import NavBar from "../components/navbar/NavBar.tsx";
 import MessageList from "../components/messages/MessageList.tsx";
 import MessageHeader from "../models/messages/messageHeader.ts";
@@ -7,7 +7,7 @@ import PowerForecast from "../models/messages/powerForecast.ts";
 import { CommodityQuantity } from "../models/dataStructures/commodityQuantity.ts";
 import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 import { Filters } from "../models/dataStructures/filters.ts";
-import SideComponent from "../components/sideComponent/sideComponent.tsx"
+import SideComponent from "../components/sideComponent/SideComponent.tsx";
 
 const data4: PowerForecast = {
   time: new Date(),

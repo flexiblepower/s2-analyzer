@@ -23,7 +23,7 @@ function TerminalController(props: TerminalProps) {
 
   return (
     <Draggable handle=".handle">
-      <div className="container fixed">
+      <div className="container fixed bottom-0 w-16">
         <div
           className="handle"
           style={{ cursor: "move", backgroundColor: "#eee", padding: "14px" }}
