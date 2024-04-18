@@ -35,8 +35,9 @@ export class Parser {
                     }
                 }
             } else if ("object_id" in this.messageMap[i]) {
+                const temp = this.messageMap[i] as RevokeObject
                 for (let j=0; j<this.messageMap.length; j++) {
-                    if (this.messageMap[j].message_id==this.messageMap[i].object_id) {
+                    if (this.messageMap[j].message_id==temp.object_id) {
                         this.messageMap[j].status = "revoked by message_id: "+this.messageMap[i].message_id
                     }
                 }
