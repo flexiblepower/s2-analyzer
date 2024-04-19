@@ -6,3 +6,8 @@ services:
       - "8001:8001"
     environment:
       LOG_LEVEL: info
+  frontend:
+    build:
+      context: ./frontend 
+    ports:
+      - "4173:4173"
