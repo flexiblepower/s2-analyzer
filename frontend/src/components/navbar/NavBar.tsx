@@ -4,7 +4,7 @@ import MessageHeader from "../../models/messages/messageHeader.ts";
 import { Filters } from "../../models/dataStructures/filters.ts";
 import { parser } from "../../parser/Parser.ts";
 import FilterMenu from "./navbar_items/FilterMenu.tsx";
-import SideComponent from "../sideComponent/SideComponent.tsx";
+import SideComponent from "../sideComponent/sideComponent.tsx"
 
 /**
  * This is an interface to define the props of the NavigationBar.
@@ -91,7 +91,6 @@ function NavigationBar({ messages, filters, onFilterChange }: NavBarProps) {
         </div>
       </div>
       <SideComponent isVisible={isSideComponentVisible} setIsVisible={setIsSideComponentVisible}/>
-      {/*The SideComponent needs to be moved to the Page.tsx because it is another main component, it can't be inside of the NavBar. */}
     </nav>
   );
 }

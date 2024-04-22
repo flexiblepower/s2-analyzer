@@ -19,9 +19,9 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
   const keys = Object.keys(props.message) as (keyof T)[];
 
   const handleSpecialMessage = () => {
-      if (props.message.message_type == "PowerForecast") {
+      if (props.message.message_type == "PowerForecast" && "elements" in props.message && "start_time" in props.message) {
           return <PowerForecastGraph data={props.message.elements as PowerForecastElement[]} start={props.message.start_time as Date}/>
-      } else if (props.message.message_type == "UsageForecast") {
+      } else if (props.message.message_type == "UsageForecast" && "elements" in props.message && "start_time" in props.message) {
           return <UsageForecastGraph data={props.message.elements as UsageForecastElement[]} start={props.message.start_time as Date}/>
       }
       return <></>;
@@ -29,7 +29,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
 
   const handleSpecialValue = (key: keyof T) => {
       if (typeof props.message[key] === 'object') {
-          if (key=="status") {
+          if (key=="status" && typeof props.message.status === "object" && "status" in props.message.status) {
               return props.message.status.status
           } else if (key=="elements") {
               return "See graph below"
