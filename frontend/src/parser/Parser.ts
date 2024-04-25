@@ -49,6 +49,7 @@ export class Parser {
     //Allows you to select one or more files from the file system
     async parseLogFile() {
         const fileHandles = await window.showOpenFilePicker({ multiple: false });
+        this.messageMap = []
         for (const fileHandle of fileHandles) {
             const file = await fileHandle.getFile();
             this.lines = await file.text();
