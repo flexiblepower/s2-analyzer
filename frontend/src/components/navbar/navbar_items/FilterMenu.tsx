@@ -16,7 +16,7 @@ function FilterMenu({ filters, onFilterChange, isVisible }: FilterMenuProps) {
   };
 
   return (
-    <div className={`relative inline-block text-left ${isVisible ? 'block' : 'hidden'}`}>
+    <div className={`text-left ${isVisible ? 'block' : 'hidden'}`}>
       <div className="absolute mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5">
         <div className="py-4 px-4">
           <div className="flex items-center">

@@ -7,6 +7,8 @@ import DeviceBox from "../components/devices/DeviceBox.tsx";
 //import { CommodityQuantity } from "../models/dataStructures/commodityQuantity.ts";
 //import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 import { Filters } from "../models/dataStructures/filters.ts";
+//import Sidebar from "../components/sideComponent/sideComponent.tsx";
+import TerminalController from "../components/terminal/Terminal.tsx";
 /**
 const data4: PowerForecast = {
   time: new Date(),
@@ -185,6 +187,7 @@ const data5: UsageForecast = {
 function Page() {
   const maxHeight = useRef(window.innerHeight).current * 0.75;
   const [data, setData] = useState([] as MessageHeader[]);
+  const [alignment, setAlignment] = useState("justify-center")
   const [selectedFilters, setSelectedFilters] = useState<Filters>({
     CEM: true,
     RM: true,
@@ -212,23 +215,28 @@ function Page() {
   });
 
   return (
-    <div className="min-h-screen bg-white">
-      <NavBar
-        messages={setData}
-        filters={selectedFilters}
-        onFilterChange={handleFilterChange}
-      />
-      <div className={"flex items-center justify-center"}>
-        <DeviceBox title={"CEM"} thickness={3} width={5} height={maxHeight} />
-        <div
-          style={{ maxHeight: maxHeight, overflow: "auto" }}
-          className={"no-scrollbar"}
-        >
-          <MessageList<MessageHeader> messages={filteredMessages}></MessageList>
+      <div className="w-full h-screen bg-white" /*grid grid-cols[max-content_auto] grid-rows-[5fr_1fr]"*/>
+        <div className="col-span-2">
+          <NavBar
+              messages={setData}
+              filters={selectedFilters}
+              onFilterChange={handleFilterChange}
+              onAlignmentChange={setAlignment}
+          />
         </div>
-        <DeviceBox title={"RM"} thickness={3} width={5} height={maxHeight} />
+        {/*<div className={"col-span-1"}><Sidebar/></div>*/}
+        <div className={`col-span-1 flex items-center ${alignment}`}>
+          <DeviceBox title={"CEM"} thickness={3} width={5} height={maxHeight}/>
+          <div
+              style={{maxHeight: maxHeight, overflow: "auto"}}
+              className={"no-scrollbar"}
+          >
+            <MessageList<MessageHeader> messages={filteredMessages}></MessageList>
+          </div>
+          <DeviceBox title={"RM"} thickness={3} width={5} height={maxHeight}/>
+        </div>
+        <div className="col-span-2"><TerminalController/></div>
       </div>
-    </div>
   );
 }
 

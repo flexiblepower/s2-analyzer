@@ -5,9 +5,10 @@ import Valid from "../../assets/valid.png";
 import ReceptionStatus from "../../models/dataStructures/receptionStatus.ts";
 import MessagePopUp from "../popups/MessagePopUp.tsx";
 import {useState} from "react";
+import MessageHeader from "../../models/messages/messageHeader.ts";
 
 interface props {
-  status: ReceptionStatus | string;
+  header: MessageHeader
 }
 
 /**
@@ -20,10 +21,10 @@ function ReceptionStatusIcon(props: props) {
   let imgSrc = Valid;
   let label = "";
 
-  if (typeof props.status == "object") {
-    label = (props.status as ReceptionStatus).status;
+  if (typeof props.header.status == "object") {
+    label = (props.header.status as ReceptionStatus).status;
   } else {
-    label = props.status.split(" ")[0]
+    label = props.header.status.split(" ")[0]
   }
 
   if (label == "revoked") {
@@ -34,12 +35,23 @@ function ReceptionStatusIcon(props: props) {
     imgSrc = Error;
   }
 
+  const createReceptionStatus = (text: string) => {
+    return {
+      time: props.header.time,
+      sender: props.header.sender,
+      receiver: props.header.receiver,
+      message_type: "ReceptionStatus",
+      subject_message_id: props.header.message_id,
+      status: text
+    } as ReceptionStatus
+  }
+
   return (
     <>
     <MessagePopUp<ReceptionStatus>
           trigger={isPopUpVisible}
           setTrigger={setIsPopUpVisible}
-          message={typeof props.status == "object" ? props.status : {status: props.status.replace("invalid", "Invalid because:\n")} as ReceptionStatus}
+          message={typeof props.header.status == "object" ? props.header.status : createReceptionStatus(props.header.status.replace("invalid", "Invalid because:\n"))}
       />
     <img className="cursor-pointer" onClick={()=>setIsPopUpVisible(!isPopUpVisible)} src={imgSrc} alt={label} title={label}/>
     </>);
