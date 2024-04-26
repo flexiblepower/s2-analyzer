@@ -13,6 +13,8 @@ interface NavBarProps {
   filters: Filters;
   onFilterChange: (filters: Filters) => void;
   onAlignmentChange: React.Dispatch<React.SetStateAction<string>>
+  toggleSideBar: boolean
+  onToggleSideBar: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 /**
@@ -23,7 +25,7 @@ interface NavBarProps {
  * @returns the NavBar component.
  */
 
-function NavigationBar({ messages, filters, onFilterChange, onAlignmentChange }: NavBarProps) {
+function NavigationBar({ messages, filters, onFilterChange, onAlignmentChange, toggleSideBar, onToggleSideBar}: NavBarProps) {
   const [isVisibleOptions, setIsVisibleOptions] = useState(false);
   const [index, setIndex] = useState(2)
   const alignments = ["justify-self-auto", "justify-center", "justify-end"]
@@ -56,22 +58,27 @@ function NavigationBar({ messages, filters, onFilterChange, onAlignmentChange }:
           >
             <ul className="flex md:p-0 font-medium md:space-x-8 md:flex-row md:mt-0 md:border-0 md:bg-components-gray">
               <li>
-                <a
-                    href="#"
+                <button
+                    className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
+                    onClick={() => onToggleSideBar(!toggleSideBar)}>
+                  Ξ
+                </button>
+              </li>
+              <li>
+                <button
                     className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
                     onClick={getFiles}
                 >
                   Load File
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                    href="#"
+                <button
                     className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
                     onClick={toggleFilterOptions}
                 >
                   Filters
-                </a>
+                </button>
                 <div className="clickable-heading">
                   <FilterMenu
                       filters={filters}
@@ -81,13 +88,12 @@ function NavigationBar({ messages, filters, onFilterChange, onAlignmentChange }:
                 </div>
               </li>
               <li>
-                <a
-                    href="#"
+                <button
                     className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
                     onClick={changeAlignment}
                 >
                   Change Alignment
-                </a>
+                </button>
               </li>
             </ul>
           </div>

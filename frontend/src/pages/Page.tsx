@@ -7,7 +7,7 @@ import DeviceBox from "../components/devices/DeviceBox.tsx";
 //import { CommodityQuantity } from "../models/dataStructures/commodityQuantity.ts";
 //import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 import { Filters } from "../models/dataStructures/filters.ts";
-//import Sidebar from "../components/sideComponent/sideComponent.tsx";
+import Sidebar from "../components/sideComponent/sideComponent.tsx";
 import TerminalController from "../components/terminal/Terminal.tsx";
 /**
 const data4: PowerForecast = {
@@ -187,6 +187,7 @@ const data5: UsageForecast = {
 function Page() {
   const maxHeight = useRef(window.innerHeight).current * 0.75;
   const [data, setData] = useState([] as MessageHeader[]);
+  const [isSideBarVisible, setIsSideBarVisible] = useState(false)
   const [alignment, setAlignment] = useState("justify-center")
   const [selectedFilters, setSelectedFilters] = useState<Filters>({
     CEM: true,
@@ -215,17 +216,19 @@ function Page() {
   });
 
   return (
-      <div className="w-full h-screen bg-white" /*grid grid-cols[max-content_auto] grid-rows-[5fr_1fr]"*/>
+      <div className="w-full h-screen bg-white grid grid-cols[max-content_auto] grid-rows-[5fr_1fr]">
         <div className="col-span-2">
           <NavBar
               messages={setData}
               filters={selectedFilters}
               onFilterChange={handleFilterChange}
               onAlignmentChange={setAlignment}
+              toggleSideBar={isSideBarVisible}
+              onToggleSideBar={setIsSideBarVisible}
           />
         </div>
-        {/*<div className={"col-span-1"}><Sidebar/></div>*/}
-        <div className={`col-span-1 flex items-center ${alignment}`}>
+        {isSideBarVisible && <div className={"col-span-1"}><Sidebar/></div>}
+        <div className={`col-span-2 flex items-center ${alignment}`}>
           <DeviceBox title={"CEM"} thickness={3} width={5} height={maxHeight}/>
           <div
               style={{maxHeight: maxHeight, overflow: "auto"}}
