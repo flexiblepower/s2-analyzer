@@ -13,7 +13,7 @@ function Sidebar() {
       }
 
       setWidth((previousWidth) => {
-        const newWidth = previousWidth + e.movementX / 2;
+        const newWidth = previousWidth + e.movementX / 3;
 
         const isWidthInRange = newWidth >= minWidth && newWidth <= maxWidth;
 
@@ -27,9 +27,9 @@ function Sidebar() {
   }, []);
 
   return (
-      <div className="flex">
+      <div className="flex absolute transition-colors">
 
-        <div style={{width: `${width / 16}rem` }} className="bg-neutral-700">
+        <div style={{width: `${width / 16}rem`, height: window.innerHeight*0.81}} className="bg-neutral-700">
           Sidebar
         </div>
 
