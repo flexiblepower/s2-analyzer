@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import tnologo from "../../assets/TNO-logo.svg"
+import tnologo from "../../assets/TNO-logo.svg";
 import MessageHeader from "../../models/messages/messageHeader.ts";
 import { Filters } from "../../models/dataStructures/filters.ts";
 import { parser } from "../../parser/Parser.ts";
@@ -12,9 +12,9 @@ interface NavBarProps {
   messages: React.Dispatch<React.SetStateAction<MessageHeader[]>>;
   filters: Filters;
   onFilterChange: (filters: Filters) => void;
-  onAlignmentChange: React.Dispatch<React.SetStateAction<string>>
-  toggleSideBar: boolean
-  onToggleSideBar: React.Dispatch<React.SetStateAction<boolean>>
+  onAlignmentChange: React.Dispatch<React.SetStateAction<string>>;
+  toggleSideBar: boolean;
+  onToggleSideBar: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 /**
@@ -25,10 +25,17 @@ interface NavBarProps {
  * @returns the NavBar component.
  */
 
-function NavigationBar({ messages, filters, onFilterChange, onAlignmentChange, toggleSideBar, onToggleSideBar}: NavBarProps) {
+function NavigationBar({
+  messages,
+  filters,
+  onFilterChange,
+  onAlignmentChange,
+  toggleSideBar,
+  onToggleSideBar,
+}: NavBarProps) {
   const [isVisibleOptions, setIsVisibleOptions] = useState(false);
-  const [index, setIndex] = useState(2)
-  const alignments = ["justify-self-auto", "justify-center", "justify-end"]
+  const [index, setIndex] = useState(2);
+  const alignments = ["justify-self-auto", "justify-center", "justify-end"];
 
   const toggleFilterOptions = () => {
     setIsVisibleOptions(!isVisibleOptions);
@@ -39,66 +46,67 @@ function NavigationBar({ messages, filters, onFilterChange, onAlignmentChange, t
   };
 
   const changeAlignment = () => {
-    setIndex((index+1)%3)
-    onAlignmentChange(alignments[index])
-  }
+    setIndex((index + 1) % 3);
+    onAlignmentChange(alignments[index]);
+  };
 
   return (
-      <nav className="bg-components-gray dark:bg-gray-900 w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
-        <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-          <a
-              href="https://www.tno.nl/en/"
-              className="flex items-center space-x-3 rtl:space-x-reverse"
-          >
-            <img src={tnologo} className="h-8" alt="TNO Logo" />
-          </a>
-          <div
-              className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1"
-              id="navbar-sticky"
-          >
-            <ul className="flex md:p-0 font-medium md:space-x-8 md:flex-row md:mt-0 md:border-0 md:bg-components-gray">
-              <li>
-                <button
-                    className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
-                    onClick={() => onToggleSideBar(!toggleSideBar)}>
-                  Ξ
-                </button>
-              </li>
-              <li>
-                <button
-                    className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
-                    onClick={getFiles}
-                >
-                  Load File
-                </button>
-              </li>
-              <li>
-                <button
-                    className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
-                    onClick={toggleFilterOptions}
-                >
-                  Filters
-                </button>
-                <div className="clickable-heading">
-                  <FilterMenu
-                      filters={filters}
-                      onFilterChange={onFilterChange}
-                      isVisible={isVisibleOptions}
-                  />
-                </div>
-              </li>
-              <li>
-                <button
-                    className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
-                    onClick={changeAlignment}
-                >
-                  Change Alignment
-                </button>
-              </li>
-            </ul>
-          </div>
+    <nav className="bg-components-gray dark:bg-gray-900 w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
+      <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+        <a
+          href="https://www.tno.nl/en/"
+          className="flex items-center space-x-3 rtl:space-x-reverse"
+        >
+          <img src={tnologo} className="h-8" alt="TNO Logo" />
+        </a>
+        <div
+          className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1"
+          id="navbar-sticky"
+        >
+          <ul className="flex md:p-0 font-medium md:space-x-8 md:flex-row md:mt-0 md:border-0">
+            <li>
+              <button
+                className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
+                onClick={() => onToggleSideBar(!toggleSideBar)}
+              >
+                Ξ
+              </button>
+            </li>
+            <li>
+              <button
+                className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
+                onClick={getFiles}
+              >
+                Load File
+              </button>
+            </li>
+            <li>
+              <button
+                className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
+                onClick={toggleFilterOptions}
+              >
+                Filters
+              </button>
+              <div className="clickable-heading">
+                <FilterMenu
+                  filters={filters}
+                  onFilterChange={onFilterChange}
+                  isVisible={isVisibleOptions}
+                />
+              </div>
+            </li>
+            <li>
+              <button
+                className="block py-2 px-3 text-white rounded md:hover:text-yellow-200 md:p-0"
+                onClick={changeAlignment}
+              >
+                Change Alignment
+              </button>
+            </li>
+          </ul>
         </div>
-      </nav>
+      </div>
+    </nav>
   );
 }
 
