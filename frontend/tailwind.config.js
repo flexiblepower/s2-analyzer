@@ -7,7 +7,8 @@ export default {
       colors:{
         "tno-blue": "#1A0DAB",
         "stephanie-color": "#FFFFFF",
-        "components-gray": "#2c2d31",
+        "components-gray": "#414245",
+        "base-gray": "#2C2D31"
       }
     },
   },
