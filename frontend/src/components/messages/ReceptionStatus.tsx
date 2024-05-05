@@ -48,12 +48,12 @@ function ReceptionStatusIcon(props: props) {
 
   return (
     <>
-    <MessagePopUp<ReceptionStatus>
-          trigger={isPopUpVisible}
-          setTrigger={setIsPopUpVisible}
-          message={typeof props.header.status == "object" ? props.header.status : createReceptionStatus(props.header.status.replace("invalid", "Invalid because:\n"))}
-      />
-    <img className="cursor-pointer" onClick={()=>setIsPopUpVisible(!isPopUpVisible)} src={imgSrc} alt={label} title={label}/>
+      <MessagePopUp<ReceptionStatus>
+            trigger={isPopUpVisible}
+            setTrigger={setIsPopUpVisible}
+            message={typeof props.header.status == "object" ? props.header.status : createReceptionStatus(props.header.status.replace("invalid", "Invalid because:\n"))}
+        />
+      <img className="cursor-pointer" onClick={()=>setIsPopUpVisible(!isPopUpVisible)} src={imgSrc} alt={label} title={label}/>
     </>);
 }
 
