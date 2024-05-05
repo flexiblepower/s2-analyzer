@@ -56,9 +56,21 @@ function PowerForecastGraph(props: Props) {
         };
     }
 
+    const options = {
+        scales: {
+            x: {
+                display: true,
+                title: {
+                    display: true,
+                    text: 'Time (ms)',
+                },
+            }
+        }
+    };
+
     return (
         <div className={"flex justify-center items-center"}>
-            <Line data={collectGraphData()} width={100} height={200}/>
+            <Line data={collectGraphData()} width={100} height={200} options={options}/>
         </div>
     );
 }

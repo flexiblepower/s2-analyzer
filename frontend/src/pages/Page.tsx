@@ -10,6 +10,7 @@ import { Filters } from "../models/dataStructures/filters.ts";
 import Sidebar from "../components/sideComponent/sideComponent.tsx";
 import TerminalController from "../components/terminal/Terminal.tsx";
 import useFilters from "../hooks/useFilters.tsx";
+
 /**
 const data4: PowerForecast = {
   time: new Date(),
@@ -225,8 +226,7 @@ function Page() {
       <div className={`col-span-2 flex items-center ${alignment}`}>
         <DeviceBox title={"CEM"} thickness={3} width={5} height={maxHeight} />
         <div
-          style={{ maxHeight: maxHeight, overflow: "auto" }}
-          className={"no-scrollbar"}
+            style={{ maxHeight: maxHeight, overflow: "auto" }}
         >
           <MessageList<MessageHeader> messages={filteredMessages}></MessageList>
         </div>

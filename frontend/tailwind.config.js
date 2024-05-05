@@ -11,20 +11,6 @@ export default {
         "base-gray": "#2C2D31"
       }
     },
-  },
-  plugins: [
-      function({ addUtilities }) {
-        const newUtilities = {
-          ".no-scrollbar::-webkit-scrollbar": {
-            display: "none"
-          },
-          ".no-scrollbar": {
-            "-ms-overflow-style": "none",
-            "scrollbar-width": "none"
-          }
-        };
-        addUtilities(newUtilities)
-      }
-  ],
+  }
 }
 
