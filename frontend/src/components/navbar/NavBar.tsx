@@ -4,6 +4,7 @@ import MessageHeader from "../../models/messages/messageHeader.ts";
 import { Filters } from "../../models/dataStructures/filters.ts";
 import { parser } from "../../parser/Parser.ts";
 import FilterMenu from "./navbar_items/FilterMenu.tsx";
+import SearchBar from "./navbar_items/SearchBar.tsx";
 
 /**
  * This is an interface to define the props of the NavigationBar.
@@ -12,6 +13,8 @@ interface NavBarProps {
   messages: React.Dispatch<React.SetStateAction<MessageHeader[]>>;
   filters: Filters;
   onFilterChange: (filters: Filters) => void;
+  search: string;
+  onSearchChange: (search: string) => void;
   onAlignmentChange: React.Dispatch<React.SetStateAction<string>>;
   toggleSideBar: boolean;
   onToggleSideBar: React.Dispatch<React.SetStateAction<boolean>>;
@@ -29,6 +32,8 @@ function NavigationBar({
   messages,
   filters,
   onFilterChange,
+  search,
+  onSearchChange,
   onAlignmentChange,
   toggleSideBar,
   onToggleSideBar,
@@ -134,6 +139,9 @@ function NavigationBar({
               >
                 Change Alignment
               </a>
+            </li>
+            <li>
+              <SearchBar searchId={search} onSearchChange={onSearchChange}/>
             </li>
           </ul>
         </div>
