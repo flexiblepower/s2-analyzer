@@ -10,6 +10,7 @@ import { Filters } from "../models/dataStructures/filters.ts";
 import Sidebar from "../components/sideComponent/sideComponent.tsx";
 import TerminalController from "../components/terminal/Terminal.tsx";
 import useFilters from "../hooks/useFilters.tsx";
+import useSearch from "../hooks/useSearch.tsx";
 
 /**
 const data4: PowerForecast = {
@@ -199,12 +200,20 @@ function Page() {
     logs: true,
     warnings: true,
   });
+  const [searchedMessage, setSearchedMessage] = useState("");
 
   const handleFilterChange = (newFilters: Filters) => {
     setSelectedFilters(newFilters);
   };
 
+  const handleSearch = (search:string) => {
+    setSearchedMessage(search);
+  }
+
   const filteredMessages = useFilters(data, selectedFilters);
+  const searchedMessages = useSearch(filteredMessages, searchedMessage);
+
+  console.log(filteredMessages);
 
   return (
     <div className="w-full h-screen bg-white grid grid-cols[max-content_auto] grid-rows-[5fr_1fr]">
@@ -213,6 +222,8 @@ function Page() {
           messages={setData}
           filters={selectedFilters}
           onFilterChange={handleFilterChange}
+          search={searchedMessage}
+          onSearchChange={handleSearch}
           onAlignmentChange={setAlignment}
           toggleSideBar={isSideBarVisible}
           onToggleSideBar={setIsSideBarVisible}
@@ -228,7 +239,7 @@ function Page() {
         <div
             style={{ maxHeight: maxHeight, overflow: "auto" }}
         >
-          <MessageList<MessageHeader> messages={filteredMessages}></MessageList>
+          <MessageList<MessageHeader> messages={searchedMessages}></MessageList>
         </div>
         <DeviceBox title={"RM"} thickness={3} width={5} height={maxHeight} />
       </div>
