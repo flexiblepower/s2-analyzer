@@ -29,7 +29,7 @@ function Sidebar() {
   return (
       <div className="flex absolute transition-colors">
 
-        <div style={{width: `${width / 16}rem`, height: window.innerHeight*0.81}} className="bg-neutral-700">
+        <div style={{width: `${width / 16}rem`, height: window.innerHeight*0.81}} className="bg-components-gray">
           Sidebar
         </div>
 
