@@ -64,7 +64,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
     <Draggable>
       <div
         className={`
-                 fixed flex justify-center items-center transition-colors
+                 fixed flex justify-center items-center transition-colors z-10
                  ${props.trigger ? "visible" : "invisible"}
                  `}
         style={{position: "fixed", top: "50%", bottom: "50%", left:"50%"}}

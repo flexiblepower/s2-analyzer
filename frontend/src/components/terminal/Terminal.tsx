@@ -14,7 +14,7 @@ function TerminalController() {
       <h2 id="accordion-flush-heading-1">
         <button
           type="button"
-          className="flex items-center justify-between w-full py-5 font-medium rtl:text-right text-white border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 gap-3"
+          className={`flex items-center justify-between w-full py-5 font-medium rtl:text-right text-white border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 gap-3`}
           data-accordion-target="#accordion-flush-body-1"
           aria-expanded={isOpen ? "true" : "false"} // Update aria-expanded based on accordion state
           onClick={toggleAccordion} // Handle click to toggle accordion
@@ -22,7 +22,6 @@ function TerminalController() {
         >
           <span className="mx-auto">Terminal</span>
           <svg
-            data-accordion-icon
             className={`w-3 h-3 rotate-${isOpen ? "180" : "0"} shrink-0`} // Rotate the arrow icon based on accordion state
             aria-hidden="true"
             fill="none"
