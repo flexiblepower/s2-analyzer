@@ -57,7 +57,7 @@ function NavigationBar({
   };
 
   return (
-    <nav className="bg-components-gray dark:bg-gray-900 w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
+    <nav className="bg-base-gray dark:bg-gray-900 w-full z-20 top-0 start-0 border-b border-tno-blue">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
         <a
           href="https://www.tno.nl/en/"
@@ -71,7 +71,7 @@ function NavigationBar({
         </a>
         <button 
           type="button" 
-          className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-600" 
+          className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-tno-blue" 
           onClick={() => setShowAllOptions(!showAllOptions)}
         >
           <span className="sr-only">Open main menu</span>
@@ -100,7 +100,7 @@ function NavigationBar({
             <li>
               <a
                 href ="#"
-                className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-gray-500 md:p-0"
+                className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
                 onClick={() => onToggleSideBar(!toggleSideBar)}
               >
                 Ξ
@@ -109,7 +109,7 @@ function NavigationBar({
             <li>
               <a
                 href ="#"
-                className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-gray-500 md:p-0"
+                className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
                 onClick={getFiles}
               >
                 Load File
@@ -118,7 +118,7 @@ function NavigationBar({
             <li>
               <a
                 href ="#"
-                className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-gray-500 md:p-0"
+                className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
                 onClick={toggleFilterOptions}
               >
                 Filters
@@ -134,7 +134,7 @@ function NavigationBar({
             <li>
               <a
                 href ="#"
-                className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-gray-500 md:p-0"
+                className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
                 onClick={changeAlignment}
               >
                 Change Alignment
