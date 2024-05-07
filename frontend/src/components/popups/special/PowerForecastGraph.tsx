@@ -1,4 +1,4 @@
-import PowerForecastElement from "../../models/dataStructures/powerForecastElement.ts";
+import PowerForecastElement from "../../../models/dataStructures/powerForecastElement.ts";
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -9,7 +9,7 @@ import {
     Legend,
     Tooltip
 } from "chart.js";
-import {CommodityQuantity} from "../../models/dataStructures/commodityQuantity.ts";
+import {CommodityQuantity} from "../../../models/dataStructures/commodityQuantity.ts";
 
 interface Props {
     data: PowerForecastElement[]
@@ -115,7 +115,7 @@ function PowerForecastGraph(props: Props) {
     };
 
     return (
-        <div className={"flex justify-center items-center"}>
+        <div className={"flex justify-center items-center bg-white"}>
             <Line data={collectGraphData()} width={100} height={200} options={options}/>
         </div>
     );

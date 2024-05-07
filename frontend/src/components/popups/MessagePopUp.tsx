@@ -1,10 +1,7 @@
 import MessageHeader from "../../models/messages/messageHeader.ts";
 import Draggable from "react-draggable";
-import PowerForecastGraph from "./PowerForecastGraph.tsx";
-import PowerForecastElement from "../../models/dataStructures/powerForecastElement.ts";
-import UsageForecastGraph from "./UsageForecastGraph.tsx";
-import UsageForecastElement from "../../models/dataStructures/frbc/usageForecastElement.ts";
 import {useEffect, useState} from "react";
+import SpecialMessage from "./special/SpecialMessage.tsx";
 
 interface props<T extends MessageHeader> {
   trigger: boolean;
@@ -30,19 +27,11 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
       }
   }
 
-  const handleSpecialMessage = () => {
-      if (props.message.message_type == "PowerForecast" && "elements" in props.message && "start_time" in props.message) {
-          return <PowerForecastGraph data={props.message.elements as PowerForecastElement[]} start={props.message.start_time as Date}/>
-      } else if (props.message.message_type == "UsageForecast" && "elements" in props.message && "start_time" in props.message) {
-          return <UsageForecastGraph data={props.message.elements as UsageForecastElement[]} start={props.message.start_time as Date}/>
-      }
-  }
-
   const handleSpecialValue = (key: keyof T) => {
       if (typeof props.message[key] === 'object') {
           if (key=="status" && typeof props.message.status === "object" && "status" in props.message.status) {
               return props.message.status.status
-          } else if (key=="elements" && !isJSON) {
+          } else if ((props.message.message_type == "FRBC.UsageForecast"||props.message.message_type == "PowerForecast" )&&key=="elements" && !isJSON) {
               return "See graph"
           } else if (key == "time") {
               return props.message.time.toLocaleDateString("en-NL", {
@@ -92,7 +81,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                   </button>
               </div>
               {isJSON ?
-                  <pre className={"whitespace-pre-wrap overflow-auto"} style={{maxWidth: "700px"}}>
+                  <pre className={"text-white whitespace-pre-wrap overflow-auto"} style={{maxWidth: "700px"}}>
                     {"{\n"+keys.map((k)=>"  \""+k.toString()+"\": "+"\""+handleSpecialValue(k)+"\"").join(",\n")+"\n}"}
                   </pre>
                   :
@@ -122,7 +111,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                   </table>
               </div>}
               {!isJSON && <div>
-                  {handleSpecialMessage()}
+                  <SpecialMessage message={props.message}/>
               </div>}
           </div>
       </div>
