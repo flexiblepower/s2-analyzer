@@ -10,11 +10,11 @@ function TerminalController() {
   };
 
   return (
-    <div id="accordion-flush" className="bg-stephanie-color text-white">
+    <div id="accordion-flush" className="bg-base-gray text-white">
       <h2 id="accordion-flush-heading-1">
         <button
           type="button"
-          className={`flex items-center justify-between w-full py-5 font-medium rtl:text-right text-white border-b border-gray-200 dark:border-gray-700 dark:text-gray-400 gap-3`}
+          className={`flex items-center justify-between w-full py-5 font-medium rtl:text-right text-white border-b border-tno-blue gap-3`}
           data-accordion-target="#accordion-flush-body-1"
           aria-expanded={isOpen ? "true" : "false"} // Update aria-expanded based on accordion state
           onClick={toggleAccordion} // Handle click to toggle accordion
@@ -22,7 +22,7 @@ function TerminalController() {
         >
           <span className="mx-auto">Terminal</span>
           <svg
-            className={`w-3 h-3 rotate-${isOpen ? "180" : "0"} shrink-0`} // Rotate the arrow icon based on accordion state
+            className={`w-3 h-3 transform transition-transform duration-300 ease-in-out ${isOpen ? "rotate-180" : "rotate-0"}`}
             aria-hidden="true"
             fill="none"
             viewBox="0 0 10 6"
@@ -42,7 +42,7 @@ function TerminalController() {
         className={`${isOpen ? "block" : "hidden"}`} // Show/hide accordion body based on accordion state
         aria-labelledby="accordion-flush-heading-1"
       >
-        <div className="py-5 border-b border-gray-200 dark:border-gray-700">
+        <div className="py-5 border-b border-tno-blue">
           <pre className="whitespace-pre-wrap overflow-auto" style={{ maxHeight: window.innerHeight / 2, fontFamily: 'Cascadia Code' }}>
             {parser.getLines()}
           </pre>

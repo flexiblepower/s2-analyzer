@@ -5,9 +5,10 @@ export default {
   theme: {
     extend: {
       colors:{
-        "tno-blue": "#1A0DAB",
+        "tno-blue": "#3a617f",
         "stephanie-color": "#31302C",
-        "components-gray": "#2C2D31",
+        "base-gray": "#2C2D31",
+        "secondary-gray":"#808183"
       }
     },
   }
