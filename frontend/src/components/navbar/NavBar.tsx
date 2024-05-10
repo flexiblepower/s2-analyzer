@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import tnologo from "../../assets/TNO-logo.svg";
 import s2logo from "../../assets/s2-analyzer-logo.png";
 import Terminal from "./navbar_items/terminal/Terminal";
 import OptionsMenu from "./navbar_items/optionsmenu/OptionsMenu";
-import { parser } from "../../parser/Parser.ts";
-import MessageHeader from "../../models/messages/messageHeader.ts";
-import { Filters } from "../../models/dataStructures/filters.ts";
+import { parser } from "../../parser/Parser";
+import MessageHeader from "../../models/messages/messageHeader";
+import { Filters } from "../../models/dataStructures/filters";
 
 interface NavBarProps {
   messages: React.Dispatch<React.SetStateAction<MessageHeader[]>>;
@@ -21,9 +21,24 @@ function NavBar({ messages, filters, onFilterChange }: NavBarProps) {
   const [isVisibleTerminal, setIsVisibleTerminal] = useState(false);
   const [isVisibleOptions, setIsVisibleOptions] = useState(false);
 
-  const getFiles = async () => {
-    messages(await parser.parseLogFile());
+  const fetchMessages = async () => {
+    try {
+      const newMessages = await parser.parseLogFile();
+      messages(newMessages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
   };
+
+  /**
+   * Somewhat of a hack to get new messages, instead of the old loadfile button. 
+   * Probably should move this!
+   */
+  useEffect(() => {
+    // Start polling for new messages every 1 seconds
+    const interval = setInterval(fetchMessages, 1000);
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, []);
 
   return (
     <>
@@ -37,9 +52,7 @@ function NavBar({ messages, filters, onFilterChange }: NavBarProps) {
                 </div>
               </div>
               <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none hover:scale-110">
-                <div onClick={getFiles}>
-                  <h1>Load File</h1>
-                </div>
+                <h1>Load File</h1>
               </div>
               <div className="mx-8 text-white font-semibold font-sans text-3xl cursor-pointer select-none hover:scale-110">
                 <div onClick={() => setIsVisibleTerminal(!isVisibleTerminal)}>

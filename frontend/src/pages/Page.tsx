@@ -7,6 +7,7 @@ import DeviceBox from "../components/devices/DeviceBox.tsx";
 import { useState, useRef } from "react";
 //import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 import { Filters } from "../models/dataStructures/filters.ts";
+import WebSocketClient from "../parser/Socket.ts";
 /**
 const data4: PowerForecast = {
   time: new Date(),
@@ -193,6 +194,8 @@ function Page() {
     warnings: true,
   });
 
+  //Should be changed when running in docker to ws://socket:5000
+  new WebSocketClient("ws://localhost:5000");
   // A function to handle changes of filters dynamically.
   const handleFilterChange = (newFilters: Filters) => {
     setSelectedFilters(newFilters);

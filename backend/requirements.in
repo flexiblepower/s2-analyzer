@@ -2,7 +2,7 @@ fastapi~=0.101.1
 jsonschema~=4.17.3
 types-jsonschema~=4.17.0
 uvicorn~=0.22.0
-websockets~=10.4
+websockets~=12
 pytz
 dataclass-wizard[yaml]~=0.22.2
 bidict~=0.22.1
