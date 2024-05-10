@@ -26,7 +26,7 @@ export class Parser {
     }
 
     getMessages() {
-        for (let i=0; i<this.messageMap.length; i++) {
+       for (let i=0; i<this.messageMap.length; i++) {
             if ("subject_message_id" in this.messageMap[i]) {
                 const temp = this.messageMap[i] as ReceptionStatus
                 for (let j=0; j<this.messageMap.length; j++) {
@@ -46,19 +46,12 @@ export class Parser {
         return this.messageMap.filter((m)=> !("subject_message_id" in m)).reverse()
     }
 
-    //Allows you to select one or more files from the file system
+    // Bad method name!
     async parseLogFile() {
-        const fileHandles = await window.showOpenFilePicker({ multiple: false });
-        for (const fileHandle of fileHandles) {
-            const file = await fileHandle.getFile();
-            this.lines = await file.text();
-            this.lines = this.lines.replace("Issue:\n", "Issue: ")
-            this.parse(this.lines);
-        }
         return this.getMessages();
     }
 
-    private parse(contents: string) {
+    public parse(contents: string) {
         const lines = contents.split('\n');
         lines.forEach(line => {
             const header = this.extractHeader(line);
@@ -79,7 +72,6 @@ export class Parser {
         const dateTimeMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
         // Extracting JSON message after ensuring it's properly formatted
         const jsonMessageMatch = line.match(/Message: (\{.*\})/s); // 's' flag for capturing multiline JSON
-
         if (this.extractField(line, "Message") == "forwarded") {
             return null
         }
@@ -162,6 +154,7 @@ export class Parser {
 
 // Create a singleton instance
 const parser = new Parser();
+
 
 // Export the instance
 export { parser };
