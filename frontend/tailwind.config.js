@@ -8,7 +8,9 @@ export default {
         "tno-blue": "#3a617f",
         "stephanie-color": "#31302C",
         "base-gray": "#2C2D31",
-        "secondary-gray":"#808183"
+        "secondary-gray":"#808183",
+        "base-backgroung":"#D0D1D4",
+        "good-red":"#B7555D"
       }
     },
   }
