@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import s2AnalyzerLogo from "../../assets/s2-analyzer-logo.png";
+import s2AnalyzerLogo from "../../assets/s2AnalyzerLogo.png";
 import MessageHeader from "../../models/messages/messageHeader.ts";
 import { Filters } from "../../models/dataStructures/filters.ts";
 import { parser } from "../../parser/Parser.ts";

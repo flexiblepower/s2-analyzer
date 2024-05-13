@@ -1,6 +1,6 @@
 import { useState } from "react";
-import ArrowL from "../../assets/ArrowL.png";
-import ArrowR from "../../assets/ArrowR.png"
+import ArrowL from "../../assets/arrowL.png";
+import ArrowR from "../../assets/arrowR.png"
 import Line from "../../assets/line.png";
 import MessagePopUp from "../popups/MessagePopUp.tsx";
 import MessageHeader from "../../models/messages/messageHeader.ts";
@@ -28,7 +28,7 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
           <div>
             <table
                 className={`'items-center justify-center flex 
-                          ${props.message.message_id != null ? "text-blue-700" : "text-red-500"}`}
+                          ${props.message.message_id != null ? "text-tno-blue" : "text-good-red"}`}
             >
               <tbody>
               <tr>
