@@ -12,12 +12,12 @@ function MyComponent<T extends MessageHeader>(props: props<T>) {
     <div className="max-w-xl h-5/6 rounded-xl shadow-[0_1px_30px_1px_rgba(0,0,0,0.3)] grid grid-cols-12 grid-rows-12">
       <div className='col-start-2 col-end-4 row-start-11'>
         <img className='h-auto max-w-auto' src={cemBox} alt="image"></img>
-        <figcaption className='mt-2 text-lg text-center text-black'> CEM</figcaption>
+        <figcaption className='mt-2 text-lg font-semibold text-center text-black'> CEM</figcaption>
       </div>
 
       <div className='col-start-10 col-end-12 row-start-11'>
         <img className='h-auto max-w-auto' src={rmBox} alt="image"></img>
-        <figcaption className='mt-2 text-lg text-center text-black'> RM</figcaption>
+        <figcaption className='mt-2 text-lg font-semibold text-center text-black'> RM</figcaption>
       </div>
 
       <div className='col-start-3 row-start-2 row-end-11 border-l-4 border-black'></div>
