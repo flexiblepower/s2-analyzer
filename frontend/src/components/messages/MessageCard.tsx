@@ -51,6 +51,7 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
             <img src={props.message.message_id != null ? props.message.sender?.split(' ')[0] == "RM" ? ArrowL : ArrowR : Line} alt={props.message.sender?.toString()}/>
             <p
                 className={`${props.message.sender?.split(' ')[0] == "RM" ? "text-right" : "text-left"} text-xs`}
+                style={{marginRight: "0.2em", marginLeft:"0.5em"}}
             >
               {props.message.time.toLocaleDateString("en-NL", {
                 day: "2-digit",

@@ -63,7 +63,7 @@ function ReceptionStatusIcon(props: Props) {
         src={imgSrc}
         alt={label}
         title={label}
-        style={{ width: "15px", height: "15px" }} // Set width and height here
+        style={{ width: "15px", height: "15px", marginLeft: "0.2em" }} // Set width and height here
       />
     </>
   );

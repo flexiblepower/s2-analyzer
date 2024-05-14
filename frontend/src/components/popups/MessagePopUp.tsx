@@ -50,10 +50,10 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
   }
 
   return (
-    <Draggable>
+    <Draggable handle={".handle"}>
       <div
         className={`
-                 fixed flex justify-center items-center transition-colors z-10
+                 fixed flex justify-center items-center transition-colors z-50
                  ${props.trigger ? "visible" : "invisible"}
                  `}
         style={{position: "fixed", top: "50%", bottom: "50%", left:"50%"}}
@@ -64,10 +64,10 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                      ${props.trigger ? "scale-100 opacity-100" : "scale-50 opacity-0"}
                      `}
           >
-              <h2 className="text-lg font-black text-white justify-center items-center flex">
+              <h2 className="handle cursor-all-scroll text-lg font-black text-white justify-center items-center flex">
                   {props.message.message_type}
               </h2>
-              <div className="font-black">
+              <div className="handle font-black">
                   <button
                       className="font-[Arial] absolute top-2 left-2 p-1 rounded-lg text-white bg-stephanie-color hover:text-tno-blue"
                       onClick={()=>setIsJSON(!isJSON)}>
@@ -81,13 +81,13 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                   </button>
               </div>
               {isJSON ?
-                  <pre className={"text-white whitespace-pre-wrap overflow-auto"} style={{maxWidth: "700px"}}>
+                  <pre className={"text-white whitespace-pre-wrap overflow-auto"} style={{maxWidth: "700px", maxHeight: "700px"}}>
                     {"{\n"+keys.map((k)=>"  \""+k.toString()+"\": "+"\""+handleSpecialValue(k)+"\"").join(",\n")+"\n}"}
                   </pre>
                   :
                   <div>
                   <table className="rounded-lg font-[Calibri] border-2 border-separate border-tno-blue">
-                      <thead className="text-white border-2 border-tno-blue">
+                      <thead className="handle cursor-all-scroll text-white border-2 border-tno-blue">
                       <tr className="text-center">
                           <th className="py-3 bg-stephanie-color">Property</th>
                           <th className="py-3 bg-stephanie-color">Value</th>

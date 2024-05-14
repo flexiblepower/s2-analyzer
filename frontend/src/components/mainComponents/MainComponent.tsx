@@ -1,6 +1,7 @@
 import cemBox from '../../assets/cemBox.png';
 import MessageList from '../messages/MessageList';
 import MessageHeader from '../../models/messages/messageHeader';
+import DeviceBox from '../devices/DeviceBox';
 
 interface props<T extends MessageHeader> {
   searchedMessages: T[];
@@ -9,19 +10,9 @@ interface props<T extends MessageHeader> {
 function MyComponent<T extends MessageHeader>(props: props<T>) {
   return (
     <div className="max-w-xl h-5/6 rounded-xl shadow-[0_1px_30px_1px_rgba(0,0,0,0.3)] grid grid-cols-12 grid-rows-12">
-      <div className='col-start-2 col-end-4 row-start-11'>
-        <img className='h-auto max-w-auto' src={cemBox} alt="image"></img>
-        <figcaption className='mt-2 text-lg text-center text-black'> CEM</figcaption>
-      </div>
-
-      <div className='col-start-11 row-start-11'>
-        RM
-      </div>
-
-      <div className='col-start-3 row-start-2 row-end-11 border-l-2 border-black'></div>
-      <div className='col-start-11 row-start-2 row-end-11 border-l-2 border-black'></div>
-
-      <div className='col-start-3 col-end-11 row-start-2 row-end-11' style={{overflow: "auto" }}>
+      <DeviceBox title={'CEM'} c_start={2} c_end={4} r_start={11} l_start={3}/>
+      <DeviceBox title={'RM'} c_start={10} c_end={12} r_start={11} l_start={11}/>
+      <div className='col-start-3 col-end-11 row-start-1 row-end-11' style={{overflow: "auto" }}>
         <MessageList<MessageHeader> messages={props.searchedMessages}></MessageList>
       </div>
 
