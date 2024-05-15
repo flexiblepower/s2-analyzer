@@ -27,7 +27,6 @@ function Page() {
     PowerForecast: true,
     PowerMeasurement: true,
     ResourceManagerDetails: true,
-    ReceptionStatus: true,
     RevokeObject: true,
     SelectControlType: true,
     SessionRequest: true,

@@ -10,7 +10,6 @@ type Filters = {
   PowerForecast: boolean;
   PowerMeasurement: boolean;
   ResourceManagerDetails: boolean;
-  ReceptionStatus: boolean;
   RevokeObject: boolean;
   SelectControlType: boolean;
   SessionRequest: boolean;
