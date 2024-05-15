@@ -14,16 +14,66 @@ function useFilters(data: MessageHeader[], selectedFilters: Filters) {
   useEffect(() => {
     const filtered = data.filter((m) => {
       const sender = m.sender?.split(" ")[0];
-      const { CEM, RM, min, max, logs, warnings } = selectedFilters;
+      const {
+        CEM,
+        RM,
+        Logs,
+        Warnings,
+        Handshake,
+        HandshakeResponse,
+        InstructionStatusUpdate,
+        PowerForecast,
+        PowerMeasurement,
+        ResourceManagerDetails,
+        ReceptionStatus,
+        RevokeObject,
+        SelectControlType,
+        SessionRequest,
+        ConnectionLost,
+        ActuatorStatus,
+        FillLevelTargetProfile,
+        Instruction,
+        LeakageBehavior,
+        StorageStatus,
+        SystemDescription,
+        TimerStatus,
+        UsageForecast,
+      } = selectedFilters;
 
+      // A constant to determine which filter for the message sender is applied.
       const isSenderMatched =
         (CEM && sender === "CEM") || (RM && sender === "RM");
-      const isTimeMatched =
-        min && max ? m.time.getTime() >= min && m.time.getTime() <= max : true;
-      const isMessageMatched =
-        (logs && m.message_id !== null) || (warnings && m.message_id === null);
 
-      return isSenderMatched && isTimeMatched && isMessageMatched;
+      // A constant to determine whether logs or warnings or both are selected.
+      const isMessageMatched =
+        (Logs && m.message_id !== null) || (Warnings && m.message_id === null);
+
+      // A constant to determine which filter for the message type is applied.
+      const isTypeMatched =
+        (Handshake && m.message_type === "Handshake") ||
+        (HandshakeResponse && m.message_type === "HandshakeResponse") ||
+        (InstructionStatusUpdate &&
+          m.message_type === "InstructionStatusUpdate") ||
+        (PowerForecast && m.message_type === "PowerForecast") ||
+        (PowerMeasurement && m.message_type === "PowerMeasurement") ||
+        (ResourceManagerDetails &&
+          m.message_type === "ResourceManagerDetails") ||
+        (ReceptionStatus && m.message_type === "ReceptionStatus") ||
+        (RevokeObject && m.message_type === "RevokeObject") ||
+        (SelectControlType && m.message_type === "SelectControlType") ||
+        (SessionRequest && m.message_type === "SessionRequest") ||
+        (ConnectionLost && m.message_type === "Connection Lost") ||
+        (ActuatorStatus && m.message_type === "ActuatorStatus") ||
+        (FillLevelTargetProfile &&
+          m.message_type === "FillLevelTargetProfile") ||
+        (Instruction && m.message_type === "Instruction") ||
+        (LeakageBehavior && m.message_type === "LeakageBehavior") ||
+        (StorageStatus && m.message_type === "StorageStatus") ||
+        (SystemDescription && m.message_type === "SystemDescription") ||
+        (TimerStatus && m.message_type === "TimerStatus") ||
+        (UsageForecast && m.message_type === "UsageForecast");
+
+      return isSenderMatched && isMessageMatched && isTypeMatched;
     });
 
     setFilters(filtered);

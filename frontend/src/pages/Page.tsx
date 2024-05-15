@@ -1,4 +1,4 @@
-import {useState} from "react";
+import { useState } from "react";
 import NavBar from "../components/navbar/NavBar.tsx";
 import MessageHeader from "../models/messages/messageHeader.ts";
 import { Filters } from "../models/dataStructures/filters.ts";
@@ -19,10 +19,27 @@ function Page() {
   const [selectedFilters, setSelectedFilters] = useState<Filters>({
     CEM: true,
     RM: true,
-    min: null,
-    max: null,
-    logs: true,
-    warnings: true,
+    Logs: true,
+    Warnings: true,
+    Handshake: true,
+    HandshakeResponse: true,
+    InstructionStatusUpdate: true,
+    PowerForecast: true,
+    PowerMeasurement: true,
+    ResourceManagerDetails: true,
+    ReceptionStatus: true,
+    RevokeObject: true,
+    SelectControlType: true,
+    SessionRequest: true,
+    ConnectionLost: true,
+    ActuatorStatus: true,
+    FillLevelTargetProfile: true,
+    Instruction: true,
+    LeakageBehavior: true,
+    StorageStatus: true,
+    SystemDescription: true,
+    TimerStatus: true,
+    UsageForecast: true,
   });
   const [searchedMessage, setSearchedMessage] = useState("");
 
@@ -30,9 +47,9 @@ function Page() {
     setSelectedFilters(newFilters);
   };
 
-  const handleSearch = (search:string) => {
+  const handleSearch = (search: string) => {
     setSearchedMessage(search);
-  }
+  };
 
   const filteredMessages = useFilters(data, selectedFilters);
   const searchedMessages = useSearch(filteredMessages, searchedMessage);
@@ -56,8 +73,10 @@ function Page() {
           <Sidebar />
         </div>
       )}
-      <div className={`col-start-1 col-end-13 row-start-1 row-end-12 flex items-center ${alignment}`}>
-        <MainComponent<MessageHeader> searchedMessages={searchedMessages}/>
+      <div
+        className={`col-start-1 col-end-13 row-start-1 row-end-12 flex items-center ${alignment}`}
+      >
+        <MainComponent<MessageHeader> searchedMessages={searchedMessages} />
       </div>
       <div className="col-start-1 col-end-13 row-start-12 row-end-13 z-40">
         <TerminalController />

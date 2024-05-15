@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import s2AnalyzerLogo from "../../assets/s2AnalyzerLogo.png";
 import MessageHeader from "../../models/messages/messageHeader.ts";
 import { Filters } from "../../models/dataStructures/filters.ts";
@@ -38,13 +38,13 @@ function NavigationBar({
   toggleSideBar,
   onToggleSideBar,
 }: NavBarProps) {
-  const [isVisibleOptions, setIsVisibleOptions] = useState(false);
+  const [isVisibleFilterMenu, setIsVisibleFilterMenu] = useState(false);
   const [index, setIndex] = useState(2);
   const [showAllOptions, setShowAllOptions] = useState(false);
   const alignments = ["justify-self-auto", "justify-center", "justify-end"];
 
-  const toggleFilterOptions = () => {
-    setIsVisibleOptions(!isVisibleOptions);
+  const toggleFilterMenu = () => {
+    setIsVisibleFilterMenu(!isVisibleFilterMenu);
   };
 
   const getFiles = async () => {
@@ -63,32 +63,28 @@ function NavigationBar({
           href="https://www.tno.nl/en/"
           className="flex items-center space-x-3 rtl:space-x-reverse"
         >
-          <img 
-            src={s2AnalyzerLogo} 
-            className="h-10" 
-            alt="TNO Logo" 
-          />
+          <img src={s2AnalyzerLogo} className="h-10" alt="TNO Logo" />
         </a>
-        <button 
-          type="button" 
-          className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-tno-blue" 
+        <button
+          type="button"
+          className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-tno-blue"
           onClick={() => setShowAllOptions(!showAllOptions)}
         >
           <span className="sr-only">Open main menu</span>
-          <svg 
-            className="w-5 h-5" 
-            aria-hidden="true" 
-            xmlns="http://www.w3.org/2000/svg" 
-            fill="none" 
+          <svg
+            className="w-5 h-5"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
             viewBox="0 0 17 14"
           >
-              <path 
-                stroke="currentColor" 
-                stroke-linecap="round" 
-                stroke-linejoin="round" 
-                stroke-width="2" 
-                d="M1 1h15M1 7h15M1 13h15"
-              />
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M1 1h15M1 7h15M1 13h15"
+            />
           </svg>
         </button>
         <div
@@ -99,7 +95,7 @@ function NavigationBar({
           <ul className="flex flex-col md:flex-row md:space-x-8 md:border-0">
             <li>
               <a
-                href ="#"
+                href="#"
                 className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
                 onClick={() => onToggleSideBar(!toggleSideBar)}
               >
@@ -108,7 +104,7 @@ function NavigationBar({
             </li>
             <li>
               <a
-                href ="#"
+                href="#"
                 className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
                 onClick={getFiles}
               >
@@ -117,9 +113,9 @@ function NavigationBar({
             </li>
             <li>
               <a
-                href ="#"
+                href="#"
                 className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
-                onClick={toggleFilterOptions}
+                onClick={toggleFilterMenu}
               >
                 Filters
               </a>
@@ -127,13 +123,13 @@ function NavigationBar({
                 <FilterMenu
                   filters={filters}
                   onFilterChange={onFilterChange}
-                  isVisible={isVisibleOptions}
+                  isVisible={isVisibleFilterMenu}
                 />
               </div>
             </li>
             <li>
               <a
-                href ="#"
+                href="#"
                 className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
                 onClick={changeAlignment}
               >
@@ -141,7 +137,7 @@ function NavigationBar({
               </a>
             </li>
             <li>
-              <SearchBar searchId={search} onSearchChange={onSearchChange}/>
+              <SearchBar searchId={search} onSearchChange={onSearchChange} />
             </li>
           </ul>
         </div>
