@@ -2,7 +2,7 @@ import { useState } from "react";
 import NavBar from "../components/navbar/NavBar.tsx";
 import MessageHeader from "../models/messages/messageHeader.ts";
 import { Filters } from "../models/dataStructures/filters.ts";
-import Sidebar from "../components/sideComponent/sideComponent.tsx";
+import Sidebar from "../components/sidebar/Sidebar.tsx";
 import TerminalController from "../components/terminal/Terminal.tsx";
 import useFilters from "../hooks/useFilters.tsx";
 import useSearch from "../hooks/useSearch.tsx";
