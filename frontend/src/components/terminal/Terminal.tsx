@@ -14,7 +14,7 @@ function TerminalController() {
       <h2 id="accordion-flush-heading-1">
         <button
           type="button"
-          className={`flex items-center justify-between w-full py-4 font-medium rtl:text-right text-white ${isOpen? "border-2" : "border-t"} border-tno-blue gap-3`}
+          className={`flex items-center justify-between w-full ${"py-"+(window.innerHeight>700?"5":"4")} font-medium rtl:text-right text-white ${isOpen? "border" : "border-t"} border-tno-blue gap-3`}
           data-accordion-target="#accordion-flush-body-1"
           aria-expanded={isOpen ? "true" : "false"} // Update aria-expanded based on accordion state
           onClick={toggleAccordion} // Handle click to toggle accordion

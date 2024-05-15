@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import {parser} from "../../parser/Parser.ts";
 
-const [minWidth, maxWidth, defaultWidth] = [200, window.innerWidth/2, 350];
+const [minWidth, maxWidth, defaultWidth] = [200, window.innerWidth/2, window.innerWidth/4];
 
 function Sidebar() {
   const [width, setWidth] = useState(defaultWidth);
@@ -29,8 +30,15 @@ function Sidebar() {
   return (
       <div className="flex absolute transition-colors">
 
-        <div style={{width: `${width / 16}rem`, height: window.innerHeight*0.86}} className="bg-base-gray">
-          Sidebar
+        <div style={{width: `${width / 16}rem`, height: window.innerHeight*0.86}} className="border-tno-blue border-r bg-base-gray">
+            <h1 className={"text-lg text-white"}>All errors:</h1>
+            {parser.getErrors().length!=0 && parser.getErrors().map((s:string)=>{
+                return (
+                <pre className={"text-white overflow-auto bg-base-gray"} style={{maxWidth: width}}>
+                    {s}
+                </pre>);
+            })}
+            {parser.getErrors().length==0 && <pre className={"text-white"}>None.</pre>}
         </div>
 
         <div
