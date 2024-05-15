@@ -61,8 +61,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
           <div
               onClick={(e) => e.stopPropagation()}
               className={`bg-stephanie-color rounded-lg shadow p-6 transition-all
-                     ${props.trigger ? "scale-100 opacity-100" : "scale-50 opacity-0"}
-                     `}
+                     ${props.trigger ? "scale-100 opacity-100" : "scale-50 opacity-0"}`}
           >
               <h2 className="handle cursor-all-scroll text-lg font-black text-white justify-center items-center flex">
                   {props.message.message_type}
