@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState, useEffect } from "react";
 import s2AnalyzerLogo from "../../assets/s2AnalyzerLogo.png";
 import MessageHeader from "../../models/messages/messageHeader.ts";
 import { Filters } from "../../models/dataStructures/filters.ts";
@@ -41,6 +41,7 @@ function NavigationBar({
   const [isVisibleFilterMenu, setIsVisibleFilterMenu] = useState(false);
   const [index, setIndex] = useState(2);
   const [showAllOptions, setShowAllOptions] = useState(false);
+  const [isRealTime, setisRealTime] = useState(true);
   const alignments = ["justify-self-auto", "justify-center", "justify-end"];
 
   const toggleFilterMenu = () => {
@@ -48,6 +49,7 @@ function NavigationBar({
   };
 
   const getFiles = async () => {
+    setisRealTime(false);
     messages(await parser.parseLogFile());
   };
 
@@ -55,6 +57,27 @@ function NavigationBar({
     setIndex((index + 1) % 3);
     onAlignmentChange(alignments[index]);
   };
+
+  const fetchMessages = async () => {
+    try {
+      const newMessages = await parser.getMessages();
+      messages(newMessages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    }
+  };
+
+  /**
+   * Somewhat of a hack to get new messages, instead of the old loadfile button. 
+   * Probably should move this!
+   */
+  useEffect(() => {
+    if (isRealTime) {
+      // Start polling for new messages every 1 seconds
+      const interval = setInterval(fetchMessages, 1000);
+      return () => clearInterval(interval); // Cleanup on unmount
+    }
+  }, []);
 
   return (
     <nav className="bg-base-gray dark:bg-gray-900 w-full z-20 top-0 start-0 border-b border-tno-blue">
@@ -100,6 +123,15 @@ function NavigationBar({
                 onClick={() => onToggleSideBar(!toggleSideBar)}
               >
                 Ξ
+              </a>
+            </li>
+            <li>
+              <a
+                href="#"
+                className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
+                onClick={() => setisRealTime(true)}
+              >
+                Real Time
               </a>
             </li>
             <li>
