@@ -2,6 +2,9 @@ import MessageHeader from "../../models/messages/messageHeader.ts";
 import Draggable from "react-draggable";
 import {useEffect, useState} from "react";
 import SpecialMessage from "./special/SpecialMessage.tsx";
+import NestedObjectVisualization from "./special/NestedObjectVisualization.tsx";
+import ActuatorDescription from "../../models/dataStructures/frbc/actuatorDescription.ts";
+import StorageDescription from "../../models/dataStructures/frbc/storageDescription.ts";
 
 interface props<T extends MessageHeader> {
   trigger: boolean;
@@ -16,16 +19,26 @@ interface props<T extends MessageHeader> {
 function MessagePopUp<T extends MessageHeader>(props: props<T>) {
   const keys = Object.keys(props.message) as (keyof T)[];
   const [isJSON, setIsJSON] = useState(false);
+  const [isDraggable, setIsDraggable] = useState(false);
 
-  useEffect(() => {
+
+    useEffect(() => {
         document.addEventListener("keydown", detectKeyDown, true)
       }, []);
 
-  const detectKeyDown = (e: KeyboardEvent) => {
-      if (e.key == "x") {
-          props.setTrigger(false);
-      }
-  }
+    const detectKeyDown = (e: KeyboardEvent) => {
+        e.stopPropagation();
+        switch (e.key) {
+            case "x":
+                props.setTrigger(false);
+                break;
+            case "c":
+                setIsDraggable((isDraggable) => !isDraggable);
+                break;
+            default:
+                break;
+        }
+    };
 
   const handleSpecialValue = (key: keyof T) => {
       if (typeof props.message[key] === 'object') {
@@ -43,6 +56,10 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                   second: "2-digit",
                   hour12: true,
               })
+          } else if (key == "actuators" && "actuators" in props.message) {
+              return (<NestedObjectVisualization obj={props.message.actuators as ActuatorDescription[]}/>);
+          } else if (key == "storage" && "storage" in props.message) {
+              return (<NestedObjectVisualization obj={props.message.storage as StorageDescription[]}/>);
           }
           return JSON.stringify(props.message[key])
       }
@@ -50,9 +67,10 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
   }
 
   return (
-    <Draggable handle={".handle"}>
+    <Draggable handle={`${isDraggable?"":".handle"}`}>
       <div
         className={`
+                ${isDraggable?"cursor-all-scroll":"cursor-auto"}
                  fixed flex justify-center items-center transition-colors z-50
                  ${props.trigger ? "visible" : "invisible"}
                  `}

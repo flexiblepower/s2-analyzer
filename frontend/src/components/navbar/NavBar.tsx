@@ -42,7 +42,7 @@ function NavigationBar({
   const [isVisibleFilterMenu, setIsVisibleFilterMenu] = useState(false);
   const [index, setIndex] = useState(2);
   const [showAllOptions, setShowAllOptions] = useState(false);
-  const [isRealTime, setisRealTime] = useState(true);
+  const [isRealTime, setIsRealTime] = useState(true);
   const alignments = ["justify-self-auto", "justify-center", "justify-end"];
   const filterMenuRef = useRef(null);
 
@@ -51,7 +51,7 @@ function NavigationBar({
   };
 
   const getFiles = async () => {
-    setisRealTime(false);
+    setIsRealTime(false);
     messages(await parser.parseLogFile());
   };
 
@@ -136,8 +136,8 @@ function NavigationBar({
             <li>
               <a
                 href="#"
-                className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
-                onClick={() => setisRealTime(true)}
+                className={`block py-1 px-2 md:py-2 md:px-3 rounded ${isRealTime?"text-tno-blue":"text-white"} md:p-0`}
+                onClick={() => setIsRealTime(true)}
               >
                 Real Time
               </a>
