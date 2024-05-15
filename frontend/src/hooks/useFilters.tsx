@@ -25,7 +25,6 @@ function useFilters(data: MessageHeader[], selectedFilters: Filters) {
         PowerForecast,
         PowerMeasurement,
         ResourceManagerDetails,
-        ReceptionStatus,
         RevokeObject,
         SelectControlType,
         SessionRequest,
@@ -58,20 +57,19 @@ function useFilters(data: MessageHeader[], selectedFilters: Filters) {
         (PowerMeasurement && m.message_type === "PowerMeasurement") ||
         (ResourceManagerDetails &&
           m.message_type === "ResourceManagerDetails") ||
-        (ReceptionStatus && m.message_type === "ReceptionStatus") ||
         (RevokeObject && m.message_type === "RevokeObject") ||
         (SelectControlType && m.message_type === "SelectControlType") ||
         (SessionRequest && m.message_type === "SessionRequest") ||
         (ConnectionLost && m.message_type === "Connection Lost") ||
-        (ActuatorStatus && m.message_type === "ActuatorStatus") ||
+        (ActuatorStatus && m.message_type === "FRBC.ActuatorStatus") ||
         (FillLevelTargetProfile &&
-          m.message_type === "FillLevelTargetProfile") ||
-        (Instruction && m.message_type === "Instruction") ||
-        (LeakageBehavior && m.message_type === "LeakageBehavior") ||
-        (StorageStatus && m.message_type === "StorageStatus") ||
-        (SystemDescription && m.message_type === "SystemDescription") ||
-        (TimerStatus && m.message_type === "TimerStatus") ||
-        (UsageForecast && m.message_type === "UsageForecast");
+          m.message_type === "FRBC.FillLevelTargetProfile") ||
+        (Instruction && m.message_type === "FRBC.Instruction") ||
+        (LeakageBehavior && m.message_type === "FRBC.LeakageBehavior") ||
+        (StorageStatus && m.message_type === "FRBC.StorageStatus") ||
+        (SystemDescription && m.message_type === "FRBC.SystemDescription") ||
+        (TimerStatus && m.message_type === "FRBC.TimerStatus") ||
+        (UsageForecast && m.message_type === "FRBC.UsageForecast");
 
       return isSenderMatched && isMessageMatched && isTypeMatched;
     });

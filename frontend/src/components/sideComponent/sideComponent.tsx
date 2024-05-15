@@ -28,7 +28,7 @@ function Sidebar() {
   }, []);
 
   return (
-      <div className="flex absolute transition-colors">
+      <div className="overflow-auto flex absolute transition-colors">
 
         <div style={{width: `${width / 16}rem`, height: window.innerHeight*0.86}} className="border-tno-blue border-r bg-base-gray">
             <h1 className={"text-lg text-white"}>All errors:</h1>
