@@ -65,7 +65,7 @@ export class Parser {
         return this.getMessages();
     }
 
-    private parse(contents: string) {
+    public parse(contents: string) {
         const lines = contents.split('\n');
         lines.forEach((line,i) => {
             const header = this.extractHeader(line,i);

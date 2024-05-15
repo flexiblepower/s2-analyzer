@@ -6,6 +6,7 @@ import Sidebar from "../components/sideComponent/sideComponent.tsx";
 import TerminalController from "../components/terminal/Terminal.tsx";
 import useFilters from "../hooks/useFilters.tsx";
 import useSearch from "../hooks/useSearch.tsx";
+import WebSocketClient from "../parser/Socket.ts";
 import MainComponent from "../components/mainComponents/MainComponent.tsx";
 
 /**
@@ -41,6 +42,9 @@ function Page() {
     UsageForecast: true,
   });
   const [searchedMessage, setSearchedMessage] = useState("");
+
+
+  new WebSocketClient("ws://localhost:5000")
 
   const handleFilterChange = (newFilters: Filters) => {
     setSelectedFilters(newFilters);

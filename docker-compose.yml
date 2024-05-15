@@ -6,8 +6,33 @@ services:
       - "8001:8001"
     environment:
       LOG_LEVEL: info
+    networks:
+      - my_network
+
   frontend:
     build:
       context: ./frontend
     ports:
       - "4173:4173"
+    networks:
+      - my_network
+    depends_on:
+      - backend
+
+  socket:
+    image: python:3.9-slim
+    volumes:
+      - ./socket:/socket
+    working_dir: /socket
+    command: sh -c "pip install -r requirements.txt && python server.py"
+    ports:
+      - "5000:5000"
+    networks:
+      - my_network
+    depends_on:
+      - backend
+      - frontend
+
+networks:
+  my_network:
+    driver: bridge
