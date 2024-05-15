@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import s2AnalyzerLogo from "../../assets/s2AnalyzerLogo.png";
 import MessageHeader from "../../models/messages/messageHeader.ts";
 import { Filters } from "../../models/dataStructures/filters.ts";
 import { parser } from "../../parser/Parser.ts";
 import FilterMenu from "./navbar_items/FilterMenu.tsx";
 import SearchBar from "./navbar_items/SearchBar.tsx";
+import useCloseFilterMenu from "../../hooks/useCloseFilterMenu.tsx";
 
 /**
  * This is an interface to define the props of the NavigationBar.
@@ -43,6 +44,7 @@ function NavigationBar({
   const [showAllOptions, setShowAllOptions] = useState(false);
   const [isRealTime, setisRealTime] = useState(true);
   const alignments = ["justify-self-auto", "justify-center", "justify-end"];
+  const filterMenuRef = useRef(null);
 
   const toggleFilterMenu = () => {
     setIsVisibleFilterMenu(!isVisibleFilterMenu);
@@ -67,8 +69,14 @@ function NavigationBar({
     }
   };
 
+  const handleClosingFilterMenu = () => {
+    setIsVisibleFilterMenu(false);
+  };
+
+  useCloseFilterMenu(filterMenuRef, handleClosingFilterMenu);
+
   /**
-   * Somewhat of a hack to get new messages, instead of the old loadfile button. 
+   * Somewhat of a hack to get new messages, instead of the old loadfile button.
    * Probably should move this!
    */
   useEffect(() => {
@@ -80,10 +88,10 @@ function NavigationBar({
   }, []);
 
   return (
-    <nav className="bg-base-gray dark:bg-gray-900 w-full z-20 top-0 start-0 border-b border-tno-blue">
+    <nav className="bg-base-gray w-full z-20 top-0 start-0 border-b border-tno-blue">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
         <a
-          href="https://www.tno.nl/en/"
+          href="https://s2standard.org/"
           className="flex items-center space-x-3 rtl:space-x-reverse"
         >
           <img src={s2AnalyzerLogo} className="h-10" alt="TNO Logo" />
@@ -143,14 +151,13 @@ function NavigationBar({
                 Load File
               </a>
             </li>
-            <li>
-              <a
-                href="#"
+            <li ref={filterMenuRef}>
+              <button
                 className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
                 onClick={toggleFilterMenu}
               >
                 Filters
-              </a>
+              </button>
               <div className="clickable-heading md:absolute">
                 <FilterMenu
                   filters={filters}
