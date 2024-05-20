@@ -7,7 +7,7 @@ interface props<T extends MessageHeader> {
   searchedMessages: T[];
 }
 
-function MainComponent<T extends MessageHeader>(props: props<T>) {
+function MessageWidget<T extends MessageHeader>(props: props<T>) {
   return (
     <div className="max-w-xl h-5/6 rounded-xl shadow-[0_1px_30px_1px_rgba(0,0,0,0.3)] grid grid-cols-12 grid-rows-12">
       <div className='col-start-2 col-end-4 row-start-11'>
@@ -31,4 +31,4 @@ function MainComponent<T extends MessageHeader>(props: props<T>) {
   );
 };
 
-export default MainComponent;
+export default MessageWidget;

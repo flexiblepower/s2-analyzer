@@ -7,7 +7,7 @@ import TerminalController from "../components/terminal/Terminal.tsx";
 import useFilters from "../hooks/useFilters.tsx";
 import useSearch from "../hooks/useSearch.tsx";
 import WebSocketClient from "../parser/Socket.ts";
-import MainComponent from "../components/mainComponents/MainComponent.tsx";
+import MessageWidget from "../components/widgets/MessageWidget.tsx"
 
 /**
  * The component for rendering the Single Page Application
@@ -79,7 +79,7 @@ function Page() {
         <div
             className={`col-start-1 col-end-13 row-start-1 row-end-12 flex items-center ${alignment}`}
         >
-          <MainComponent<MessageHeader> searchedMessages={searchedMessages} />
+          <MessageWidget<MessageHeader> searchedMessages={searchedMessages} />
         </div>
         <div className="col-start-1 col-end-13 row-start-12 row-end-13 z-40">
           <TerminalController />
