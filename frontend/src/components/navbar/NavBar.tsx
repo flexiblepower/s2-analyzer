@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import s2AnalyzerLogo from "../../assets/s2AnalyzerLogo.png";
 import MessageHeader from "../../models/messages/messageHeader.ts";
