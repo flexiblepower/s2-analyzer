@@ -94,11 +94,18 @@ docker run --network=host --env CEM_URL=ws://localhost:8001/backend/rm/battery1/
 ```
 Now, you should be able to some messages flooding in from the Frontend.
 
+In case this gets overwhelming, you can click the "Pause Real-Time" button to temporally stop real-time rendering.
+To resume, click the button again (it should go under the "Continue Real-Time" name now) and the next time a message is
+received, the message list and the terminal view will update with everything you might have missed.
+
 ### File Loading
-By selecting the "Load File" button, the real-time connection of the Frontend to the Backend is permanently terminated.
-Instead, a file selection window pops up, allowing you to select any ".txt" file to load logged messages from.
-Feel free to check out the ".txt" files provided in the "frontend/setup" folder.
+By selecting the "Load File" button, the real-time connection of the Frontend to the Backend is temporally terminated.
+Then, a file selection window pops up, allowing you to select any ".txt" file to load logged messages from.
+Feel free to check out the ".txt" files provided in the "frontend/examples" folder.
 Please note, that the user is able to select multiple files at once and their contents will be merged when being displayed.
+
+When you want to return to the real-time message exchange, click on the "Continue Real-Time" button and watch as the incoming
+messages get rendered on top of the messages loaded from the selected file.
 
 ### Filters
 The filters menu contains a variety of stackable filters that allow users to limit which messages are visible on the screen at a time. To close this menu, simply click away.

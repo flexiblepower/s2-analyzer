@@ -42,7 +42,6 @@ function NavigationBar({
   const [isVisibleFilterMenu, setIsVisibleFilterMenu] = useState(false);
   const [index, setIndex] = useState(2);
   const [showAllOptions, setShowAllOptions] = useState(false);
-  const [isRealTime, setIsRealTime] = useState(true);
   const alignments = ["justify-self-auto", "justify-center", "justify-end"];
   const filterMenuRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
@@ -52,8 +51,9 @@ function NavigationBar({
   };
 
   const getFiles = async () => {
-    setIsRealTime(false);
+    setIsPaused(true);
     messages(await parser.parseLogFile());
+    parser.pauseMessages();
   };
 
   const pauseMessages = () => {
@@ -82,11 +82,8 @@ function NavigationBar({
   useCloseFilterMenu(filterMenuRef, handleClosingFilterMenu);
 
   useEffect(() => {
-    if (isRealTime) {
-      // Start polling for new messages every 1 seconds
       const interval = setInterval(fetchMessages, 1000);
       return () => clearInterval(interval); // Cleanup on unmount
-    }
   }, []);
 
   return (
@@ -138,10 +135,10 @@ function NavigationBar({
               <li>
                 <a
                     href="#"
-                    className={`block py-1 px-2 md:py-2 md:px-3 rounded ${isRealTime?"text-tno-blue":"text-white"} md:p-0`}
-                    onClick={() => setIsRealTime(true)}
+                    className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
+                    onClick={pauseMessages}
                 >
-                  Real Time
+                  {isPaused ? "Continue Real-Time" : "Pause Real-Time"}
                 </a>
               </li>
               <li>
@@ -151,15 +148,6 @@ function NavigationBar({
                     onClick={getFiles}
                 >
                   Load File
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
-                  onClick={pauseMessages}
-                >
-                  {isPaused ? "Start Message Loading" : "Pause Message Loading"}
                 </a>
               </li>
               <li ref={filterMenuRef}>
@@ -187,7 +175,7 @@ function NavigationBar({
                 </a>
               </li>
               <li>
-                <SearchBar searchId={search} onSearchChange={onSearchChange} />
+                <SearchBar searchId={search} onSearchChange={onSearchChange}/>
               </li>
             </ul>
           </div>

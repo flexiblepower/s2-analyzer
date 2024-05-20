@@ -21,13 +21,20 @@ export class Parser {
     private messageMap: MessageHeader[] = []
     private lines: string = ""
     private errors: string[] = []
-    private  isPaused: boolean = false
-    private messages: MessageHeader[] = []
+    private isPaused: boolean = false
+    private bufferedMessages: MessageHeader[] = []
+    private bufferedLines:string = ""
+
     addLine(m: string) {
-        if (m.charAt(m.length-1)=='\n') {
-            this.lines=this.lines.concat(m);
+        const m_temp = (m.charAt(m.length-1)=='\n'? m : m.concat('\n'))
+        if (this.isPaused) {
+            this.bufferedLines = this.bufferedLines.concat(m);
         } else {
-            this.lines=this.lines.concat(m,'\n');
+            if (this.bufferedLines.length>0) {
+                this.lines = this.lines.concat(this.bufferedLines);
+                this.bufferedLines = "";
+            }
+            this.lines = this.lines.concat(m_temp);
         }
     }
 
@@ -82,27 +89,34 @@ export class Parser {
         lines.forEach((line,i) => {
             const header = this.extractHeader(line,i);
             if (header) {
-                for (let i=0; i<this.messageMap.length; i++) {
-                    if (this.messageMap[i].message_id && this.messageMap[i].message_id==header.message_id) {
-                        if (this.messageMap[i].status.toString().includes("invalid")) return
-                        this.messageMap[i] = header
-                        return
-                    }
-                }
-                // Logic to handle if message loading is paused or not. 
-                if(this.isPaused){
-                    this.messages.push(header);
-                }
-                else{
-                    if(this.messages.length>0){
-                        for(let i=0; i<this.messages.length; i++){
-                            this.messageMap.push(this.messages[i]);
-                        }
-                    }
+                if (this.isPaused) {
+                    this.bufferedMessages.push(header);
+                } else if (!this.removeDuplicates(header)) {
+                    if (this.bufferedMessages.length>0) this.emptyBufferedMessages();
                     this.messageMap.push(header);
                 }
             }
         });
+    }
+
+    private emptyBufferedMessages() {
+        for (let i=0; i<this.bufferedMessages.length; i++) {
+            if (!this.removeDuplicates(this.bufferedMessages[i])) {
+                this.messageMap.push(this.bufferedMessages[i]);
+            }
+        }
+        this.bufferedMessages = [];
+    }
+
+    private removeDuplicates(header:MessageHeader) {
+        for (let i=0; i<this.messageMap.length; i++) {
+            if (this.messageMap[i].message_id && this.messageMap[i].message_id==header.message_id) {
+                if (this.messageMap[i].status.toString().includes("invalid")) return true;
+                this.messageMap[i] = header
+                return true;
+            }
+        }
+        return false;
     }
 
     private extractHeader(line: string, i:number): MessageHeader | null {
