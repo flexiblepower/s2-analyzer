@@ -34,7 +34,7 @@ function Sidebar() {
             <h1 className={"text-lg text-white"}>All errors:</h1>
             {parser.getErrors().length!=0 && parser.getErrors().map((s:string)=>{
                 return (
-                <pre className={"text-white overflow-auto bg-base-gray"} style={{maxWidth: width}}>
+                <pre className={"text-white overflow-auto bg-base-gray no-scrollbar"} style={{maxWidth: width, overflowX: "hidden"}}>
                     {s}
                 </pre>);
             })}

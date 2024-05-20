@@ -67,7 +67,7 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
               props.message.sender?.split(" ")[0] == "RM"
                 ? "text-right"
                 : "text-left"
-            } text-xs`}
+            } text-xs font-semibold`}
             style={{ marginRight: "0.2em", marginLeft: "0.5em" }}
           >
             {props.message.time.toLocaleDateString("en-NL", {
