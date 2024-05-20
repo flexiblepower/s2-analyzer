@@ -75,10 +75,6 @@ function NavigationBar({
 
   useCloseFilterMenu(filterMenuRef, handleClosingFilterMenu);
 
-  /**
-   * Somewhat of a hack to get new messages, instead of the old loadfile button.
-   * Probably should move this!
-   */
   useEffect(() => {
     if (isRealTime) {
       // Start polling for new messages every 1 seconds

@@ -56,9 +56,9 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                   second: "2-digit",
                   hour12: true,
               })
-          } else if (key == "actuators" && "actuators" in props.message) {
+          } else if (!isJSON && key == "actuators" && "actuators" in props.message) {
               return (<NestedObjectVisualization obj={props.message.actuators as ActuatorDescription[]}/>);
-          } else if (key == "storage" && "storage" in props.message) {
+          } else if (!isJSON && key == "storage" && "storage" in props.message) {
               return (<NestedObjectVisualization obj={props.message.storage as StorageDescription[]}/>);
           }
           return JSON.stringify(props.message[key])

@@ -22,6 +22,14 @@ export class Parser {
     private lines: string = ""
     private errors: string[] = []
 
+    addLine(m: string) {
+        if (m.charAt(m.length-1)=='\n') {
+            this.lines=this.lines.concat(m);
+        } else {
+            this.lines=this.lines.concat(m,'\n');
+        }
+    }
+
     getLines() {
         return this.lines
     }
@@ -53,7 +61,7 @@ export class Parser {
 
     //Allows you to select one or more files from the file system
     async parseLogFile() {
-        const fileHandles = await window.showOpenFilePicker({ multiple: false });
+        const fileHandles = await window.showOpenFilePicker({ multiple: true });
         this.messageMap = []
         this.errors = []
         for (const fileHandle of fileHandles) {

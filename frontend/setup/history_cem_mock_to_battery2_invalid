@@ -1,0 +1,5 @@
+2024-03-22 12:51:58 Connection initiated from 'battery2' to S2-analyzer.
+2024-03-22 12:51:58 [Message received][Sender: RM battery2][Receiver: CEM cem_mock] Message: {"message_type": "FRBC.ActuatorStatus", "message_id": "1234", "operation_mode_factor": 0.5, "previous_operation_mode_id": "4321"}
+2024-03-22 12:51:58 [Message validation not successful][Sender: RM battery2][Receiver: CEM cem_mock] Message: {'message_type': 'FRBC.ActuatorStatus', 'message_id': '1234', 'operation_mode_factor': 0.5, 'previous_operation_mode_id': '4321'} Issue:
+((FRBCActuatorStatus(),), 'active_operation_mode_id\n  field required (type=value_error.missing)\nactuator_id\n  field required (type=value_error.missing)\nmessage_id\n  value is not a valid uuid (type=type_error.uuid)\nprevious_operation_mode_id\n  value is not a valid uuid (type=type_error.uuid)')
+2024-03-22 12:51:58 [Message buffered][Sender: RM battery2][Receiver: CEM cem_mock] Message: {'message_type': 'FRBC.ActuatorStatus', 'message_id': '1234', 'operation_mode_factor': 0.5, 'previous_operation_mode_id': '4321'}
