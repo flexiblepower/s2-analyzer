@@ -5,24 +5,16 @@ export default {
   theme: {
     extend: {
       colors:{
-        "tno-blue": "#1A0DAB",
-        "stephanie-color": "#FFFFFF",
+        "tno-blue": "#3a617f",
+        "stephanie-color": "#31302C",
+        "base-gray": "#2C2D31",
+        "secondary-gray":"#808183",
+        "base-backgroung":"#313338",
+        "good-red":"#B7555D",
+        "good-green":"B4DD6D",
+        "good-orange":"#DDC66D"
       }
     },
-  },
-  plugins: [
-      function({ addUtilities }) {
-        const newUtilities = {
-          ".no-scrollbar::-webkit-scrollbar": {
-            display: "none"
-          },
-          ".no-scrollbar": {
-            "-ms-overflow-style": "none",
-            "scrollbar-width": "none"
-          }
-        };
-        addUtilities(newUtilities)
-      }
-  ],
+  }
 }
 

@@ -20,9 +20,22 @@ import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 export class Parser {
     private messageMap: MessageHeader[] = []
     private lines: string = ""
+    private errors: string[] = []
+
+    addLine(m: string) {
+        if (m.charAt(m.length-1)=='\n') {
+            this.lines=this.lines.concat(m);
+        } else {
+            this.lines=this.lines.concat(m,'\n');
+        }
+    }
 
     getLines() {
         return this.lines
+    }
+
+    getErrors() {
+        return this.errors
     }
 
     getMessages() {
@@ -46,15 +59,23 @@ export class Parser {
         return this.messageMap.filter((m)=> !("subject_message_id" in m)).reverse()
     }
 
-    // Bad method name!
     async parseLogFile() {
+        const fileHandles = await window.showOpenFilePicker({ multiple: true });
+        this.messageMap = []
+        this.errors = []
+        for (const fileHandle of fileHandles) {
+            const file = await fileHandle.getFile();
+            this.lines = await file.text();
+            this.lines = this.lines.replace("Issue:\n", "Issue: ")
+            this.parse(this.lines);
+        }
         return this.getMessages();
     }
 
     public parse(contents: string) {
         const lines = contents.split('\n');
-        lines.forEach(line => {
-            const header = this.extractHeader(line);
+        lines.forEach((line,i) => {
+            const header = this.extractHeader(line,i);
             if (header) {
                 for (let i=0; i<this.messageMap.length; i++) {
                     if (this.messageMap[i].message_id && this.messageMap[i].message_id==header.message_id) {
@@ -68,7 +89,7 @@ export class Parser {
         });
     }
 
-    private extractHeader(line: string): MessageHeader | null {
+    private extractHeader(line: string, i:number): MessageHeader | null {
         const dateTimeMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
         // Extracting JSON message after ensuring it's properly formatted
         const jsonMessageMatch = line.match(/Message: (\{.*\})/s); // 's' flag for capturing multiline JSON
@@ -85,7 +106,8 @@ export class Parser {
             messageStr = messageStr.replace(/\b(True|False)\b/g, match => match.toLowerCase());
 
             try {
-                const header: MessageHeader = this.castToMessageType(messageStr)
+                const header: MessageHeader|null = this.castToMessageType(messageStr, i)
+                if (header==null) return null;
 
                 let status = this.extractField(line, "Message")
                 if (status && status=="validation not successful") {
@@ -101,20 +123,26 @@ export class Parser {
 
                 return header;
             } catch (error) {
-                console.error("Error parsing message JSON", error, "Line:", line);
+                this.errors.push(i+". Error parsing message JSON: \""+error+"\"\n at line: \""+line+"\"");
             }
         } else if (dateTimeMatch) { // Check if it is a connection log
-            const match = line.match(/Connection from '(.*?)' to S2-analyzer has closed./);
-            if (match) {
-                return {
-                    time: new Date(dateTimeMatch[1]),
-                    status: "",
-                    sender: (match[1].toUpperCase().includes("CEM") ? "CEM " : "RM ") + match[1],
-                    receiver: null,
-                    message_type: "Connection Lost",
-                    message_id: null
-                } as MessageHeader
-            }
+            return this.parseBackendLog(line, dateTimeMatch[1]);
+        }
+        this.errors.push(i+". Line did not contribute to any object: \""+line+"\"")
+        return null;
+    }
+
+    private parseBackendLog(line:string, time:string) {
+        const match = line.match(/Connection from '(.*?)' to S2-analyzer has closed./);
+        if (match) {
+            return {
+                time: new Date(time),
+                status: "",
+                sender: (match[1].toUpperCase().includes("CEM") ? "CEM " : "RM ") + match[1],
+                receiver: null,
+                message_type: "Connection Lost",
+                message_id: null
+            } as MessageHeader
         }
         return null;
     }
@@ -125,7 +153,7 @@ export class Parser {
         return match ? match[1].trim() : null;
     }
 
-    private castToMessageType(messageStr: string) {
+    private castToMessageType(messageStr: string, i:number) {
         const message = JSON.parse(messageStr);
         switch(message.message_type) {
             case "Handshake": return message as Handshake;
@@ -147,7 +175,7 @@ export class Parser {
             case "FRBC.TimerStatus": return message as TimerStatus;
             case "FRBC.UsageForecast": return message as UsageForecast;
             case null: return message as MessageHeader;
-            default: throw new Error("Did not found matching message type interface for " +message.message_type.toString()+".");
+            default: this.errors.push(i+". Did not find a matching message type interface for " +message.message_type.toString()+"."); return null;
         }
     }
 }

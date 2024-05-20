@@ -52,6 +52,7 @@ class WebSocketClient {
         const timestampedMessage = `${timestamp} ${message}`;
         try {
             console.log("Parsing message");
+            parser.addLine(timestampedMessage);
             parser.parse(timestampedMessage);
         } catch (error) {
             console.error('Error parsing data:', error);
