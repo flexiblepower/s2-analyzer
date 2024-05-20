@@ -10,7 +10,7 @@ class WebSocketClient {
         this.ws = new WebSocket(url);
         this.receivedMessages = new Set<string>();
         this.ws.onopen = () => {
-            this.sendMessage('Hi from frontend');
+            this.sendMessage('Hi from frontend'); // Needed for socket to know frontend messages can be sent.
             console.log('WebSocket connection opened');
         };
 
@@ -34,8 +34,6 @@ class WebSocketClient {
     private onReceive(data: any): void {
         const message = data.toString();
         if (this.receivedMessages.has(message)) {
-            // For some reason in testing, the same message is received twice.... 
-            // We will have to check this in detail. TO BE DONE!
             console.log('Duplicate message received, ignoring:', message);
             return;
         }

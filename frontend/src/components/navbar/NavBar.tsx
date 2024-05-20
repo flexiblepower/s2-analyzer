@@ -45,6 +45,7 @@ function NavigationBar({
   const [isRealTime, setIsRealTime] = useState(true);
   const alignments = ["justify-self-auto", "justify-center", "justify-end"];
   const filterMenuRef = useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   const toggleFilterMenu = () => {
     setIsVisibleFilterMenu(!isVisibleFilterMenu);
@@ -54,6 +55,11 @@ function NavigationBar({
     setIsRealTime(false);
     messages(await parser.parseLogFile());
   };
+
+  const pauseMessages = () => {
+    setIsPaused(!isPaused);
+    parser.pauseMessages();
+  }
 
   const changeAlignment = () => {
     setIndex((index + 1) % 3);
@@ -145,6 +151,15 @@ function NavigationBar({
                     onClick={getFiles}
                 >
                   Load File
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
+                  onClick={pauseMessages}
+                >
+                  {isPaused ? "Start Message Loading" : "Pause Message Loading"}
                 </a>
               </li>
               <li ref={filterMenuRef}>
