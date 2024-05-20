@@ -1,4 +1,4 @@
-import UsageForecastElement from "../../models/dataStructures/frbc/usageForecastElement.ts";
+import UsageForecastElement from "../../../models/dataStructures/frbc/usageForecastElement.ts";
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -56,9 +56,21 @@ function PowerForecastGraph(props: Props) {
         };
     }
 
+    const options = {
+        scales: {
+            x: {
+                display: true,
+                title: {
+                    display: true,
+                    text: 'Time (ms)',
+                },
+            }
+        }
+    };
+
     return (
-        <div className={"flex justify-center items-center"}>
-            <Line data={collectGraphData()} width={100} height={200}/>
+        <div className={"flex justify-center items-center bg-white"}>
+            <Line data={collectGraphData()} width={100} height={200} options={options}/>
         </div>
     );
 }
