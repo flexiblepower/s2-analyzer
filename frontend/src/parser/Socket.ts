@@ -10,6 +10,7 @@ class WebSocketClient {
         this.ws = new WebSocket(url);
         this.receivedMessages = new Set<string>();
         this.ws.onopen = () => {
+            this.sendMessage('Hi from frontend');
             console.log('WebSocket connection opened');
         };
 
@@ -27,15 +28,6 @@ class WebSocketClient {
         };
     }
 
-    /**
-     * Hacky workaround to get a timestamp so messages can be parsed, 
-     * since the backend doesn't send them by default. TO BE DONE!
-     */
-    private getCurrentTimestamp(): string {
-        const now = new Date();
-        return now.toISOString().replace('T', ' ').substring(0, 19); // Format: YYYY-MM-DD HH:MM:SS
-    }
-
     /*
     * Function to handle the received data from the websocket
     */
@@ -48,12 +40,10 @@ class WebSocketClient {
             return;
         }
         this.receivedMessages.add(message);
-        const timestamp = this.getCurrentTimestamp();
-        const timestampedMessage = `${timestamp} ${message}`;
         try {
-            console.log("Parsing message");
-            parser.addLine(timestampedMessage);
-            parser.parse(timestampedMessage);
+            console.log("Parsing message:" + message);
+            parser.addLine(message);
+            parser.parse(message);
         } catch (error) {
             console.error('Error parsing data:', error);
         }

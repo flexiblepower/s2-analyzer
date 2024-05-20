@@ -90,11 +90,14 @@ class MessageHistory(AsyncApplication):
         filename = f"{S2_MESSAGE_HISTORY_FILE_PREFIX}_{self._cem_id}_to_{self._rm_id}{S2_MESSAGE_HISTORY_FILE_SUFFIX}"
         async with aiofiles.open(CONFIG.connection_histories_dir_path / filename, mode='at+') as file:
             async def handle_line(line: str):
-                await file.write(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {line}\n")
-                await file.flush()
                 if self.websocket_client.connection is None:
                     await self.websocket_client.connect()
-                await self.websocket_client.send_message(line)
+                    await self.websocket_client.send_message("hi from backend")
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                formatted_line = f"{timestamp} {line}"
+                await file.write(f"{formatted_line}\n")
+                await file.flush()
+                await self.websocket_client.send_message(formatted_line)
             try:
                 while self._running:
                     line = await self._queue.get()
