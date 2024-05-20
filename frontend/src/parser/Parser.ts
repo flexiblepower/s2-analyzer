@@ -21,7 +21,8 @@ export class Parser {
     private messageMap: MessageHeader[] = []
     private lines: string = ""
     private errors: string[] = []
-
+    private  isPaused: boolean = false
+    private messages: MessageHeader[] = []
     addLine(m: string) {
         if (m.charAt(m.length-1)=='\n') {
             this.lines=this.lines.concat(m);
@@ -36,6 +37,10 @@ export class Parser {
 
     getErrors() {
         return this.errors
+    }
+
+    pauseMessages(){
+        this.isPaused = !this.isPaused;
     }
 
     getMessages() {
@@ -84,7 +89,18 @@ export class Parser {
                         return
                     }
                 }
-                this.messageMap.push(header);
+                // Logic to handle if message loading is paused or not. 
+                if(this.isPaused){
+                    this.messages.push(header);
+                }
+                else{
+                    if(this.messages.length>0){
+                        for(let i=0; i<this.messages.length; i++){
+                            this.messageMap.push(this.messages[i]);
+                        }
+                    }
+                    this.messageMap.push(header);
+                }
             }
         });
     }

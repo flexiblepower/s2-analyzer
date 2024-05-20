@@ -10,6 +10,7 @@ connected_clients = {
     'frontend': None
 }
 
+# Message Handler
 async def handler(websocket, path):
     try:
         # Wait for the client to send its initial message
@@ -26,6 +27,8 @@ async def handler(websocket, path):
     except websockets.ConnectionClosed:
         pass
 
+# Handles messages from the backend client. Queues messages and tries to 
+# forwards them to the frontend client.
 async def handle_backend_client(websocket):
     global messages
     while True:
@@ -37,12 +40,13 @@ async def handle_backend_client(websocket):
         except websockets.ConnectionClosed:
             break
 
+# Handles frontend connection behavior, including sending stored messages
 async def handle_frontend_client(websocket):
     global messages
     # Send all stored messages to the frontend client
     for message in messages:
         await websocket.send(message)
-
+    messages = []
     # Create a task to forward new messages from backend to frontend
     async def forward_messages():
         while True:
