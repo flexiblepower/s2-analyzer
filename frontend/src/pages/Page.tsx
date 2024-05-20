@@ -58,33 +58,33 @@ function Page() {
   const searchedMessages = useSearch(filteredMessages, searchedMessage);
 
   return (
-    <div className="w-full h-screen m-auto bg-base-backgroung grid grid-cols-12 grid-rows-12">
-      <div className="col-start-1 col-end-13 row-start-0 row-end-1 z-40">
-        <NavBar
-          messages={setData}
-          filters={selectedFilters}
-          onFilterChange={handleFilterChange}
-          search={searchedMessage}
-          onSearchChange={handleSearch}
-          onAlignmentChange={setAlignment}
-          toggleSideBar={isSideBarVisible}
-          onToggleSideBar={setIsSideBarVisible}
-        />
-      </div>
-      {isSideBarVisible && (
-        <div className={"col-start-1 col-end-5 row-start-1 row-end-12 z-10"}>
-          <Sidebar />
+      <div className="w-full h-screen m-auto bg-base-backgroung grid grid-cols-12 grid-rows-12">
+        <div className="col-start-1 col-end-13 row-start-0 row-end-1 z-40">
+          <NavBar
+              messages={setData}
+              filters={selectedFilters}
+              onFilterChange={handleFilterChange}
+              search={searchedMessage}
+              onSearchChange={handleSearch}
+              onAlignmentChange={setAlignment}
+              toggleSideBar={isSideBarVisible}
+              onToggleSideBar={setIsSideBarVisible}
+          />
         </div>
-      )}
-      <div
-        className={`col-start-1 col-end-13 row-start-1 row-end-12 flex items-center ${alignment}`}
-      >
-        <MainComponent<MessageHeader> searchedMessages={searchedMessages} />
+        {isSideBarVisible && (
+            <div className={"col-start-1 col-end-5 row-start-1 row-end-12 z-10"}>
+              <Sidebar />
+            </div>
+        )}
+        <div
+            className={`col-start-1 col-end-13 row-start-1 row-end-12 flex items-center ${alignment}`}
+        >
+          <MainComponent<MessageHeader> searchedMessages={searchedMessages} />
+        </div>
+        <div className="col-start-1 col-end-13 row-start-12 row-end-13 z-40">
+          <TerminalController />
+        </div>
       </div>
-      <div className="col-start-1 col-end-13 row-start-12 row-end-13 z-40">
-        <TerminalController />
-      </div>
-    </div>
   );
 }
 
