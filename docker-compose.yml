@@ -8,6 +8,8 @@ services:
       LOG_LEVEL: info
     networks:
       - my_network
+    depends_on:
+      - frontend
 
   frontend:
     build:
@@ -17,7 +19,7 @@ services:
     networks:
       - my_network
     depends_on:
-      - backend
+      - socket
 
   socket:
     image: python:3.9-slim
@@ -29,9 +31,6 @@ services:
       - "5000:5000"
     networks:
       - my_network
-    depends_on:
-      - backend
-      - frontend
 
 networks:
   my_network:
