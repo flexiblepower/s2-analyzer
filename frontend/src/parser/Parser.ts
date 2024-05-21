@@ -89,7 +89,6 @@ export class Parser {
     }
 
     public parse(contents: string) {
-        console.log(this.isPaused)
         const lines = contents.split('\n');
         lines.forEach((line,i) => {
             const header = this.extractHeader(line,i);
