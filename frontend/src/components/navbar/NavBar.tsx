@@ -44,21 +44,17 @@ function NavigationBar({
   const [showAllOptions, setShowAllOptions] = useState(false);
   const alignments = ["justify-self-auto", "justify-center", "justify-end"];
   const filterMenuRef = useRef(null);
-  const [isPaused, setIsPaused] = useState(false);
 
   const toggleFilterMenu = () => {
     setIsVisibleFilterMenu(!isVisibleFilterMenu);
   };
 
   const getFiles = async () => {
-    setIsPaused(true);
     messages(await parser.parseLogFile());
-    parser.pauseMessages();
   };
 
   const pauseMessages = () => {
-    setIsPaused(!isPaused);
-    parser.pauseMessages();
+    parser.setPause(!parser.getIsPaused());
   }
 
   const changeAlignment = () => {
@@ -138,7 +134,7 @@ function NavigationBar({
                     className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
                     onClick={pauseMessages}
                 >
-                  {isPaused ? "Continue Real-Time" : "Pause Real-Time"}
+                  {parser.getIsPaused() ? "Continue Real-Time" : "Pause Real-Time"}
                 </a>
               </li>
               <li>
