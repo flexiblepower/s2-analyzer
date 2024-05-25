@@ -18,12 +18,12 @@ import TimerStatus from "../models/messages/frbc/timerStatus.ts";
 import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 
 export class Parser {
-    private messageMap: MessageHeader[] = []
-    private lines: string = ""
-    private errors: string[] = []
-    private isPaused: boolean = false
-    private bufferedMessages: MessageHeader[] = []
-    private bufferedLines:string = ""
+    public messageMap: MessageHeader[] = []
+    public lines: string = ""
+    public errors: string[] = []
+    public isPaused: boolean = false
+    public bufferedMessages: MessageHeader[] = []
+    public bufferedLines:string = ""
 
     addLine(m: string) {
         const m_temp = (m.charAt(m.length-1)=='\n'? m : m.concat('\n'))
