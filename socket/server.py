@@ -68,7 +68,7 @@ async def handle_frontend_client(websocket):
         forward_task.cancel()
 
 async def main():
-    async with websockets.serve(handler, "0.0.0.0", 5000):
+    async with websockets.serve(handler, "0.0.0.0", 51770):
         await asyncio.Future()  # Run forever
 
 asyncio.run(main())
