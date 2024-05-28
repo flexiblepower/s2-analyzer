@@ -2,12 +2,12 @@ import { useState } from "react";
 import NavBar from "../components/navbar/NavBar.tsx";
 import MessageHeader from "../models/messages/messageHeader.ts";
 import { Filters } from "../models/dataStructures/filters.ts";
-import Sidebar from "../components/sidebar/Sidebar.tsx";
+import Sidebar from "../components/navbar/navbar_items/Sidebar.tsx";
 import TerminalController from "../components/terminal/Terminal.tsx";
 import useFilters from "../hooks/useFilters.tsx";
 import useSearch from "../hooks/useSearch.tsx";
 import WebSocketClient from "../parser/Socket.ts";
-import MessageWidget from "../components/widgets/MessageWidget.tsx"
+import MessageWidget from "../components/messages/MessageWidget.tsx";
 
 /**
  * The component for rendering the Single Page Application

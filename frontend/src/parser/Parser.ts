@@ -103,7 +103,7 @@ export class Parser {
         });
     }
 
-    private emptyBufferedMessages() {
+    public emptyBufferedMessages() {
         for (let i=0; i<this.bufferedMessages.length; i++) {
             if (!this.removeDuplicates(this.bufferedMessages[i])) {
                 this.messageMap.push(this.bufferedMessages[i]);
@@ -112,7 +112,7 @@ export class Parser {
         this.bufferedMessages = [];
     }
 
-    private removeDuplicates(header:MessageHeader) {
+    public removeDuplicates(header:MessageHeader) {
         for (let i=0; i<this.messageMap.length; i++) {
             if (this.messageMap[i].message_id && this.messageMap[i].message_id==header.message_id) {
                 if (this.messageMap[i].status.toString().includes("invalid")) return true;
@@ -123,7 +123,7 @@ export class Parser {
         return false;
     }
 
-    private extractHeader(line: string, i:number): MessageHeader | null {
+    public extractHeader(line: string, i:number): MessageHeader | null {
         const dateTimeMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
         // Extracting JSON message after ensuring it's properly formatted
         const jsonMessageMatch = line.match(/Message: (\{.*\})/s); // 's' flag for capturing multiline JSON
@@ -166,7 +166,7 @@ export class Parser {
         return null;
     }
 
-    private parseBackendLog(line:string, time:string) {
+    public parseBackendLog(line:string, time:string) {
         const match = line.match(/Connection from '(.*?)' to S2-analyzer has closed./);
         if (match) {
             return {
@@ -181,13 +181,13 @@ export class Parser {
         return null;
     }
 
-    private extractField(line: string, fieldName: string): string | null {
+    public extractField(line: string, fieldName: string): string | null {
         const regex = new RegExp(`${fieldName} ([^\\]]+)`);
         const match = line.match(regex);
         return match ? match[1].trim() : null;
     }
 
-    private castToMessageType(messageStr: string, i:number) {
+    public castToMessageType(messageStr: string, i:number) {
         const message = JSON.parse(messageStr);
         switch(message.message_type) {
             case "Handshake": return message as Handshake;

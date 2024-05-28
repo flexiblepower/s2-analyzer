@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {parser} from "../../parser/Parser.ts";
+import {parser} from "../../../parser/Parser.ts";
 
 const [minWidth, maxWidth, defaultWidth] = [200, window.innerWidth/2, window.innerWidth/4];
 
