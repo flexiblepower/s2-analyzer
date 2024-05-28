@@ -17,9 +17,11 @@ async def handler(websocket, path):
         greeting = await websocket.recv()
 
         if greeting == "hi from backend":
+            print("Backend connected")
             connected_clients['backend'] = websocket
             await handle_backend_client(websocket)
         elif greeting == "Hi from frontend":
+            print("Frontend connected")
             connected_clients['frontend'] = websocket
             await handle_frontend_client(websocket)
         else:
@@ -68,7 +70,7 @@ async def handle_frontend_client(websocket):
         forward_task.cancel()
 
 async def main():
-    async with websockets.serve(handler, "0.0.0.0", 51770):
+    async with websockets.serve(handler, "0.0.0.0", 5000):
         await asyncio.Future()  # Run forever
 
 asyncio.run(main())
