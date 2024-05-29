@@ -4,8 +4,8 @@ import { parser } from './Parser';  // Importing the parse function from Parser.
  * Websocket class to connect to the python intermediary websocket server.
  */
 class WebSocketClient {
-    private receivedMessages: Set<string>;
-    private ws: WebSocket;
+    public receivedMessages: Set<string>;
+    public ws: WebSocket;
     constructor(url: string) {
         this.ws = new WebSocket(url);
         this.receivedMessages = new Set<string>();
@@ -15,7 +15,7 @@ class WebSocketClient {
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
-            console.log('Recieving message');
+            console.log('Receiving message');
             this.onReceive(event.data);
         };
 
@@ -31,7 +31,7 @@ class WebSocketClient {
     /*
     * Function to handle the received data from the websocket
     */
-    private onReceive(data: any): void {
+    public onReceive(data: any): void {
         const message = data.toString();
         if (this.receivedMessages.has(message)) {
             console.log('Duplicate message received, ignoring:', message);
