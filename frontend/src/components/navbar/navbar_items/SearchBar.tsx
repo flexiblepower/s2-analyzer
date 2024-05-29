@@ -1,7 +1,7 @@
 import { Combobox } from "@headlessui/react";
 
 /**
- * An interface for props of SearchBar component.
+ * An interface for props of SearchBar component
  */
 interface SearchBarProps {
   searchId: string;
@@ -9,18 +9,16 @@ interface SearchBarProps {
 }
 
 /**
- * The component for SearchBar. SearchBar enables searching for messages based on their id. *
- * @param searchId The message ID to search for.
- * @param onSearchChange The function to keep track of changing the search ID.
- * @returns The SearchBar component.
- *
+ * The component for SearchBar - enables searching for messages based on their id
+ * @param searchId The message ID to search for
+ * @param onSearchChange The function to keep track of changing the search ID
+ * @returns The SearchBar component
  */
-
 function SearchBar({ searchId, onSearchChange }: SearchBarProps) {
-  // This constant determines the visibility of the delete icon in the search bar.
+  // Determines the visibility of the delete icon in the search bar
   const deleteTextIcon = searchId !== "" ? "block" : "hidden";
 
-  // This function deletes the text in the search bar.
+  // Deletes the text in the search bar
   const handleDeleteSearchText = () => {
     onSearchChange("");
   };

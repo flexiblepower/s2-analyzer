@@ -7,19 +7,21 @@ interface props<T extends MessageHeader> {
 
 /**
  * The component for rendering the MessageList
- * @returns the MessageList
+ * @param props - The properties for the MessageList component, including an array of messages of type T
+ * @returns The MessageList component
  */
 function MessageList<T extends MessageHeader>(props: props<T>) {
   return (
-      <div>
-        <ul>
-          {props.messages.map((m, index) => (
-            <li key={index} className="mt-4">
-              <MessageCard<T> message={m} />
-            </li>
-          ))}
-        </ul>
-      </div>
+    <div>
+      <ul>
+        {props.messages.map((m, index) => (
+          <li key={index} className="mt-4">
+            {/* Renders a MessageCard for each message */}
+            <MessageCard<T> message={m} />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

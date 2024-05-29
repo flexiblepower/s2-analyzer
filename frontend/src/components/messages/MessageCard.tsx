@@ -12,13 +12,15 @@ interface props<T extends MessageHeader> {
 
 /**
  * The component for rendering a single MessageHeader
- * @returns the MessageCard
+ * @param props - The properties for the MessageCard component, including a message of type T
+ * @returns The MessageCard component
  */
 function MessageCard<T extends MessageHeader>(props: props<T>) {
   const [isPopUpVisible, setIsPopUpVisible] = useState(false);
 
   return (
     <>
+      {/* Pop-up component for displaying message details */}
       <MessagePopUp<T>
         trigger={isPopUpVisible}
         setTrigger={setIsPopUpVisible}
@@ -37,6 +39,7 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
             <tbody>
               <tr>
                 <th>
+                  {/* Clickable  header to toggle pop-up visibility */}
                   <h3
                     className="cursor-pointer"
                     onClick={() => setIsPopUpVisible(!isPopUpVisible)}
@@ -46,12 +49,14 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
                 </th>
                 {props.message.status && (
                   <th>
+                    {/* Icon indicating the reception status of the message */}
                     <ReceptionStatusIcon header={props.message} />
                   </th>
                 )}
               </tr>
             </tbody>
           </table>
+          {/* Conditional arrow image based on message ID and sender */}
           <img
             src={
               props.message.message_id != null
@@ -62,6 +67,7 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
             }
             alt={props.message.sender?.toString()}
           />
+          {/* Timestamp display */}
           <p
             className={`${
               props.message.sender?.split(" ")[0] == "RM"
