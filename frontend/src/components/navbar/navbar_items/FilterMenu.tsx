@@ -11,18 +11,17 @@ interface FilterMenuProps {
 }
 
 /**
- * The component for FilterMenu. FilterMenu enables filtering messages based on specific filters.
- * @param filters The filters to apply.
- * @param onFilterChange The function to keep track of chang in filters.
- * @param isVisible The visibility of the FilterMenu component.
- * @returns the FilterMenu component.
+ * The component for FilterMenu - enables filtering messages based on specific filters
+ * @param filters The filters to apply
+ * @param onFilterChange The function to keep track of change in filters
+ * @param isVisible The visibility of the FilterMenu component
+ * @returns The FilterMenu component
  */
-
 function FilterMenu({ filters, onFilterChange, isVisible }: FilterMenuProps) {
   const [isVisibleTypeFilters, setIsVisibleTypeFilters] = useState(false);
   const [isVisibleFRBCFilters, setIsVisibleFRBCFilters] = useState(false);
 
-  // A function to handle the change in the checkbox (selecting or deselecting filters).
+  // Handles the change in the checkbox (selecting or deselecting filters)
   const handleCheckboxChange = (option: keyof Filters) => {
     const newFilters = {
       ...filters,
@@ -31,12 +30,12 @@ function FilterMenu({ filters, onFilterChange, isVisible }: FilterMenuProps) {
     onFilterChange(newFilters);
   };
 
-  // A function to handle the visibility of the Type Filters menu.
+  // Handles the visibility of the Type Filters menu
   const handleTypeFilterVisibility = () => {
     setIsVisibleTypeFilters(!isVisibleTypeFilters);
   };
 
-  // A function to handle the visibility of the FRBC Filters menu.
+  // Handles the visibility of the FRBC Filters menu
   const handleFRBCFilterVisibility = () => {
     setIsVisibleFRBCFilters(!isVisibleFRBCFilters);
   };
@@ -61,7 +60,7 @@ function FilterMenu({ filters, onFilterChange, isVisible }: FilterMenuProps) {
                 </label>
               </div>
             ))}
-          {/*The Type Filter Menu*/}
+          {/* The Type Filter Menu */}
           <div className="flex items-center justify-between mb-1">
             <button
               className="flex items-center ml-6 w-auto text-lg text-white"
@@ -108,7 +107,7 @@ function FilterMenu({ filters, onFilterChange, isVisible }: FilterMenuProps) {
                 </div>
               ))}
           </div>
-          {/*The FRBC Filter Menu*/}
+          {/* The FRBC Filter Menu */}
           <div className="flex items-center justify-between mb-1">
             <button
               className="flex items-center ml-6 w-auto text-lg text-white"

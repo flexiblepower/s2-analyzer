@@ -1,4 +1,3 @@
-
 type Filters = {
   CEM: boolean;
   RM: boolean;
@@ -25,5 +24,3 @@ type Filters = {
 };
 
 export type { Filters };
-
-

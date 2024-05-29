@@ -3,10 +3,10 @@ import MessageHeader from "../models/messages/messageHeader";
 import { Filters } from "../models/dataStructures/filters";
 
 /**
- * This is a custom hook that filters the messages based on the selected filters.
- * @param data the current MessageHeaders data.
- * @param selectedFilters selected filters by user.
- * @returns the filtered messages.
+ * Custom hook that filters the messages based on the selected filters
+ * @param data - The array of MessageHeaders objects to be filtered
+ * @param selectedFilters - The Filters object containing the selected filters ny the user
+ * @returns The filtered array of MessageHeader objects
  */
 function useFilters(data: MessageHeader[], selectedFilters: Filters) {
   const [filters, setFilters] = useState<MessageHeader[]>([]);
@@ -39,15 +39,15 @@ function useFilters(data: MessageHeader[], selectedFilters: Filters) {
         UsageForecast,
       } = selectedFilters;
 
-      // A constant to determine which filter for the message sender is applied.
+      // Determine which filter for the message sender is applied
       const isSenderMatched =
         (CEM && sender === "CEM") || (RM && sender === "RM");
 
-      // A constant to determine whether logs or warnings or both are selected.
+      // Determine whether logs or warnings or both are selected
       const isMessageMatched =
         (Logs && m.message_id !== null) || (Warnings && m.message_id === null);
 
-      // A constant to determine which filter for the message type is applied.
+      // Determine which filter for the message type is applied
       const isTypeMatched =
         (Handshake && m.message_type === "Handshake") ||
         (HandshakeResponse && m.message_type === "HandshakeResponse") ||

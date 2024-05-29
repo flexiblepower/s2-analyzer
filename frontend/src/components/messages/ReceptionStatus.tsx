@@ -13,7 +13,8 @@ interface Props {
 
 /**
  * The component for rendering a single ReceptionStatus
- * @returns the ReceptionStatus
+ * @param props - The properties for the ReceptionStatusIcon component, including a message header
+ * @returns The ReceptionStatusIcon component
  */
 function ReceptionStatusIcon(props: Props) {
   const [isPopUpVisible, setIsPopUpVisible] = useState(false);
@@ -27,6 +28,7 @@ function ReceptionStatusIcon(props: Props) {
     label = props.header.status.split(" ")[0];
   }
 
+  // Determine the appropriate image source based on the status label
   if (label === "revoked") {
     imgSrc = Revoked;
   } else if (label === "buffered") {
@@ -35,6 +37,11 @@ function ReceptionStatusIcon(props: Props) {
     imgSrc = Error;
   }
 
+  /**
+   * Creates a ReceptionStatus object
+   * @param text - The status text
+   * @returns A ReceptionStatus object
+   */
   const createReceptionStatus = (text: string) => {
     return {
       time: props.header.time,
@@ -48,22 +55,26 @@ function ReceptionStatusIcon(props: Props) {
 
   return (
     <>
+      {/* Pop-up component for displaying reception status details */}
       <MessagePopUp<ReceptionStatus>
         trigger={isPopUpVisible}
         setTrigger={setIsPopUpVisible}
         message={
           typeof props.header.status == "object"
             ? props.header.status
-            : createReceptionStatus(props.header.status.replace("invalid", "Invalid because:\n"))
+            : createReceptionStatus(
+                props.header.status.replace("invalid", "Invalid because:\n")
+              )
         }
       />
+      {/* Status icon with click handler to toggle pop-up visibility */}
       <img
         className="cursor-pointer"
         onClick={() => setIsPopUpVisible(!isPopUpVisible)}
         src={imgSrc}
         alt={label}
         title={label}
-        style={{ width: "15px", height: "15px", marginLeft: "0.2em" }} // Set width and height here
+        style={{ width: "15px", height: "15px", marginLeft: "0.2em" }}
       />
     </>
   );
