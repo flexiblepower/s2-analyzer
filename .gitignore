@@ -9,3 +9,5 @@ backend/connection_histories/
 
 frontend/node_modules/
 node_modules/
+sonar-project.properties
+.scannerwork/
