@@ -33,9 +33,9 @@ describe("Parser", () => {
             parser.setPause(true);
             expect(parser.getLines()).toBe("");
             parser.addLine("Line1");
-            expect(parser.bufferedLines).toBe("Line1");
+            expect(parser.bufferedLines).toBe("Line1\n");
             parser.addLine("Line2");
-            expect(parser.bufferedLines).toBe("Line1Line2");
+            expect(parser.bufferedLines).toBe("Line1\nLine2\n");
             expect(parser.getLines()).toBe("");
         });
 
