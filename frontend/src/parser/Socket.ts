@@ -42,7 +42,7 @@ class WebSocketClient {
    * Handles the received data from the WebSocket
    * @param data The data received from the WebSocket
    */
-  public onReceive(data: any): void {
+  public onReceive(data: string): void {
     // Convert data to string
     const message = data.toString();
     // Check for duplicate messages

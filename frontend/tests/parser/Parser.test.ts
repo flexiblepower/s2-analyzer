@@ -14,22 +14,22 @@ describe("Parser", () => {
     // Unit testing for the addLine() function
     describe("addLine()", () => {
 
-       // Unit test code: UT-01 
-       test("UT-01: should append a newline character if missing to the end of the string", () => {
+        // Unit test code: UT-01
+        test("UT-01: should append a newline character if missing to the end of the string", () => {
             const line = "Testing line without newline";
             parser.addLine(line);
             expect(parser.getLines().endsWith("\n")).toBe(true);
-       })
+        })
 
-       // Unit test code: UT-02
-       test("UT-02: should not append a newline character if there is newline character already", () => {
+        // Unit test code: UT-02
+        test("UT-02: should not append a newline character if there is newline character already", () => {
             const line = "Testing line with newline\n";
             parser.addLine(line);
             expect(parser.getLines().endsWith("\n")).toBe(true);
-       })
+        })
 
-       // Unit test code: UT-03
-       test("UT-03: should append the line to the bufferedLines when paused", () => {
+        // Unit test code: UT-03
+        test("UT-03: should append the line to the bufferedLines when paused", () => {
             parser.setPause(true);
             expect(parser.getLines()).toBe("");
             parser.addLine("Line1");
@@ -37,28 +37,28 @@ describe("Parser", () => {
             parser.addLine("Line2");
             expect(parser.bufferedLines).toBe("Line1Line2");
             expect(parser.getLines()).toBe("");
-       });
+        });
 
-       // Unit test code: UT-04
-       test("UT-04: should append the line to the lines when not paused and length of bufferedLines are bigger than 0", () => {
+        // Unit test code: UT-04
+        test("UT-04: should append the line to the lines when not paused and length of bufferedLines are bigger than 0", () => {
             parser.setPause(true);
             parser.addLine("Line1");
             parser.setPause(false);
             parser.addLine("Line2");
-            expect(parser.getLines()).toBe("Line1Line2\n");
+            expect(parser.getLines()).toBe("Line1\nLine2\n");
             parser.addLine("Line3");
-            expect(parser.getLines()).toBe("Line1Line2\nLine3\n");
+            expect(parser.getLines()).toBe("Line1\nLine2\nLine3\n");
             expect(parser.bufferedLines).toBe("");
-       });
+        });
 
-       // Unit test code: UT-05
-       test("UT-05: should append the line to the lines when not paused and length of bufferedLines are less or equal than 0", () => {
+        // Unit test code: UT-05
+        test("UT-05: should append the line to the lines when not paused and length of bufferedLines are less or equal than 0", () => {
             parser.setPause(false);
             parser.addLine("Line1");
             expect(parser.getLines()).toBe("Line1\n");
             parser.addLine("Line2");
             expect(parser.getLines()).toBe("Line1\nLine2\n");
-       });
+        });
     });
 
     // Unit testing for getLines() function
@@ -150,7 +150,7 @@ describe("Parser", () => {
         beforeEach(() => {
             parser.messageMap = [];
         });
-        
+
         // Unit test code: UT-15
         test("UT-15: should return an empty array", () => {
             expect(parser.getMessages()).toBeNull;
@@ -161,14 +161,14 @@ describe("Parser", () => {
             const message1 =
                 {
                     time: new Date(),
-                    status: "subject_message_id",
+                    status: "valid",
                     sender: "CM",
                     receiver: "REM",
                     message_type: "Handshake",
                     message_id: "message_id",
                     subject_message_id: "message_id101"
                 };
-            
+
             parser.messageMap.push(message1);
             expect(parser.getMessages()).not.toContainEqual(message1);
         });
@@ -225,7 +225,7 @@ describe("Parser", () => {
         });
 
         // Unit test code: UT-19
-        test("UT-19: should be able to change the statuse of the message if the message has object_id", () => {
+        test("UT-19: should be able to change the status of the message if the message has object_id", () => {
             const message1 = {
                 time: new Date(),
                 status: "object_id",
@@ -286,35 +286,35 @@ describe("Parser", () => {
             expect(window.showOpenFilePicker).toHaveBeenCalled();
             expect(fileHandles[0].getFile).toHaveBeenCalled();
             expect(fileHandles[1].getFile).toHaveBeenCalled();
-            expect(parser.parse).toHaveBeenCalledTimes(2);      
+            expect(parser.parse).toHaveBeenCalledTimes(2);
             expect(parser.parse).toHaveBeenCalledWith("Line1\nLine2\n");
-            expect(parser.parse).toHaveBeenCalledWith("Line3\nLine4\nLine5\n");      
+            expect(parser.parse).toHaveBeenCalledWith("Line3\nLine4\nLine5\n");
         });
 
         // Unit test code: UT-21
         test("UT-21: should return the messages from getMessages", async () => {
 
             const message1 = {
-            time: new Date(),
-            status: "received",
-            sender: "CM",
-            receiver: "REM",
-            message_type: "Handshake",
-            message_id: "message_id101",
+                time: new Date(),
+                status: "received",
+                sender: "CM",
+                receiver: "REM",
+                message_type: "Handshake",
+                message_id: "message_id101",
             };
-            
+
             const message2 = {
-            time: new Date(),
-            status: "received",
-            sender: "REM",
-            receiver: "CM",
-            message_type: "HandshakeResponse",
-            message_id: "message_id102",
+                time: new Date(),
+                status: "received",
+                sender: "REM",
+                receiver: "CM",
+                message_type: "HandshakeResponse",
+                message_id: "message_id102",
             };
 
             const fileHandles = [
-            { getFile: jest.fn().mockResolvedValue({ text: jest.fn().mockResolvedValue(JSON.stringify(message1)) }) },
-            { getFile: jest.fn().mockResolvedValue({ text: jest.fn().mockResolvedValue(JSON.stringify(message2)) }) }
+                { getFile: jest.fn().mockResolvedValue({ text: jest.fn().mockResolvedValue(JSON.stringify(message1)) }) },
+                { getFile: jest.fn().mockResolvedValue({ text: jest.fn().mockResolvedValue(JSON.stringify(message2)) }) }
             ];
 
             window.showOpenFilePicker = jest.fn().mockResolvedValue(fileHandles);
@@ -705,7 +705,7 @@ describe("Parser", () => {
         test("UT-40: should return the message header for valid message", () => {
             const line = `2024-03-22 12:50:53 [Message received][Sender: CEM cem_mock][Receiver: RM battery1] Message: {"message_type": "Handshake", "message_id": "00ef6f72-257c-46a5-a656-07887903eb09", "role": "CEM", "supported_protocol_versions": ["0.0.1-beta"]}`;
             const message = parser.extractHeader(line,line.length);
-            
+
             expect(message).not.toBeNull;
             expect(message?.time).toEqual(new Date("2024-03-22 12:50:53"));
             expect(message?.status).toEqual("received");
@@ -727,7 +727,7 @@ describe("Parser", () => {
         // Unit test code: UT-42
         test("UT-42: should parse Connection Lost messages", () => {
             const line = `2024-03-22 12:50:53 Connection from 'cem_mock' to S2-analyzer has closed.`;
-            
+
             const message = parser.extractHeader(line,line.length);
             expect(message).not.toBeNull;
             expect(message?.time).toEqual(new Date("2024-03-22 12:50:53"));

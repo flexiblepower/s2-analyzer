@@ -32,7 +32,7 @@ export class Parser {
   addLine(m: string) {
     const m_temp = m.charAt(m.length - 1) == "\n" ? m : m.concat("\n");
     if (this.isPaused) {
-      this.bufferedLines = this.bufferedLines.concat(m);
+      this.bufferedLines = this.bufferedLines.concat(m_temp);
     } else {
       if (this.bufferedLines.length > 0) {
         this.lines = this.lines.concat(this.bufferedLines);
@@ -92,14 +92,14 @@ export class Parser {
         for (let j = 0; j < this.messageMap.length; j++) {
           if (this.messageMap[j].message_id == temp.object_id) {
             this.messageMap[j].status =
-              "revoked by message_id: " + this.messageMap[i].message_id;
+                "revoked by message_id: " + this.messageMap[i].message_id;
           }
         }
       }
     }
     return this.messageMap
-      .filter((m) => !("subject_message_id" in m))
-      .reverse();
+        .filter((m) => !("subject_message_id" in m))
+        .reverse();
   }
 
   /**
@@ -158,8 +158,8 @@ export class Parser {
   public removeDuplicates(header: MessageHeader) {
     for (let i = 0; i < this.messageMap.length; i++) {
       if (
-        this.messageMap[i].message_id &&
-        this.messageMap[i].message_id == header.message_id
+          this.messageMap[i].message_id &&
+          this.messageMap[i].message_id == header.message_id
       ) {
         if (this.messageMap[i].status.toString().includes("invalid"))
           return true;
@@ -191,13 +191,13 @@ export class Parser {
       messageStr = messageStr.replace(/'/g, '"');
       // Convert the boolean literals to lowercase for parsing compat.
       messageStr = messageStr.replace(/\b(True|False)\b/g, (match) =>
-        match.toLowerCase()
+          match.toLowerCase()
       );
 
       try {
         const header: MessageHeader | null = this.castToMessageType(
-          messageStr,
-          i
+            messageStr,
+            i
         );
         if (header == null) return null;
 
@@ -216,7 +216,7 @@ export class Parser {
         return header;
       } catch (error) {
         this.errors.push(
-          i +
+            i +
             '. Error parsing message JSON: "' +
             error +
             '"\n at line: "' +
@@ -229,7 +229,7 @@ export class Parser {
       return this.parseBackendLog(line, dateTimeMatch[1]);
     }
     this.errors.push(
-      i + '. Line did not contribute to any object: "' + line + '"'
+        i + '. Line did not contribute to any object: "' + line + '"'
     );
     return null;
   }
@@ -242,14 +242,14 @@ export class Parser {
    */
   public parseBackendLog(line: string, time: string) {
     const match = line.match(
-      /Connection from '(.*?)' to S2-analyzer has closed./
+        /Connection from '(.*?)' to S2-analyzer has closed./
     );
     if (match) {
       return {
         time: new Date(time),
         status: "",
         sender:
-          (match[1].toUpperCase().includes("CEM") ? "CEM " : "RM ") + match[1],
+            (match[1].toUpperCase().includes("CEM") ? "CEM " : "RM ") + match[1],
         receiver: null,
         message_type: "Connection Lost",
         message_id: null,
@@ -322,7 +322,7 @@ export class Parser {
       default:
         // If no matching type is found, log an error and return null
         this.errors.push(
-          i +
+            i +
             ". Did not find a matching message type interface for " +
             message.message_type.toString() +
             "."
