@@ -45,9 +45,10 @@ function Sidebar() {
       >
         <h1 className={"text-lg text-white"}>All errors:</h1>
         {parser.getErrors().length != 0 &&
-          parser.getErrors().map((s: string) => {
+          parser.getErrors().map((s: string, index) => {
             return (
               <pre
+                key={index} 
                 className={"text-white overflow-auto bg-base-gray"}
                 style={{ maxWidth: width, overflowX: "hidden" }}
               >
