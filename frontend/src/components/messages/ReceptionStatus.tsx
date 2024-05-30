@@ -71,6 +71,7 @@ function ReceptionStatusIcon(props: Props) {
       <img
         className="cursor-pointer"
         onClick={() => setIsPopUpVisible(!isPopUpVisible)}
+        onKeyDown={() => setIsPopUpVisible(!isPopUpVisible)}
         src={imgSrc}
         alt={label}
         title={label}

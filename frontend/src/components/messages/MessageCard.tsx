@@ -42,7 +42,8 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
                   {/* Clickable  header to toggle pop-up visibility */}
                   <h3
                     className="cursor-pointer"
-                    onClick={() => setIsPopUpVisible(!isPopUpVisible)}
+                    onClick={() => {setIsPopUpVisible(!isPopUpVisible)}} 
+                    onKeyDown={() => {setIsPopUpVisible(!isPopUpVisible)}}
                   >
                     {props.message.message_type}
                   </h3>
