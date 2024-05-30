@@ -8,7 +8,7 @@ const NestedObjectVisualization = ({ obj }: props) => {
   const [collapsed] = useState(new Map<string, boolean>());
 
   // Renders a single property
-  const renderProperty = (property: string, value: any) => {
+  const renderProperty = (property: string, value: string | object) => {
     if (typeof value === "object" && value !== null) {
       return (
         <tr className="bg-stephanie-color">
