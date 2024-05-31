@@ -72,6 +72,7 @@ function MessageCard<T extends MessageHeader>(props: props<T>) {
                     <img
                         src={getArrowImage()}
                         alt={props.message.sender?.toString()}
+                        title={props.message.sender?.toString()}
                     />
                     {/* Timestamp display */}
                     <p
