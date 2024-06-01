@@ -10,3 +10,4 @@ backend/connection_histories/
 frontend/node_modules/
 node_modules/
 .scannerwork/
+frontend/coverage

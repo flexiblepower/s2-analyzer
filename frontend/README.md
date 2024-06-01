@@ -18,6 +18,8 @@ This project involves the development of a frontend to TNO’s S2-Analyzer.
     - [Terminal View](#terminal-view)
     - [Message Pop-ups](#message-pop-ups)
     - [Customized Message Renderings](#customized-message-renderings) 
+-  [Testing the Application]()
+    - [Testing ]
 
 ## Project Description
 
@@ -171,3 +173,43 @@ We suggest activating "dragging mode" in order to double-click on property heade
 #### ConnectionLost
 As mentioned earlier, the only backend warning that is being displayed alongside the logged messages, are connection loses.
 These messages are rendered without a directed arrow and with a red font in order to stand out. However, when you click on them, their pop-up will list exactly which device disconnected under its "sender" field.
+
+## Testing the Application
+ 
+ You can test the application by using either provided tests in the **./frontend/tests** folders or SonarQube to see the code smells, etc.
+
+ ### Testing via  *"JEST"*
+
+ You can run tests for *Parser.ts* and *Socket.ts* bb running the following commands:
+ ```bash
+ cd .\frontend\  # Go to the frontend folder
+ npm test # Run tests
+```
+
+You can see how many tests and test suites were passed.
+
+### Testing via *"SonarQube*
+
+To test and analyze our code by using SonarQube, firstly, you can follow steps in this [link](https://docs.sonarsource.com/sonarqube/latest/try-out-sonarqube/) to create a project. After you created your project and got your token, you need to change following parts in [sonar-project.properties](/sonar-project.properties) file.
+
+- sonar.projectKey=* **YOUR PROJECT KEY**
+- sonar.projectName=  **YOUR PROJECT NAME**\
+- sonar.login = **YOUR PROJECT TOKEN**
+- sonar.host.url=http://localhost:9000 (change this part if you are using different url for SonarQube)
+
+
+After changing these values, you need to run the following commands to create *coverage* folder which help you to see the test coverage of the project in SonarQube.
+
+ ```bash
+ cd .\frontend\  # Go to the frontend folder
+npm test -- --coverage # Run tests and create a coverage folder
+```
+
+Lastly, you need to run these command to see the analysis on your SonarQube:
+
+ ```bash
+ cd ..  # Go back to the main folder
+ sonar-scanner # Start analyzing the project
+```
+
+Now, you can see the analysis on your SonarQube.
