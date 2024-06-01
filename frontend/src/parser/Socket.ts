@@ -1,4 +1,4 @@
-import { parser } from "./Parser";
+import { parser as parserSingleton } from "./Parser";
 
 /**
  * Websocket class to connect to the python intermediary websocket server
@@ -6,6 +6,7 @@ import { parser } from "./Parser";
 class WebSocketClient {
   public receivedMessages: Set<string>;
   public ws: WebSocket;
+  public parser = parserSingleton;
 
   /**
    * Constructs a new WebSocketClient instance
@@ -55,8 +56,8 @@ class WebSocketClient {
     try {
       console.log("Parsing message:" + message);
       // Add and parse message using parser
-      parser.addLine(message);
-      parser.parse(message);
+      this.parser.addLine(message);
+      this.parser.parse(message);
     } catch (error) {
       console.error("Error parsing data:", error);
     }

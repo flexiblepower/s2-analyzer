@@ -16,6 +16,7 @@ import StorageStatus from "../models/messages/frbc/storageStatus.ts";
 import SystemDescription from "../models/messages/frbc/systemDescription.ts";
 import TimerStatus from "../models/messages/frbc/timerStatus.ts";
 import UsageForecast from "../models/messages/frbc/usageForecast.ts";
+import SessionRequest from "../models/messages/sessionRequest.ts";
 
 export class Parser {
   public messageMap: MessageHeader[] = [];
@@ -300,7 +301,7 @@ export class Parser {
       case "SelectControlType":
         return message as SelectControlType;
       case "SessionRequest":
-        return message as SelectControlType;
+        return message as SessionRequest;
       case "FRBC.ActuatorStatus":
         return message as ActuatorStatus;
       case "FRBC.FillLevelTargetProfile":
