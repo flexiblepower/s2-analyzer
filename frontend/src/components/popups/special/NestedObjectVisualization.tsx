@@ -11,7 +11,7 @@ const NestedObjectVisualization = ({ obj }: props) => {
   const renderProperty = (property: string, value: string | object) => {
     if (typeof value === "object" && value !== null) {
       return (
-        <tr className="bg-stephanie-color">
+        <tr className="bg-metallic-gray">
           <td
             className="border-2 border-tno-blue"
             onClick={(e) => {
@@ -35,7 +35,7 @@ const NestedObjectVisualization = ({ obj }: props) => {
       );
     } else if (Array.isArray(value)) {
       return (
-        <tr className="bg-stephanie-color">
+        <tr className="bg-metallic-gray">
           <td
             className="border-2 border-tno-blue"
             onClick={(e) => {

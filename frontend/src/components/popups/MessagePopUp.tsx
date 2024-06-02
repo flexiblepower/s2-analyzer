@@ -110,7 +110,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
       >
         <div
           onClick={(e) => e.stopPropagation()}
-          className={`bg-stephanie-color rounded-lg shadow p-6 transition-all
+          className={`bg-metallic-gray rounded-lg shadow p-6 transition-all
                      ${
                        props.trigger
                          ? "scale-100 opacity-100"
@@ -122,13 +122,13 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
           </h2>
           <div className="handle font-black">
             <button
-              className="font-[Arial] absolute top-2 left-2 p-1 rounded-lg text-white bg-stephanie-color hover:text-tno-blue"
+              className="font-[Arial] absolute top-2 left-2 p-1 rounded-lg text-white bg-metallic-gray hover:text-tno-blue"
               onClick={() => setIsJSON(!isJSON)}
             >
               {isJSON ? "{J}" : "J"}
             </button>
             <button
-              className="text-lg absolute top-2 right-2 p-1 rounded-lg text-white bg-stephanie-color hover:text-tno-blue"
+              className="text-lg absolute top-2 right-2 p-1 rounded-lg text-white bg-metallic-gray hover:text-tno-blue"
               onClick={() => props.setTrigger(false)}
             >
               x
@@ -158,13 +158,13 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
               <table className="rounded-lg font-[Calibri] border-2 border-separate border-tno-blue">
                 <thead className="handle cursor-all-scroll text-white border-2 border-tno-blue">
                   <tr className="text-center">
-                    <th className="py-3 bg-stephanie-color">Property</th>
-                    <th className="py-3 bg-stephanie-color">Value</th>
+                    <th className="py-3 bg-metallic-gray">Property</th>
+                    <th className="py-3 bg-metallic-gray">Value</th>
                   </tr>
                 </thead>
                 <tbody className={"text-white"}>
                   {keys.map((key, index) => (
-                    <tr key={index} className="bg-stephanie-color">
+                    <tr key={index} className="bg-metallic-gray">
                       <th className="border-2 border-tno-blue">
                         {key.toString()}
                       </th>

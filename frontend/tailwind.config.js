@@ -6,7 +6,7 @@ export default {
     extend: {
       colors:{
         "tno-blue": "#3a617f",
-        "stephanie-color": "#31302C",
+        "metallic-gray": "#31302C",
         "base-gray": "#2C2D31",
         "secondary-gray":"#808183",
         "base-backgroung":"#313338",
