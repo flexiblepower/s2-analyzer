@@ -23,7 +23,7 @@ function ReceptionStatusIcon(props: Props) {
   let label = "";
 
   if (typeof props.header.status == "object") {
-    label = (props.header.status).status;
+    label = props.header.status.status;
   } else {
     label = props.header.status.split(" ")[0];
   }

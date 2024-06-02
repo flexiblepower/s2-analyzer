@@ -5,9 +5,7 @@ import Page from "./pages/Page";
  * @returns The Visual Application component
  */
 function App() {
-  return (
-      <Page />
-  );
+  return <Page />;
 }
 
 export default App;

@@ -34,7 +34,9 @@ function useFilters(data: MessageHeader[], selectedFilters: Filters) {
   // Determine whether logs or warnings or both are selected
   function matchMessage(m: MessageHeader, filters: Filters): boolean {
     const { Logs, Warnings } = filters;
-    return (Logs && m.message_id !== null) || (Warnings && m.message_id === null);
+    return (
+      (Logs && m.message_id !== null) || (Warnings && m.message_id === null)
+    );
   }
 
   // Determine which filter for the message type is applied
@@ -63,7 +65,8 @@ function useFilters(data: MessageHeader[], selectedFilters: Filters) {
     return (
       (Handshake && m.message_type === "Handshake") ||
       (HandshakeResponse && m.message_type === "HandshakeResponse") ||
-      (InstructionStatusUpdate && m.message_type === "InstructionStatusUpdate") ||
+      (InstructionStatusUpdate &&
+        m.message_type === "InstructionStatusUpdate") ||
       (PowerForecast && m.message_type === "PowerForecast") ||
       (PowerMeasurement && m.message_type === "PowerMeasurement") ||
       (ResourceManagerDetails && m.message_type === "ResourceManagerDetails") ||
@@ -72,7 +75,8 @@ function useFilters(data: MessageHeader[], selectedFilters: Filters) {
       (SessionRequest && m.message_type === "SessionRequest") ||
       (ConnectionLost && m.message_type === "Connection Lost") ||
       (ActuatorStatus && m.message_type === "FRBC.ActuatorStatus") ||
-      (FillLevelTargetProfile && m.message_type === "FRBC.FillLevelTargetProfile") ||
+      (FillLevelTargetProfile &&
+        m.message_type === "FRBC.FillLevelTargetProfile") ||
       (Instruction && m.message_type === "FRBC.Instruction") ||
       (LeakageBehavior && m.message_type === "FRBC.LeakageBehavior") ||
       (StorageStatus && m.message_type === "FRBC.StorageStatus") ||
