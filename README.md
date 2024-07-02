@@ -26,8 +26,10 @@ To quickly set up & run the S2 analyzer:
 docker-compose up --build
 ```
 
-This will build the backend (and in future versions also the frontend) to container images locally and run them.
+This will build the backend (and also the frontend) to container images locally and run them.
 The backend is available on port `8001`.
+The frontend is available on port `4173`.
+The websocket connecting the two is available on port `5000`.
 
 
 ## Quickstart without containers
@@ -40,4 +42,5 @@ pip3 install -r ./requirements.txt
 LOG_LEVEL=info python3 -m s2_analyzer_backend.main --s2-json-schemas-dir ./s2-ws-json/s2-json-schema/
 ```
 
-S2 analyzer frontend is coming in a future release.
+## Frontend Features
+For an extensive list on the features offered by the S2 Analyzer Frontend, please consult its README file located under the "/frontend" folder.

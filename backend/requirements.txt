@@ -52,5 +52,5 @@ typing-extensions==4.8.0
     #   pydantic
 uvicorn==0.22.0
     # via -r ./requirements.in
-websockets==10.4
+websockets==12
     # via -r ./requirements.in

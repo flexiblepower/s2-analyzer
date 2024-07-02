@@ -1,0 +1,3 @@
+2024-03-11 13:29:08 Connection initiated from 'battery2' to S2-analyzer.
+2024-03-11 13:29:09 [Message received][Sender: RM battery1][Receiver: CEM cem_mock] Message: {"message_type": "Handshake", "message_id": "7dd55ca8-f15c-4cad-adf5-154d11a9a2e1", "role": "RM", "supported_protocol_versions": ["0.0.1-beta"]}
+2024-03-11 13:29:10 [Message received][Sender: RM battery1][Receiver: CEM cem_mock] Message: {"message_type": "RevokeObject", "message_id": "3fd3fd3", "object_type": "FRBC.Instruction", "object_id":"7dd55ca8-f15c-4cad-adf5-154d11a9a2e1"}

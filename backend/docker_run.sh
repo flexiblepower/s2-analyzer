@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-cd /app/
+cd /app/ 
 
 export S2_ANALYZER_CONF=./config.yaml
 
