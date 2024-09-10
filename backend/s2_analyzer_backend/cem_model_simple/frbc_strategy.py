@@ -120,7 +120,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                 fill_level_at_start_of_timestep,
                 timestep_end,
                 active_fill_level_target_profile)
-            target_fill_level_range_at_end_of_timestep = range(max(allowed_fill_level_range['start_of_range'],
+            target_fill_level_range_at_end_of_timestep = (max(allowed_fill_level_range['start_of_range'],
                                                                    expected_fill_level_range_at_end_of_timestep.start),
                                                                min(allowed_fill_level_range['end_of_range'],
                                                                    expected_fill_level_range_at_end_of_timestep.end))
@@ -133,12 +133,12 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
             fill_level_if_no_action = fill_level_at_start_of_timestep + \
                 expected_usage_during_timestep + expected_leakage_during_timestep
 
-            if target_fill_level_range_at_end_of_timestep.start <= fill_level_if_no_action < target_fill_level_range_at_end_of_timestep.stop:
+            if target_fill_level_range_at_end_of_timestep[0] <= fill_level_if_no_action < target_fill_level_range_at_end_of_timestep[1]:
                 actuate_fill_level = 0
-            elif fill_level_if_no_action < target_fill_level_range_at_end_of_timestep.start:
-                actuate_fill_level = target_fill_level_range_at_end_of_timestep.start - fill_level_if_no_action
+            elif fill_level_if_no_action < target_fill_level_range_at_end_of_timestep[0]:
+                actuate_fill_level = target_fill_level_range_at_end_of_timestep[0] - fill_level_if_no_action
             else:
-                actuate_fill_level = target_fill_level_range_at_end_of_timestep.stop - fill_level_if_no_action
+                actuate_fill_level = target_fill_level_range_at_end_of_timestep[0] - fill_level_if_no_action
 
             LOGGER.debug('[%s] '
                          'Expected end fill level: %s\n'
