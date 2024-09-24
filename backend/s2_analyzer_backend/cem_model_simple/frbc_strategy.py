@@ -298,10 +298,8 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         current_best_actuate_fill_level = None
         for actuator_combination in itertools.product(*reachable_operation_mode_ids_per_actuator_id.values()):
             operation_mode_factors = []
-            for actuator, om, om_element in actuator_combination:
-                begin_factor = om_element['fill_level_range']['start_of_range']
-                end_factor = om_element['fill_level_range']['end_of_range']
-                all_factors = list(NumericalRange.inclusive(begin_factor, end_factor, self.OM_STEP_RESOLUTION))
+            for _ in actuator_combination:
+                all_factors = list(NumericalRange.inclusive(0, 1, self.OM_STEP_RESOLUTION))
                 # TODO move all_factors to previous for-loop into the tuple so it is not repeated so often
                 operation_mode_factors.append(all_factors)
 
