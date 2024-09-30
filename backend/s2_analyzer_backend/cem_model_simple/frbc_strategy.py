@@ -207,10 +207,22 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                            timestep_start: datetime.datetime,
                                            timestep_end: datetime.datetime) -> float:
         expected_usage = 0.0
+        relevant_usage_forecast = None
         for usage_forecast in self.usage_forecasts:
-            current_start = parse_timestamp_as_utc(usage_forecast['start_time'])
+            start_time = parse_timestamp_as_utc(usage_forecast['start_time'])
 
-            for usage_element in usage_forecast['elements']:
+            if relevant_usage_forecast:
+                start_time_of_relevant = parse_timestamp_as_utc(relevant_usage_forecast['start_time'])
+
+                if start_time_of_relevant < start_time < timestep_start:
+                    relevant_usage_forecast = usage_forecast
+            else:
+                relevant_usage_forecast = usage_forecast
+
+        if relevant_usage_forecast:
+            current_start = parse_timestamp_as_utc(relevant_usage_forecast['start_time'])
+
+            for usage_element in relevant_usage_forecast['elements']:
                 duration = datetime.timedelta(milliseconds=usage_element['duration'])
                 current_end = current_start + duration
 
@@ -222,6 +234,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
                     expected_usage = expected_usage + usage_duration.total_seconds() * usage_element[
                         'usage_rate_expected']
+                current_start = current_end
 
         return expected_usage
 
