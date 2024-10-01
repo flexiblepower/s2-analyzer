@@ -5,4 +5,4 @@ services:
     ports:
       - "8001:8001"
     environment:
-      LOG_LEVEL: info
+      LOG_LEVEL: debug
