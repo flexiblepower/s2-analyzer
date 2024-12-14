@@ -1,6 +1,7 @@
 **.pyc
 .idea/
 .vscode/
+rm.tar
 
 backend/.venv/
 backend/unit_test_coverage/
