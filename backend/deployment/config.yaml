@@ -1,6 +1,6 @@
 http_listen_address: 0.0.0.0
 http_port: 8001
 connection_histories_dir: ./connection_histories/
-models:
-  - model_type: "CEM"
-    model_id: "dummy_model"
+# models:
+#   - model_type: "CEM"
+#     model_id: "dummy_model"

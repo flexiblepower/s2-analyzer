@@ -5,7 +5,10 @@ services:
     ports:
       - "8001:8001"
     environment:
-      LOG_LEVEL: info
+      LOG_LEVEL: debug
+    volumes:
+      - "./connection_histories/:/app/connection_histories/"
+      - "./backend/deployment/config.yaml:/app/config.yaml"
     networks:
       - my_network
     depends_on:

@@ -53,29 +53,30 @@ class DummyModel(Model):
         self._connections = []
         self._select_on_connections = AsyncSelect(self._connections)
 
-    async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
-        await asyncio.gather(self.reply_task(), self.receive_task())
+    '''Gordei: Random testing code commented out'''
+    # async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:  
+    #     await asyncio.gather(self.reply_task(), self.receive_task())
 
-    async def reply_task(self):
-        while self._running:
-            await asyncio.sleep(1)
-            for connection in self._connections:
-                # await connection.send_and_forget(f"Hi {connection.dest_id}, this is {connection.origin_id}!")
-                await connection.send_and_forget({"message_type": "FRBC.ActuatorStatus",
-                                                  "message_id": "1234",
-                                                  "active_operation_mode_id": "1234",
-                                                  "operation_mode_factor": 0.5,
-                                                  "previous_operation_mode_id": "4321"})
+    # async def reply_task(self):
+    #     while self._running:
+    #         await asyncio.sleep(1)
+    #         for connection in self._connections:
+    #             # await connection.send_and_forget(f"Hi {connection.dest_id}, this is {connection.origin_id}!")
+    #             await connection.send_and_forget({"message_type": "FRBC.ActuatorStatus",
+    #                                               "message_id": "1234",
+    #                                               "active_operation_mode_id": "1234",
+    #                                               "operation_mode_factor": 0.5,
+    #                                               "previous_operation_mode_id": "4321"})
 
-    async def receive_task(self):
-        select = AsyncSelect(self._connections)
-        while self._running:
-            connections, _ = await select.select()
-            for connection in connections:
-                await self.receive_envelope(connection.retrieve_last_select_result())
+    # async def receive_task(self):
+    #     select = AsyncSelect(self._connections)
+    #     while self._running:
+    #         connections, _ = await select.select()
+    #         for connection in connections:
+    #             await self.receive_envelope(connection.retrieve_last_select_result())
 
-    async def receive_envelope(self, envelope: "Envelope") -> None:
-        print("Model %s received following envelope: %s", self.model_id, envelope)
+    # async def receive_envelope(self, envelope: "Envelope") -> None:
+    #     print("Model %s received following envelope: %s", self.model_id, envelope)
 
     def receive_new_connection(self, new_connection: "ModelConnection") -> None:
         LOGGER.info("Model %s: received connection from %s.", self.model_id, new_connection.dest_id)

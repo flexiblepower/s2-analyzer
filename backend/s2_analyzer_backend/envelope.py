@@ -13,6 +13,9 @@ S2Message = dict
 
 @dataclass
 class Envelope:
+    """
+    Sent between CEM and RM, contains S2 protocol message data.
+    """
     envelope_id: uuid.UUID
     origin: 'Connection'
     dest: 'Connection | None'
