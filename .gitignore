@@ -2,7 +2,7 @@
 .idea/
 .vscode/
 rm.tar
-
+connection_histories/*
 backend/.venv/
 backend/unit_test_coverage/
 backend/history_*_to_*.txt
