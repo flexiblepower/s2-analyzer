@@ -75,6 +75,11 @@ class WebSocketClient {
       console.warn("WebSocket is not open. Ready state:", this.ws.readyState);
     }
   }
+
+
+  public close() {
+    this.ws.close()
+  }
 }
 
 export default WebSocketClient;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import NavBar from "../components/navbar/NavBar.tsx";
 import MessageHeader from "../models/messages/messageHeader.ts";
 import { Filters } from "../models/dataStructures/filters.ts";
@@ -48,9 +48,18 @@ function Page() {
 
   // State for searched message id
   const [searchedMessage, setSearchedMessage] = useState("");
-
   // Initialize WebSocket client
-  new WebSocketClient("ws://localhost:5000");
+
+  useEffect(() => {
+    console.log("Creating WS")
+    const websocket = new WebSocketClient("ws://localhost:5000");
+
+    // Cleanup function to close the WebSocket when the component unmounts
+    return () => {
+      console.log("Cleaning up WebSocketClient");
+      websocket.close();
+    };
+  }, []); // Empty dependency array ensures this runs only once
 
   // Handle filter change
   const handleFilterChange = (newFilters: Filters) => {

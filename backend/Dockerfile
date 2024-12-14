@@ -14,4 +14,6 @@ COPY ./deployment/          /app/
 
 WORKDIR /app/
 
-CMD ["/app/docker_run.sh"]
+ENV S2_ANALYZER_CONF=./config.yaml
+
+CMD ["python3","-m","s2_analyzer_backend.main"]
