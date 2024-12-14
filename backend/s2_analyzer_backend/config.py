@@ -19,8 +19,15 @@ class ModelConfig:
 
 
 @dataclass
-class ModelsConfig(YAMLWizard):
-    models: list[ModelConfig] = field(default_factory=list)
+class Config(YAMLWizard):
+    http_listen_address: str
+    http_port: int
+    connection_histories_dir: str
+    #models: list[ModelConfig]
+
+    @property
+    def connection_histories_dir_path(self):
+        return Path(self.connection_histories_dir)
 
 
 def read_s2_analyzer_conf() -> Config:
@@ -42,11 +49,13 @@ def read_s2_analyzer_conf() -> Config:
 #     raise RuntimeError()
 
 
-def init_models(router: 'MessageRouter') -> 'list[Model]':
-    result = []
-    config = read_s2_model_conf()
+# def init_models(router: 'MessageRouter', config: Config) -> 'list[Model]':
+#     result = []
 
-    model: 'ModelConfig'
-    for model in config.models:
-        result.append(model_create(model, router))
-    return result
+#     model: 'ModelConfig'
+#     for model in config.models:
+#         result.append(model_create(model, router))
+#     return result
+
+
+CONFIG = read_s2_analyzer_conf()
