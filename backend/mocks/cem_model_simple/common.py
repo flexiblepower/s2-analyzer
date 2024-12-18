@@ -7,7 +7,7 @@ from typing import Callable, Iterator, Optional, TYPE_CHECKING
 if TYPE_CHECKING:
     from s2_analyzer_backend.envelope import Envelope, S2Message
 
-S2_VERSION = '0.0.1-beta'
+S2_VERSION = '0.0.2-beta'
 
 
 class ControlType(Enum):
