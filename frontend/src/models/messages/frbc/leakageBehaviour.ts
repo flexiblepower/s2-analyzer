@@ -2,6 +2,6 @@ import LeakageBehaviourElement from "../../dataStructures/frbc/leakagebehaviourE
 import MessageHeader from "../messageHeader";
 
 export default interface LeakageBehaviour extends MessageHeader {
-  valid_from: Date;
-  elements: LeakageBehaviourElement[];
+    valid_from: Date;
+    elements: LeakageBehaviourElement[];
 }

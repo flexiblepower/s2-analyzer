@@ -1,6 +1,6 @@
 export enum Commodity {
-  GAS = "GAS",
-  HEAT = "HEAT",
-  ELECTRICITY = "ELECTRICITY",
-  OIL = "OIL",
+    GAS = "GAS",
+    HEAT = "HEAT",
+    ELECTRICITY = "ELECTRICITY",
+    OIL = "OIL",
 }

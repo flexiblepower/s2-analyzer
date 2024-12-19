@@ -1,4 +1,4 @@
 export enum EnergyManagementRole {
-  CEM = "CEM",
-  RM = "RM",
+    CEM = "CEM",
+    RM = "RM",
 }
