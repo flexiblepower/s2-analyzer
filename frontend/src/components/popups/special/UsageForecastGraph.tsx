@@ -1,28 +1,13 @@
 import UsageForecastElement from "../../../models/dataStructures/frbc/usageForecastElement.ts";
 import {Line} from "react-chartjs-2";
-import {
-    Chart as ChartJS,
-    LineElement,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    Legend,
-    Tooltip,
-} from "chart.js";
+import {Chart as ChartJS, LineElement, CategoryScale, LinearScale, PointElement, Legend, Tooltip,} from "chart.js";
 
 interface Props {
     data: UsageForecastElement[];
     start: Date;
 }
 
-ChartJS.register(
-    LineElement,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    Legend,
-    Tooltip
-);
+ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Legend, Tooltip);
 
 /**
  * The component for rendering the UsageForecast's graph

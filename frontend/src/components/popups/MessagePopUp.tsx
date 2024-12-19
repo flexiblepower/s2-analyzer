@@ -1,6 +1,6 @@
 import MessageHeader from "../../models/messages/messageHeader.ts";
 import Draggable from "react-draggable";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import SpecialMessage from "./special/SpecialMessage.tsx";
 import NestedObjectVisualization from "./special/NestedObjectVisualization.tsx";
 import ActuatorDescription from "../../models/dataStructures/frbc/actuatorDescription.ts";
@@ -21,52 +21,42 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
     const keys = Object.keys(props.message) as (keyof T)[];
     const [isJSON, setIsJSON] = useState(false);
     const [isDraggable, setIsDraggable] = useState(false);
+    const draggableNodeRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         document.addEventListener("keydown", detectKeyDown, true);
+        return () => {
+            document.removeEventListener("keydown", detectKeyDown, true);
+        };
     }, []);
 
-    /**
-     * Handles keydown events to perform specific actions
-     * @param e - The keyboard event
-     */
     const detectKeyDown = (e: KeyboardEvent) => {
         e.stopPropagation();
         switch (e.key) {
-            // Closes all pop-ups
             case "x":
                 props.setTrigger(false);
                 break;
-            // Makes pop-ups draggable
             case "c":
-                setIsDraggable((isDraggable) => !isDraggable);
+                setIsDraggable((prev) => !prev);
                 break;
             default:
                 break;
         }
     };
 
-    /**
-     * Handles special values to be displayed in the MessagePopUp
-     * @param key - The key of the message property
-     * @returns The formatted value
-     */
     const handleSpecialValue = (key: keyof T) => {
         if (typeof props.message[key] === "object") {
-            if (
-                key == "status" &&
+            if (key === "status" &&
                 typeof props.message.status === "object" &&
-                "status" in props.message.status
-            ) {
+                "status" in props.message.status) {
                 return props.message.status.status;
             } else if (
-                (props.message.message_type == "FRBC.UsageForecast" ||
-                    props.message.message_type == "PowerForecast") &&
-                key == "elements" &&
+                (props.message.message_type === "FRBC.UsageForecast" || props.message.message_type === "PowerForecast") &&
+                key === "elements" &&
                 !isJSON
             ) {
                 return "See graph";
-            } else if (key == "time") {
+            } else if (key === "time") {
                 return props.message.time.toLocaleDateString("en-NL", {
                     day: "2-digit",
                     month: "2-digit",
@@ -76,21 +66,13 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                     second: "2-digit",
                     hour12: true,
                 });
-            } else if (
-                !isJSON &&
-                key == "actuators" &&
-                "actuators" in props.message
-            ) {
+            } else if (!isJSON && key === "actuators" && "actuators" in props.message) {
                 return (
-                    <NestedObjectVisualization
-                        obj={props.message.actuators as ActuatorDescription[]}
-                    />
+                    <NestedObjectVisualization obj={props.message.actuators as ActuatorDescription[]}/>
                 );
-            } else if (!isJSON && key == "storage" && "storage" in props.message) {
+            } else if (!isJSON && key === "storage" && "storage" in props.message) {
                 return (
-                    <NestedObjectVisualization
-                        obj={props.message.storage as StorageDescription[]}
-                    />
+                    <NestedObjectVisualization obj={props.message.storage as StorageDescription[]}/>
                 );
             }
             return JSON.stringify(props.message[key]);
@@ -99,60 +81,36 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
     };
 
     return (
-        <Draggable handle={`${isDraggable ? "" : ".handle"}`}>
-            <div
-                className={`
-                ${isDraggable ? "cursor-all-scroll" : "cursor-auto"}
-                 fixed flex justify-center items-center transition-colors z-50
-                 ${props.trigger ? "visible" : "invisible"}
-                 `}
-                style={{position: "fixed", top: "50%", bottom: "50%", left: "50%"}}
+        <Draggable handle={isDraggable ? undefined : ".handle"} nodeRef={draggableNodeRef}>
+            <div ref={draggableNodeRef}
+                 className={`${isDraggable ? "cursor-all-scroll" : "cursor-auto"
+                 } fixed flex justify-center items-center transition-colors z-50 
+                 ${props.trigger ? "visible" : "invisible"}`}
+                 style={{ position: "fixed", top: "50%", left: "50%" }}
             >
-                <div
-                    onClick={(e) => e.stopPropagation()}
-                    className={`bg-metallic-gray rounded-lg shadow p-6 transition-all
-                     ${
-                        props.trigger
-                            ? "scale-100 opacity-100"
-                            : "scale-50 opacity-0"
-                    }`}
+                <div onClick={(e) => e.stopPropagation()}
+                     className={`bg-metallic-gray rounded-lg shadow p-6 transition-all 
+                     ${props.trigger ? "scale-100 opacity-100" : "scale-50 opacity-0"}`}
                 >
                     <h2 className="handle cursor-all-scroll text-lg font-black text-white justify-center items-center flex">
                         {props.message.message_type}
                     </h2>
                     <div className="handle font-black">
-                        <button
-                            className="font-[Arial] absolute top-2 left-2 p-1 rounded-lg text-white bg-metallic-gray hover:text-tno-blue"
-                            onClick={() => setIsJSON(!isJSON)}
+                        <button className="font-[Arial] absolute top-2 left-2 p-1 rounded-lg text-white bg-metallic-gray hover:text-tno-blue"
+                                onClick={() => setIsJSON(!isJSON)}
                         >
                             {isJSON ? "{J}" : "J"}
                         </button>
-                        <button
-                            className="text-lg absolute top-2 right-2 p-1 rounded-lg text-white bg-metallic-gray hover:text-tno-blue"
-                            onClick={() => props.setTrigger(false)}
+                        <button className="text-lg absolute top-2 right-2 p-1 rounded-lg text-white bg-metallic-gray hover:text-tno-blue"
+                                onClick={() => props.setTrigger(false)}
                         >
                             x
                         </button>
                     </div>
                     {isJSON ? (
-                        <pre
-                            className={"text-white whitespace-pre-wrap overflow-auto"}
-                            style={{maxWidth: "700px", maxHeight: "700px"}}
-                        >
-              {"{\n" +
-                  keys
-                      .map(
-                          (k) =>
-                              '  "' +
-                              k.toString() +
-                              '": ' +
-                              '"' +
-                              handleSpecialValue(k) +
-                              '"'
-                      )
-                      .join(",\n") +
-                  "\n}"}
-            </pre>
+                        <pre className="text-white whitespace-pre-wrap overflow-auto" style={{ maxWidth: "700px", maxHeight: "700px" }}>
+                            {"{\n" + keys.map((k) => '  "' + k.toString() + '": ' + '"' + handleSpecialValue(k) + '"').join(",\n") + "\n}"}
+                        </pre>
                     ) : (
                         <div>
                             <table className="rounded-lg font-[Calibri] border-2 border-separate border-tno-blue">
@@ -162,13 +120,13 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                                     <th className="py-3 bg-metallic-gray">Value</th>
                                 </tr>
                                 </thead>
-                                <tbody className={"text-white"}>
+                                <tbody className="text-white">
                                 {keys.map((key, index) => (
                                     <tr key={index} className="bg-metallic-gray">
                                         <th className="border-2 border-tno-blue">
                                             {key.toString()}
                                         </th>
-                                        <th className={"border-2 border-tno-blue"}>
+                                        <th className="border-2 border-tno-blue">
                                             {handleSpecialValue(key)}
                                         </th>
                                     </tr>
@@ -179,7 +137,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                     )}
                     {!isJSON && (
                         <div>
-                            <SpecialMessage message={props.message}/>
+                            <SpecialMessage message={props.message} />
                         </div>
                     )}
                 </div>
