@@ -5,7 +5,6 @@ import Page from "./pages/Page";
  * @returns The Visual Application component
  */
 function App() {
-    console.log("APP")
     return <Page/>;
 }
 

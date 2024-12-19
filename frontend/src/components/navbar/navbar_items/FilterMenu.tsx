@@ -115,8 +115,7 @@ function FilterMenu({filters, onFilterChange, isVisible}: FilterMenuProps) {
                             FRBC Filters
                             <svg
                                 className={`w-3 h-3 transform transition-transform duration-300 ease-in-out ${
-                                    isVisibleFRBCFilters ? "rotate-180" : "rotate-90"
-                                } ml-6`}
+                                    isVisibleFRBCFilters ? "rotate-180" : "rotate-90"} ml-6`}
                                 aria-hidden="true"
                                 fill="none"
                                 viewBox="0 0 10 6"
