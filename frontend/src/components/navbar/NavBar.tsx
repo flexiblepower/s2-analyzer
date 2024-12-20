@@ -90,12 +90,12 @@ const NavigationBar = ({messages, filters, onFilterChange, search, onSearchChang
                                     <div className="relative">
                                         {showSpecialKeys && (
                                             <div
-                                                className="absolute right-0 mt-2 w-56 bg-white border border-gray-300 rounded shadow-lg z-50">
-                                                <ul className="p-2 text-sm text-gray-800">
-                                                    <li className="py-1 px-2 hover:bg-gray-100">
+                                                className="absolute mt-2 w-60 origin-top-right rounded-md bg-base-gray shadow-lg ring-1 ring-black/5">
+                                                <ul className="text-white">
+                                                    <li className="py-1 px-2">
                                                         <strong>X:</strong> Close all message popups
                                                     </li>
-                                                    <li className="py-1 px-2 hover:bg-gray-100">
+                                                    <li className="py-1 px-2">
                                                         <strong>C:</strong> Toggle draggable mode
                                                     </li>
                                                 </ul>
