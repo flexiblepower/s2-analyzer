@@ -70,7 +70,7 @@ class RestAPI(AsyncApplication):
 
     
     async def handle_connection(self, websocket, origin_id, dest_id):
-        msg_history = MESSAGE_HISTORY_REGISTRY.add_log(origin_id, dest_id, S2OriginType.RM)
+        msg_history, status = MESSAGE_HISTORY_REGISTRY.add_log(origin_id, dest_id, S2OriginType.RM)
         conn = WebSocketConnection(origin_id, dest_id, S2OriginType.RM, self.msg_router, msg_history, websocket)
         APPLICATIONS.add_and_start_application(conn)
         await self.msg_router.receive_new_connection(conn)
