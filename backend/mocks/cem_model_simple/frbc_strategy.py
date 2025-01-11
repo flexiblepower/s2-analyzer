@@ -5,14 +5,14 @@ import logging
 from typing import Optional, Callable, TYPE_CHECKING
 import uuid
 
-from s2_analyzer_backend.cem_model_simple.common import (CemModelS2DeviceControlStrategy,
+from mocks.cem_model_simple.cem_model_simple import (CemModelS2DeviceControlStrategy,
                                                          NumericalRange,
                                                          get_active_s2_message)
-from s2_analyzer_backend.common import parse_timestamp_as_utc
+from mocks.cem_model_simple.common import parse_timestamp_as_utc
 from s2_analyzer_backend.connection import ModelConnection
 
 if TYPE_CHECKING:
-    from s2_analyzer_backend.cem_model_simple.device_model import DeviceModel
+    from mocks.cem_model_simple.device_model import DeviceModel
     from s2_analyzer_backend.envelope import Envelope, S2Message
 
 LOGGER = logging.getLogger(__name__)

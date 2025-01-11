@@ -7,12 +7,12 @@ from s2python.s2_validation_error import S2ValidationError
 
 from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.connection import ConnectionType, ModelConnection
-from s2_analyzer_backend.model import ConnectionClosedReason
-from s2_analyzer_backend.globals import BUILDERS
+from backend.mocks.model import ConnectionClosedReason
+#from s2_analyzer_backend.globals import BUILDER
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.connection import Connection
-    from s2_analyzer_backend.model import ModelRegistry
+    #from s2_analyzer_backend.model import ModelRegistry
 
 
 LOGGER = logging.getLogger(__name__)
@@ -21,13 +21,12 @@ LOGGER = logging.getLogger(__name__)
 class MessageRouter:
     connections: dict[tuple[str, str], "Connection"]
     s2_parser: "S2Parser"
-    model_registry: "ModelRegistry"
     _buffer_queue_by_origin_dest_id: dict[tuple[str, str], asyncio.Queue]
 
-    def __init__(self, model_registry: "ModelRegistry") -> None:
+    def __init__(self) -> None:
         self.connections = {}
         self.s2_parser = S2Parser()
-        self.model_registry = model_registry
+        #self.model_registry = model_registry
         self._buffer_queue_by_origin_dest_id = {}
 
     def _get_buffer_queue(self, origin_id: str, dest_id: str) -> asyncio.Queue:
@@ -113,21 +112,21 @@ class MessageRouter:
         for message in buffered_messages:
             await self._forward_envelope_to_connect(message, conn)
 
-        model = self.model_registry.lookup_by_id(conn.dest_id)
-        if model:
-            model_conn = await BUILDERS.build_model_connection(conn.dest_id, conn.origin_id, conn.s2_origin_type.reverse(), self, model)
-            model.receive_new_connection(model_conn)
+        # model = self.model_registry.lookup_by_id(conn.dest_id)
+        # if model:
+        #     model_conn = await BUILDER.build_model_connection(conn.dest_id, conn.origin_id, conn.s2_origin_type.reverse(), self, model)
+        #     model.receive_new_connection(model_conn)
 
     def connection_has_closed(self, conn: "Connection") -> None:
         del self.connections[(conn.origin_id, conn.dest_id)]
         conn.msg_history.receive_line(f"Connection from '{conn.origin_id}' to S2-analyzer has closed.")
 
-        model = self.model_registry.lookup_by_id(conn.dest_id)
-        if model:
-            model_conn = self.get_reverse_connection(conn.origin_id, conn.dest_id)
-            if isinstance(model_conn, ModelConnection):
-                model.connection_has_closed(model_conn, ConnectionClosedReason.DISCONNECT)
-                del self.connections[(model_conn.origin_id, model_conn.dest_id)]
-                model_conn.msg_history.receive_line(f"Connection from '{model_conn.origin_id}' to S2-analyzer has closed.")
-            else:
-                raise ValueError("Unexpected destination connection type")
+        # model = self.model_registry.lookup_by_id(conn.dest_id)
+        # if model:
+        #     model_conn = self.get_reverse_connection(conn.origin_id, conn.dest_id)
+        #     if isinstance(model_conn, ModelConnection):
+        #         model.connection_has_closed(model_conn, ConnectionClosedReason.DISCONNECT)
+        #         del self.connections[(model_conn.origin_id, model_conn.dest_id)]
+        #         model_conn.msg_history.receive_line(f"Connection from '{model_conn.origin_id}' to S2-analyzer has closed.")
+        #     else:
+        #         raise ValueError("Unexpected destination connection type")

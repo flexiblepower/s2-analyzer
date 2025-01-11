@@ -4,6 +4,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Iterator, Optional, TYPE_CHECKING
 
+import datetime
+import pytz
+
 if TYPE_CHECKING:
     from s2_analyzer_backend.envelope import Envelope, S2Message
 
@@ -77,3 +80,17 @@ def get_active_s2_message(timestep_instant: datetime.datetime,
                 youngest_active = s2_message
 
     return youngest_active
+
+
+def now_as_utc() -> datetime.datetime:
+    return datetime.datetime.now(tz=pytz.UTC)
+
+
+def parse_timestamp_as_utc(timestamp_str: str) -> datetime.datetime:
+    date_time = datetime.datetime.fromisoformat(timestamp_str)
+
+    if date_time.tzinfo is None:
+        date_time = date_time.replace(tzinfo=pytz.UTC)
+    else:
+        date_time = date_time.astimezone(pytz.UTC)
+    return date_time

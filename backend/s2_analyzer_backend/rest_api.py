@@ -5,15 +5,18 @@ from typing import Optional, TYPE_CHECKING
 from fastapi import FastAPI, WebSocket, APIRouter, WebSocketException
 import uvicorn
 import uvicorn.server
+from s2_analyzer_backend.connection import Connection, WebSocketConnection
 
 from s2_analyzer_backend.async_application import AsyncApplication
-from s2_analyzer_backend.globals import BUILDERS
+#from s2_analyzer_backend.globals import BUILDERS
+from s2_analyzer_backend.history import MESSAGE_HISTORY_REGISTRY
+from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.origin_type import S2OriginType
 import s2_analyzer_backend.app_logging
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.router import MessageRouter
-    from s2_analyzer_backend.async_application import ApplicationName
+    from s2_analyzer_backend.async_application import ApplicationName, AsyncApplications
 
 
 LOGGER = logging.getLogger(__name__)
@@ -29,6 +32,7 @@ class RestAPI(AsyncApplication):
         self.listen_address = listen_address
         self.listen_port = listen_port
         self.uvicorn_server = None
+
         self.fastapi_router = APIRouter()
         self.msg_router = msg_router
 
@@ -64,6 +68,15 @@ class RestAPI(AsyncApplication):
     async def get_root(self) -> str:
         return 'Hello world!'
 
+    
+    async def handle_connection(self, websocket, origin_id, dest_id):
+        msg_history = MESSAGE_HISTORY_REGISTRY.add_log(origin_id, dest_id, S2OriginType.RM)
+        conn = WebSocketConnection(origin_id, dest_id, S2OriginType.RM, self.msg_router, msg_history, websocket)
+        APPLICATIONS.add_and_start_application(conn)
+        await self.msg_router.receive_new_connection(conn)
+        msg_history.add_connection(conn)
+        await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)
+
     async def receive_new_rm_connection(self, websocket: WebSocket, rm_id: str, cem_id: str) -> None:
         try:
             await websocket.accept()
@@ -71,9 +84,8 @@ class RestAPI(AsyncApplication):
         except WebSocketException:
             LOGGER.exception('RM WS connection from %s to %s had an exception while accepting.', rm_id, cem_id)
 
-        # Creates the WebsocketConnection instance
-        conn = await BUILDERS.build_ws_connection(rm_id, cem_id, S2OriginType.RM, self.msg_router, websocket)
-        await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)
+        await self.handle_connection(websocket, rm_id, cem_id)
+
 
     async def receive_new_cem_connection(self, websocket: WebSocket, cem_id: str, rm_id: str) -> None:
         try:
@@ -82,6 +94,4 @@ class RestAPI(AsyncApplication):
         except WebSocketException:
             LOGGER.exception('CEM WS connection from %s to %s had an exception while accepting.', cem_id, rm_id)
 
-        # Creates the WebsocketConnection instance
-        conn = await BUILDERS.build_ws_connection(cem_id, rm_id, S2OriginType.CEM, self.msg_router, websocket)
-        await conn.wait_till_done_async(timeout=None, kill_after_timeout=False, raise_on_timeout=False)
+        await self.handle_connection(websocket, cem_id, rm_id)

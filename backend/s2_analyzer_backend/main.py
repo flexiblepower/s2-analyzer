@@ -10,7 +10,6 @@ from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.app_logging import LogLevel, setup_logging
 from s2_analyzer_backend.router import MessageRouter
 from s2_analyzer_backend.config import CONFIG #, #init_models
-from s2_analyzer_backend.model import ModelRegistry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,14 +20,7 @@ def main():
 
     setup_logging(LogLevel.parse(os.getenv('LOG_LEVEL', 'INFO')))
 
-    model_registry = ModelRegistry()
-    msg_router = MessageRouter(model_registry)
-
-
-    #asyncio.new_event_loop()  # Trying to get rid of "APPLICATIONS"
-    #restAPI = RestAPI(CONFIG.http_listen_address, CONFIG.http_port, msg_router)
-    #loop = asyncio.new_event_loop()
-    #restAPI.create_and_schedule_main_task(loop)
+    msg_router = MessageRouter()
 
     APPLICATIONS.add_and_start_application(RestAPI(CONFIG.http_listen_address, CONFIG.http_port, msg_router))
 

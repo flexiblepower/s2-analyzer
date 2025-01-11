@@ -145,10 +145,11 @@ class MessageHistoryRegistry:
         if log_key not in self._logs:
             msg_history = MessageHistory(cem, rm)
             self._logs[log_key] = msg_history
-            return msg_history, True
+            APPLICATIONS.add_and_start_application(msg_history)
+            return msg_history
         
         msg_history = self._logs[log_key]
-        return msg_history, False
+        return msg_history
 
     def remove_log(self, msg_history: MessageHistory) -> bool:
         if msg_history in self._logs.inverse:
