@@ -21,8 +21,7 @@ function SpecialMessage<T extends MessageHeader>(props: props<T>) {
      */
     const handleSpecialMessage = () => {
         // Check if the message is of type "PowerForecast" and has the required properties
-        if (
-            props.message.message_type == "PowerForecast" &&
+        if (props.message.message_type == "PowerForecast" &&
             "elements" in props.message &&
             "start_time" in props.message
         ) {

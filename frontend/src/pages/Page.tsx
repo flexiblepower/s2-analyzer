@@ -8,18 +8,18 @@ import useFilters from "../hooks/useFilters.tsx";
 import useSearch from "../hooks/useSearch.tsx";
 import WebSocketClient from "../parser/Socket.ts";
 import MessageWidget from "../components/messages/MessageWidget.tsx";
+import MessageTable from "../components/messages/MessageTable.tsx";
 
 /**
  * The component for rendering the Single Page Application
  * @returns The Single Page Application
  */
 function Page() {
-    // State for storing message data
-    const [data, setData] = useState([] as MessageHeader[]);
-    // State for sidebar visibility
-    const [isSideBarVisible, setIsSideBarVisible] = useState(false);
-    // State for alignment of message widget
-    const [alignment, setAlignment] = useState("justify-center");
+    const [data, setData] = useState([] as MessageHeader[]);         // State for storing message data
+    const [isSideBarVisible, setIsSideBarVisible] = useState(false); // State for sidebar visibility
+    const [alignment, setAlignment] = useState("justify-center");    // State for alignment of message widget
+    const [searchedMessage, setSearchedMessage] = useState("");      // State for searched message id
+    const [isWidgetView, setIsWidgetView] = useState(false);
     // State for selected filters
     const [selectedFilters, setSelectedFilters] = useState<Filters>({
         CEM: true,
@@ -46,10 +46,7 @@ function Page() {
         UsageForecast: true,
     });
 
-    // State for searched message id
-    const [searchedMessage, setSearchedMessage] = useState("");
     // Initialize WebSocket client
-
     useEffect(() => {
         console.log("Creating WS")
         const websocket = new WebSocketClient("ws://localhost:5000");
@@ -71,23 +68,25 @@ function Page() {
         setSearchedMessage(search);
     };
 
-    // Get filtered messages based on selected filters
-    const filteredMessages = useFilters(data, selectedFilters);
-    // Get searched messages based on search input
-    const searchedMessages = useSearch(filteredMessages, searchedMessage);
+    const toggleView = () => {
+        setIsWidgetView(!isWidgetView);
+    };
+
+    const filteredMessages = useFilters(data, selectedFilters);            // Get filtered messages based on selected filters
+    const searchedMessages = useSearch(filteredMessages, searchedMessage); // Get searched messages based on search input
 
     return (
         <div className="w-full h-screen m-auto bg-base-backgroung grid grid-cols-12 grid-rows-12">
             <div className="col-start-1 col-end-13 row-start-0 row-end-1 z-40">
-                <NavBar
-                    messages={setData}
-                    filters={selectedFilters}
-                    onFilterChange={handleFilterChange}
-                    search={searchedMessage}
-                    onSearchChange={handleSearch}
-                    onAlignmentChange={setAlignment}
-                    toggleSideBar={isSideBarVisible}
-                    onToggleSideBar={setIsSideBarVisible}
+                <NavBar messages={setData}
+                        filters={selectedFilters}
+                        onFilterChange={handleFilterChange}
+                        search={searchedMessage}
+                        onSearchChange={handleSearch}
+                        onAlignmentChange={setAlignment}
+                        toggleSideBar={isSideBarVisible}
+                        onToggleSideBar={setIsSideBarVisible}
+                        toggleView={toggleView}
                 />
             </div>
             {isSideBarVisible && (
@@ -96,7 +95,11 @@ function Page() {
                 </div>
             )}
             <div className={`col-start-1 col-end-13 row-start-1 row-end-12 flex items-center ${alignment}`}>
-                <MessageWidget<MessageHeader> searchedMessages={searchedMessages}/>
+                {isWidgetView ? (
+                    <MessageWidget<MessageHeader> searchedMessages={searchedMessages}/>
+                ) : (
+                    <MessageTable messages={searchedMessages}/>
+                )}
             </div>
             <div className="col-start-1 col-end-13 row-start-12 row-end-13 z-40">
                 <TerminalController/>

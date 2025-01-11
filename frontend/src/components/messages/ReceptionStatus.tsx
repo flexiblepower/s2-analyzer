@@ -59,23 +59,17 @@ function ReceptionStatusIcon(props: Props) {
             <MessagePopUp<ReceptionStatus>
                 trigger={isPopUpVisible}
                 setTrigger={setIsPopUpVisible}
-                message={
-                    typeof props.header.status == "object"
-                        ? props.header.status
-                        : createReceptionStatus(
-                            props.header.status.replace("invalid", "Invalid because:\n")
-                        )
-                }
+                message={typeof props.header.status == "object" ? props.header.status
+                        : createReceptionStatus(props.header.status.replace("invalid", "Invalid because:\n"))}
             />
             {/* Status icon with click handler to toggle pop-up visibility */}
-            <img
-                className="cursor-pointer"
-                onClick={() => setIsPopUpVisible(!isPopUpVisible)}
-                onKeyDown={() => setIsPopUpVisible(!isPopUpVisible)}
-                src={imgSrc}
-                alt={label}
-                title={label}
-                style={{width: "15px", height: "15px", marginLeft: "0.2em"}}
+            <img className="cursor-pointer"
+                 onClick={() => setIsPopUpVisible(!isPopUpVisible)}
+                 onKeyDown={() => setIsPopUpVisible(!isPopUpVisible)}
+                 src={imgSrc}
+                 alt={label}
+                 title={label}
+                 style={{width: "15px", height: "15px", marginLeft: "0.2em"}}
             />
         </>
     );

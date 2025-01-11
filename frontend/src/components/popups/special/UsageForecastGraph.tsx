@@ -73,12 +73,7 @@ function PowerForecastGraph(props: Props) {
 
     return (
         <div className={"flex justify-center items-center bg-white"}>
-            <Line
-                data={collectGraphData()}
-                width={100}
-                height={200}
-                options={options}
-            />
+            <Line data={collectGraphData()} width={100} height={200} options={options}/>
         </div>
     );
 }

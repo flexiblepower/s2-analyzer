@@ -36,14 +36,9 @@ function MessageWidget<T extends MessageHeader>(props: props<T>) {
             <div className="col-start-3 row-start-2 row-end-11 border-l-4 border-black"></div>
             <div className="col-start-11 row-start-2 row-end-11 border-l-4 border-black"></div>
 
-            <div
-                className="col-start-3 col-end-11 row-start-2 row-end-11"
-                style={{overflow: "auto"}}
-            >
+            <div className="col-start-3 col-end-11 row-start-2 row-end-11" style={{overflow: "auto"}}>
                 {/* Render the MessageList component with searchedMessages */}
-                <MessageList<MessageHeader>
-                    messages={props.searchedMessages}
-                ></MessageList>
+                <MessageList<MessageHeader> messages={props.searchedMessages}></MessageList>
             </div>
         </div>
     );

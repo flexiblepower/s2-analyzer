@@ -12,8 +12,7 @@ const NestedObjectVisualization = ({obj}: props) => {
         if (typeof value === "object" && value !== null) {
             return (
                 <tr className="bg-metallic-gray">
-                    <td
-                        className="border-2 border-tno-blue"
+                    <td className="border-2 border-tno-blue"
                         onClick={(e) => {
                             e.stopPropagation();
                             collapsed.set(

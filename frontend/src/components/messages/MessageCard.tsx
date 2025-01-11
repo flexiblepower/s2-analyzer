@@ -60,14 +60,9 @@ function MessageCard<T extends MessageHeader>({ message }: Props<T>) {
                         </tr>
                         </tbody>
                     </table>
-                    <img
-                        src={getArrowImage()}
-                        alt={message.sender?.toString()}
-                        title={message.sender?.toString()}
-                    />
-                    <p
-                        className={`${message.sender?.split(" ")[0] === "RM" ? "text-right" : "text-left"} text-xs font-semibold`}
-                        style={{ marginRight: "0.2em", marginLeft: "0.5em" }}
+                    <img src={getArrowImage()} alt={message.sender?.toString()} title={message.sender?.toString()}/>
+                    <p className={`${message.sender?.split(" ")[0] === "RM" ? "text-right" : "text-left"} text-xs font-semibold`}
+                       style={{ marginRight: "0.2em", marginLeft: "0.5em" }}
                     >
                         {message.time.toLocaleDateString("en-NL", {
                             day: "2-digit",
