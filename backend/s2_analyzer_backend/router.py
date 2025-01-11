@@ -6,13 +6,10 @@ from s2python.s2_parser import S2Parser
 from s2python.s2_validation_error import S2ValidationError
 
 from s2_analyzer_backend.envelope import Envelope
-from s2_analyzer_backend.connection import ConnectionType, ModelConnection
-from backend.mocks.model import ConnectionClosedReason
-#from s2_analyzer_backend.globals import BUILDER
+from s2_analyzer_backend.connection import ConnectionType
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.connection import Connection
-    #from s2_analyzer_backend.model import ModelRegistry
 
 
 LOGGER = logging.getLogger(__name__)
