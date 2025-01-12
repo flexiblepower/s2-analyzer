@@ -9,17 +9,19 @@ import useSearch from "../hooks/useSearch.tsx";
 import WebSocketClient from "../parser/Socket.ts";
 import MessageWidget from "../components/messages/MessageWidget.tsx";
 import MessageTable from "../components/messages/MessageTable.tsx";
+import useToggle from "../hooks/useToggle.tsx";
 
 /**
  * The component for rendering the Single Page Application
  * @returns The Single Page Application
  */
 function Page() {
-    const [data, setData] = useState([] as MessageHeader[]);         // State for storing message data
-    const [isSideBarVisible, setIsSideBarVisible] = useState(false); // State for sidebar visibility
-    const [alignment, setAlignment] = useState("justify-center");    // State for alignment of message widget
-    const [searchedMessage, setSearchedMessage] = useState("");      // State for searched message id
-    const [isWidgetView, setIsWidgetView] = useState(false);
+    const [data, setData] = useState<MessageHeader[]>([]); // State for storing message data
+    const [alignment, setAlignment] = useState("justify-center"); // State for alignment of message widget
+    const [searchedMessage, setSearchedMessage] = useState(""); // State for searched message id
+    const [isWidgetView, toggleWidgetView] = useToggle(false); // Using useToggle for widget view toggle
+    const [isSideBarVisible, toggleSideBar] = useToggle(false); // Using useToggle for sidebar visibility
+
     // State for selected filters
     const [selectedFilters, setSelectedFilters] = useState<Filters>({
         CEM: true,
@@ -68,10 +70,6 @@ function Page() {
         setSearchedMessage(search);
     };
 
-    const toggleView = () => {
-        setIsWidgetView(!isWidgetView);
-    };
-
     const filteredMessages = useFilters(data, selectedFilters);            // Get filtered messages based on selected filters
     const searchedMessages = useSearch(filteredMessages, searchedMessage); // Get searched messages based on search input
 
@@ -84,9 +82,8 @@ function Page() {
                         search={searchedMessage}
                         onSearchChange={handleSearch}
                         onAlignmentChange={setAlignment}
-                        toggleSideBar={isSideBarVisible}
-                        onToggleSideBar={setIsSideBarVisible}
-                        toggleView={toggleView}
+                        toggleSideBar={toggleSideBar}
+                        toggleView={toggleWidgetView}
                 />
             </div>
             {isSideBarVisible && (

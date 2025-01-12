@@ -50,10 +50,7 @@ function TerminalController() {
             >
                 <div className="py-5 border-b border-tno-blue">
                     <pre className="whitespace-pre-wrap overflow-auto"
-                         style={{
-                             maxHeight: window.innerHeight / 2,
-                             fontFamily: "Cascadia Code",
-                         }}
+                         style={{maxHeight: window.innerHeight / 2, fontFamily: "Cascadia Code"}}
                     >
                         {/* Display the lines from the parser */}
                         {parser.getLines()}

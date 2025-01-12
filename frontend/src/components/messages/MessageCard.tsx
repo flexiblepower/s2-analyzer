@@ -52,11 +52,7 @@ function MessageCard<T extends MessageHeader>({ message }: Props<T>) {
                                     {message.message_type}
                                 </h3>
                             </th>
-                            {message.status && (
-                                <th>
-                                    <ReceptionStatusIcon header={message}/>
-                                </th>
-                            )}
+                            {message.status && (<th><ReceptionStatusIcon header={message}/></th>)}
                         </tr>
                         </tbody>
                     </table>

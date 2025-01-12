@@ -2,6 +2,7 @@ import PowerForecastElement from "../../../models/dataStructures/powerForecastEl
 import {Line} from "react-chartjs-2";
 import {Chart as ChartJS, LineElement, CategoryScale, LinearScale, PointElement, Legend, Tooltip} from "chart.js";
 import {CommodityQuantity} from "../../../models/dataStructures/commodityQuantity.ts";
+import {getDurationTimestamps} from "../../../utils/util.ts";
 
 interface Props {
     data: PowerForecastElement[];
@@ -66,23 +67,11 @@ function PowerForecastGraph(props: Props) {
         return cleanUpMatrix(matrix, labels);
     };
 
-    const getDurationTimestamps = () => {
-        const array = [] as number[];
-        for (let i = 0; i < props.data.length; i++) {
-            array.push(
-                (props.data[i].duration +
-                    (i == 0 ? props.start.getMilliseconds() : array[i - 1])) %
-                1000
-            );
-        }
-        return array;
-    };
-
     const collectGraphData = () => {
         const {matrix, labs} = getExpectedMatrix(
             Object.values(CommodityQuantity)
         );
-        const xData = getDurationTimestamps();
+        const xData = getDurationTimestamps(props.data, props.start);
 
         xData.unshift(props.start.getMilliseconds());
         for (let i = 0; i < matrix.length; i++) {
@@ -121,12 +110,7 @@ function PowerForecastGraph(props: Props) {
 
     return (
         <div className={"flex justify-center items-center bg-white"}>
-            <Line
-                data={collectGraphData()}
-                width={100}
-                height={200}
-                options={options}
-            />
+            <Line data={collectGraphData()} width={100} height={200} options={options}/>
         </div>
     );
 }
