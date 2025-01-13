@@ -48,12 +48,11 @@ function FilterMenu({filters, onFilterChange, isVisible}: FilterMenuProps) {
                         .slice(0, 4)
                         .map(([key, value]) => (
                             <div className="flex items-center" key={key}>
-                                <input
-                                    type="checkbox"
-                                    id={key}
-                                    checked={value}
-                                    onChange={() => handleCheckboxChange(key as keyof Filters)}
-                                    className="mr-2 size-4 accent-white"
+                                <input type="checkbox"
+                                       id={key}
+                                       checked={value}
+                                       onChange={() => handleCheckboxChange(key as keyof Filters)}
+                                       className="mr-2 size-4 accent-white"
                                 />
                                 <label htmlFor={key} className="text-lg text-white">
                                     {key}
@@ -67,38 +66,31 @@ function FilterMenu({filters, onFilterChange, isVisible}: FilterMenuProps) {
                             onClick={handleTypeFilterVisibility}
                         >
                             Type Filters
-                            <svg className={`w-3 h-3 transform transition-transform duration-300 ease-in-out ${
-                                    isVisibleTypeFilters ? "rotate-180" : "rotate-90"
-                                } ml-7`}
-                                aria-hidden="true"
-                                fill="none"
-                                viewBox="0 0 10 6"
+                            <svg className={`w-3 h-3 transform transition-transform duration-300 ease-in-out
+                            ${isVisibleTypeFilters ? "rotate-180" : "rotate-90"} ml-7`}
+                                 aria-hidden="true"
+                                 fill="none"
+                                 viewBox="0 0 10 6"
                             >
-                                <path
-                                    stroke="currentColor"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M9 5 5 1 1 5"
+                                <path stroke="currentColor"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M9 5 5 1 1 5"
                                 />
                             </svg>
                         </button>
                     </div>
-                    <div
-                        className={`text-left ml-6 text-lg ${
-                            isVisibleTypeFilters ? "block" : "hidden"
-                        }`}
-                    >
+                    <div className={`text-left ml-6 text-lg ${isVisibleTypeFilters ? "block" : "hidden"}`}>
                         {Object.entries(filters)
                             .slice(4, 15)
                             .map(([key, value]) => (
                                 <div className="flex items-center" key={key}>
-                                    <input
-                                        type="checkbox"
-                                        id={key}
-                                        checked={value}
-                                        onChange={() => handleCheckboxChange(key as keyof Filters)}
-                                        className="mr-2 size-4 accent-white"
+                                    <input type="checkbox"
+                                           id={key}
+                                           checked={value}
+                                           onChange={() => handleCheckboxChange(key as keyof Filters)}
+                                           className="mr-2 size-4 accent-white"
                                     />
                                     <label htmlFor={key} className="text-white text-sm">
                                         {key}
@@ -108,43 +100,35 @@ function FilterMenu({filters, onFilterChange, isVisible}: FilterMenuProps) {
                     </div>
                     {/* The FRBC Filter Menu */}
                     <div className="flex items-center justify-between mb-1">
-                        <button
-                            className="flex items-center ml-6 w-auto text-lg text-white"
-                            onClick={handleFRBCFilterVisibility}
+                        <button className="flex items-center ml-6 w-auto text-lg text-white"
+                                onClick={handleFRBCFilterVisibility}
                         >
                             FRBC Filters
-                            <svg
-                                className={`w-3 h-3 transform transition-transform duration-300 ease-in-out ${
-                                    isVisibleFRBCFilters ? "rotate-180" : "rotate-90"} ml-6`}
-                                aria-hidden="true"
-                                fill="none"
-                                viewBox="0 0 10 6"
+                            <svg className={`w-3 h-3 transform transition-transform duration-300 ease-in-out
+                            ${isVisibleFRBCFilters ? "rotate-180" : "rotate-90"} ml-6`}
+                                 aria-hidden="true"
+                                 fill="none"
+                                 viewBox="0 0 10 6"
                             >
-                                <path
-                                    stroke="currentColor"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="2"
-                                    d="M9 5 5 1 1 5"
+                                <path stroke="currentColor"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M9 5 5 1 1 5"
                                 />
                             </svg>
                         </button>
                     </div>
-                    <div
-                        className={`text-left ml-6 text-lg ${
-                            isVisibleFRBCFilters ? "block" : "hidden"
-                        }`}
-                    >
+                    <div className={`text-left ml-6 text-lg ${isVisibleFRBCFilters ? "block" : "hidden"}`}>
                         {Object.entries(filters)
                             .slice(15)
                             .map(([key, value]) => (
                                 <div className="flex items-center" key={key}>
-                                    <input
-                                        type="checkbox"
-                                        id={key}
-                                        checked={value}
-                                        onChange={() => handleCheckboxChange(key as keyof Filters)}
-                                        className="mr-2 size-4 accent-white"
+                                    <input type="checkbox"
+                                           id={key}
+                                           checked={value}
+                                           onChange={() => handleCheckboxChange(key as keyof Filters)}
+                                           className="mr-2 size-4 accent-white"
                                     />
                                     <label htmlFor={key} className="text-white text-sm">
                                         {key}

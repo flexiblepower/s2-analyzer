@@ -26,9 +26,8 @@ function SpecialMessage<T extends MessageHeader>(props: props<T>) {
             "start_time" in props.message
         ) {
             return (
-                <PowerForecastGraph
-                    data={props.message.elements as PowerForecastElement[]}
-                    start={new Date(props.message.start_time as string)}
+                <PowerForecastGraph data={props.message.elements as PowerForecastElement[]}
+                                    start={new Date(props.message.start_time as string)}
                 />
             );
             // Check if the message is of type "FRBC.UsageForecast" and has the required properties
@@ -38,9 +37,8 @@ function SpecialMessage<T extends MessageHeader>(props: props<T>) {
             "start_time" in props.message
         ) {
             return (
-                <UsageForecastGraph
-                    data={props.message.elements as UsageForecastElement[]}
-                    start={new Date(props.message.start_time as string)}
+                <UsageForecastGraph data={props.message.elements as UsageForecastElement[]}
+                                    start={new Date(props.message.start_time as string)}
                 />
             );
         }

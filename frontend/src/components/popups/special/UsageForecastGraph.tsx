@@ -24,7 +24,7 @@ function PowerForecastGraph(props: Props) {
         const yData = props.data.map((el) => el.usage_rate_expected);
         const xData = getDurationTimestamps(props.data, props.start);
 
-        // Add the starting timestamp and ensure the graph etends to the end
+        // Add the starting timestamp and ensure the graph extends to the end
         xData.unshift(props.start.getMilliseconds());
         yData.push(yData[yData.length - 1]);
 

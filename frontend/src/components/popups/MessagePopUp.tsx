@@ -83,8 +83,8 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
     return (
         <Draggable handle={isDraggable ? undefined : ".handle"} nodeRef={draggableNodeRef}>
             <div ref={draggableNodeRef}
-                 className={`${isDraggable ? "cursor-all-scroll" : "cursor-auto"
-                 } fixed flex justify-center items-center transition-colors z-50 
+                 className={`${isDraggable ? "cursor-all-scroll" : "cursor-auto"} 
+                 fixed flex justify-center items-center transition-colors z-50 
                  ${props.trigger ? "visible" : "invisible"}`}
                  style={{ position: "fixed", top: "50%", left: "50%" }}
             >

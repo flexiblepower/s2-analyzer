@@ -4137,3 +4137,104 @@
 2025-01-12 22:06:43 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '8bd65540-c125-427d-9fe2-4e5fe07ebc47'}
 2025-01-12 22:06:46 Connection from 'cem1' to S2-analyzer has closed.
 2025-01-12 22:06:47 Connection from 'battery1' to S2-analyzer has closed.
+2025-01-13 10:47:28 Connection initiated from 'cem1' to S2-analyzer.
+2025-01-13 10:47:28 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"07af37d6-f795-46d6-9f58-649790a36fb7","message_type":"Handshake","role":"RM","supported_protocol_versions":["1"]}
+2025-01-13 10:47:28 [Message buffered][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': '07af37d6-f795-46d6-9f58-649790a36fb7', 'message_type': 'Handshake', 'role': 'RM', 'supported_protocol_versions': ['1']}
+2025-01-13 10:47:28 Connection initiated from 'battery1' to S2-analyzer.
+2025-01-13 10:47:28 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': '07af37d6-f795-46d6-9f58-649790a36fb7', 'message_type': 'Handshake', 'role': 'RM', 'supported_protocol_versions': ['1']}
+2025-01-13 10:47:28 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"a356d8c5-4026-4c03-906b-b5d54c755508","message_type":"Handshake","role":"RM","supported_protocol_versions":["1"]}
+2025-01-13 10:47:28 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': 'a356d8c5-4026-4c03-906b-b5d54c755508', 'message_type': 'Handshake', 'role': 'RM', 'supported_protocol_versions': ['1']}
+2025-01-13 10:47:48 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"f5e128c1-c00c-4bbc-a126-074a25310284","message_type":"FRBC.StorageStatus","present_fill_level":0.4985}
+2025-01-13 10:47:48 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': 'f5e128c1-c00c-4bbc-a126-074a25310284', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4985}
+2025-01-13 10:47:48 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"f5e128c1-c00c-4bbc-a126-074a25310284"}
+2025-01-13 10:47:48 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': 'f5e128c1-c00c-4bbc-a126-074a25310284'}
+2025-01-13 10:47:48 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"bcf6c674-a010-4984-97a7-f87d66e65913","message_type":"FRBC.StorageStatus","present_fill_level":0.4985}
+2025-01-13 10:47:48 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': 'bcf6c674-a010-4984-97a7-f87d66e65913', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4985}
+2025-01-13 10:47:48 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"bcf6c674-a010-4984-97a7-f87d66e65913"}
+2025-01-13 10:47:48 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': 'bcf6c674-a010-4984-97a7-f87d66e65913'}
+2025-01-13 10:47:53 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"83f94cac-bb0b-4adb-9ac2-bdde40c8f971","message_type":"FRBC.StorageStatus","present_fill_level":0.497}
+2025-01-13 10:47:53 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': '83f94cac-bb0b-4adb-9ac2-bdde40c8f971', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.497}
+2025-01-13 10:47:53 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"83f94cac-bb0b-4adb-9ac2-bdde40c8f971"}
+2025-01-13 10:47:53 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '83f94cac-bb0b-4adb-9ac2-bdde40c8f971'}
+2025-01-13 10:47:53 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"53fcf7b4-5d4d-43fd-a47e-673235adc841","message_type":"FRBC.StorageStatus","present_fill_level":0.497}
+2025-01-13 10:47:53 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': '53fcf7b4-5d4d-43fd-a47e-673235adc841', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.497}
+2025-01-13 10:47:53 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"53fcf7b4-5d4d-43fd-a47e-673235adc841"}
+2025-01-13 10:47:53 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '53fcf7b4-5d4d-43fd-a47e-673235adc841'}
+2025-01-13 10:47:57 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"974cb4d4-bab7-4edd-838e-bec8585ed194","message_type":"FRBC.StorageStatus","present_fill_level":0.4955}
+2025-01-13 10:47:57 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': '974cb4d4-bab7-4edd-838e-bec8585ed194', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4955}
+2025-01-13 10:47:57 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"974cb4d4-bab7-4edd-838e-bec8585ed194"}
+2025-01-13 10:47:57 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '974cb4d4-bab7-4edd-838e-bec8585ed194'}
+2025-01-13 10:47:57 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"10521c5f-3b4c-4f80-ad16-90c20b0af887","message_type":"FRBC.StorageStatus","present_fill_level":0.4955}
+2025-01-13 10:47:57 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': '10521c5f-3b4c-4f80-ad16-90c20b0af887', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4955}
+2025-01-13 10:47:57 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"10521c5f-3b4c-4f80-ad16-90c20b0af887"}
+2025-01-13 10:47:57 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '10521c5f-3b4c-4f80-ad16-90c20b0af887'}
+2025-01-13 10:48:02 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"66a3e0b9-6fae-4f52-9070-be4a7ae0f303","message_type":"FRBC.StorageStatus","present_fill_level":0.494}
+2025-01-13 10:48:02 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': '66a3e0b9-6fae-4f52-9070-be4a7ae0f303', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.494}
+2025-01-13 10:48:02 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"66a3e0b9-6fae-4f52-9070-be4a7ae0f303"}
+2025-01-13 10:48:02 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '66a3e0b9-6fae-4f52-9070-be4a7ae0f303'}
+2025-01-13 10:48:02 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"5176f16a-ee64-47ba-8cbd-373e8a080499","message_type":"FRBC.StorageStatus","present_fill_level":0.494}
+2025-01-13 10:48:02 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': '5176f16a-ee64-47ba-8cbd-373e8a080499', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.494}
+2025-01-13 10:48:02 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"5176f16a-ee64-47ba-8cbd-373e8a080499"}
+2025-01-13 10:48:02 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '5176f16a-ee64-47ba-8cbd-373e8a080499'}
+2025-01-13 10:48:07 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"dcbba1a6-0256-47ab-a73e-cb5f72d5506f","message_type":"FRBC.StorageStatus","present_fill_level":0.4925}
+2025-01-13 10:48:07 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': 'dcbba1a6-0256-47ab-a73e-cb5f72d5506f', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4925}
+2025-01-13 10:48:07 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"dcbba1a6-0256-47ab-a73e-cb5f72d5506f"}
+2025-01-13 10:48:07 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': 'dcbba1a6-0256-47ab-a73e-cb5f72d5506f'}
+2025-01-13 10:48:07 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"80f6db1d-2190-4d31-ae9c-4e503ad5fdd8","message_type":"FRBC.StorageStatus","present_fill_level":0.4925}
+2025-01-13 10:48:07 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': '80f6db1d-2190-4d31-ae9c-4e503ad5fdd8', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4925}
+2025-01-13 10:48:07 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"80f6db1d-2190-4d31-ae9c-4e503ad5fdd8"}
+2025-01-13 10:48:07 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '80f6db1d-2190-4d31-ae9c-4e503ad5fdd8'}
+2025-01-13 10:48:12 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"6204ffd9-4d05-4d4c-84d5-15905fbbeeb1","message_type":"FRBC.StorageStatus","present_fill_level":0.491}
+2025-01-13 10:48:12 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': '6204ffd9-4d05-4d4c-84d5-15905fbbeeb1', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.491}
+2025-01-13 10:48:12 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"6204ffd9-4d05-4d4c-84d5-15905fbbeeb1"}
+2025-01-13 10:48:12 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '6204ffd9-4d05-4d4c-84d5-15905fbbeeb1'}
+2025-01-13 10:48:12 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"b4e84639-ae1c-4645-bbf5-9f9b238a5581","message_type":"FRBC.StorageStatus","present_fill_level":0.491}
+2025-01-13 10:48:12 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': 'b4e84639-ae1c-4645-bbf5-9f9b238a5581', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.491}
+2025-01-13 10:48:12 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"b4e84639-ae1c-4645-bbf5-9f9b238a5581"}
+2025-01-13 10:48:12 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': 'b4e84639-ae1c-4645-bbf5-9f9b238a5581'}
+2025-01-13 10:48:17 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"00116eb2-2174-4b3c-94ca-c9b19c56226d","message_type":"FRBC.StorageStatus","present_fill_level":0.4895}
+2025-01-13 10:48:17 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': '00116eb2-2174-4b3c-94ca-c9b19c56226d', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4895}
+2025-01-13 10:48:17 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"00116eb2-2174-4b3c-94ca-c9b19c56226d"}
+2025-01-13 10:48:17 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '00116eb2-2174-4b3c-94ca-c9b19c56226d'}
+2025-01-13 10:48:17 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"ce4ae713-9925-4898-9d92-ee5e6a3b9dc9","message_type":"FRBC.StorageStatus","present_fill_level":0.4895}
+2025-01-13 10:48:17 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': 'ce4ae713-9925-4898-9d92-ee5e6a3b9dc9', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4895}
+2025-01-13 10:48:17 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"ce4ae713-9925-4898-9d92-ee5e6a3b9dc9"}
+2025-01-13 10:48:17 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': 'ce4ae713-9925-4898-9d92-ee5e6a3b9dc9'}
+2025-01-13 10:48:22 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"c4da4de3-b153-4ca6-a191-9e2afe3eec9a","message_type":"FRBC.StorageStatus","present_fill_level":0.488}
+2025-01-13 10:48:22 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': 'c4da4de3-b153-4ca6-a191-9e2afe3eec9a', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.488}
+2025-01-13 10:48:22 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"c4da4de3-b153-4ca6-a191-9e2afe3eec9a"}
+2025-01-13 10:48:22 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': 'c4da4de3-b153-4ca6-a191-9e2afe3eec9a'}
+2025-01-13 10:48:22 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"84a797b5-d246-45bd-87c7-8c268da71985","message_type":"FRBC.StorageStatus","present_fill_level":0.488}
+2025-01-13 10:48:22 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': '84a797b5-d246-45bd-87c7-8c268da71985', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.488}
+2025-01-13 10:48:22 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"84a797b5-d246-45bd-87c7-8c268da71985"}
+2025-01-13 10:48:22 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '84a797b5-d246-45bd-87c7-8c268da71985'}
+2025-01-13 10:48:25 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"f8482fa8-821c-464a-8a58-cffaf94c89d4","message_type":"FRBC.StorageStatus","present_fill_level":0.4865}
+2025-01-13 10:48:25 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': 'f8482fa8-821c-464a-8a58-cffaf94c89d4', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4865}
+2025-01-13 10:48:25 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"f8482fa8-821c-464a-8a58-cffaf94c89d4"}
+2025-01-13 10:48:25 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': 'f8482fa8-821c-464a-8a58-cffaf94c89d4'}
+2025-01-13 10:48:25 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"89306f49-655c-4d89-a0d9-31b1f2d7e104","message_type":"FRBC.StorageStatus","present_fill_level":0.4865}
+2025-01-13 10:48:25 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': '89306f49-655c-4d89-a0d9-31b1f2d7e104', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4865}
+2025-01-13 10:48:25 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"89306f49-655c-4d89-a0d9-31b1f2d7e104"}
+2025-01-13 10:48:25 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '89306f49-655c-4d89-a0d9-31b1f2d7e104'}
+2025-01-13 10:48:30 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"6a10f6ad-c7a3-49a5-a3d3-1baa858c3234","message_type":"FRBC.StorageStatus","present_fill_level":0.485}
+2025-01-13 10:48:30 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': '6a10f6ad-c7a3-49a5-a3d3-1baa858c3234', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.485}
+2025-01-13 10:48:30 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"6a10f6ad-c7a3-49a5-a3d3-1baa858c3234"}
+2025-01-13 10:48:30 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '6a10f6ad-c7a3-49a5-a3d3-1baa858c3234'}
+2025-01-13 10:48:30 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"4c7c9ddb-b2cc-4ef0-823e-c0819ff17002","message_type":"FRBC.StorageStatus","present_fill_level":0.485}
+2025-01-13 10:48:30 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': '4c7c9ddb-b2cc-4ef0-823e-c0819ff17002', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.485}
+2025-01-13 10:48:30 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"4c7c9ddb-b2cc-4ef0-823e-c0819ff17002"}
+2025-01-13 10:48:30 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '4c7c9ddb-b2cc-4ef0-823e-c0819ff17002'}
+2025-01-13 10:48:35 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_id":"6f1ac7be-683e-452e-b4cf-83f5842a8f02","message_type":"FRBC.StorageStatus","present_fill_level":0.4835}
+2025-01-13 10:48:35 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_id': '6f1ac7be-683e-452e-b4cf-83f5842a8f02', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4835}
+2025-01-13 10:48:35 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"6f1ac7be-683e-452e-b4cf-83f5842a8f02"}
+2025-01-13 10:48:35 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': '6f1ac7be-683e-452e-b4cf-83f5842a8f02'}
+2025-01-13 10:48:35 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"message_id":"cf833263-49a6-4411-86f1-cbf37b31bec9","message_type":"FRBC.StorageStatus","present_fill_level":0.4835}
+2025-01-13 10:48:35 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'message_id': 'cf833263-49a6-4411-86f1-cbf37b31bec9', 'message_type': 'FRBC.StorageStatus', 'present_fill_level': 0.4835}
+2025-01-13 10:48:35 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"cf833263-49a6-4411-86f1-cbf37b31bec9"}
+2025-01-13 10:48:35 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': 'cf833263-49a6-4411-86f1-cbf37b31bec9'}
+2025-01-13 10:48:35 [Message received][Sender: RM battery1][Receiver: CEM cem1] Message: {"elements":[{"duration":60000,"usage_rate_expected":0.004}],"message_id":"b9dc3728-c2ba-47ac-a73e-8a5c7e7ef781","message_type":"FRBC.UsageForecast","start_time":"2025-01-13T10:48:35.959168669Z"}
+2025-01-13 10:48:35 [Message forwarded][Sender: CEM cem1][Receiver: RM battery1] Message: {'elements': [{'duration': 60000, 'usage_rate_expected': 0.004}], 'message_id': 'b9dc3728-c2ba-47ac-a73e-8a5c7e7ef781', 'message_type': 'FRBC.UsageForecast', 'start_time': '2025-01-13T10:48:35.959168669Z'}
+2025-01-13 10:48:35 [Message received][Sender: CEM cem1][Receiver: RM battery1] Message: {"message_type":"ReceptionStatus","status":"OK","subject_message_id":"b9dc3728-c2ba-47ac-a73e-8a5c7e7ef781"}
+2025-01-13 10:48:35 [Message forwarded][Sender: RM battery1][Receiver: CEM cem1] Message: {'message_type': 'ReceptionStatus', 'status': 'OK', 'subject_message_id': 'b9dc3728-c2ba-47ac-a73e-8a5c7e7ef781'}
+2025-01-13 10:48:37 Connection from 'battery1' to S2-analyzer has closed.
+2025-01-13 10:48:38 Connection from 'cem1' to S2-analyzer has closed.

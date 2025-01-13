@@ -35,8 +35,7 @@ const NestedObjectVisualization = ({obj}: props) => {
         } else if (Array.isArray(value)) {
             return (
                 <tr className="bg-metallic-gray">
-                    <td
-                        className="border-2 border-tno-blue"
+                    <td className="border-2 border-tno-blue"
                         onClick={(e) => {
                             e.stopPropagation();
                             collapsed.set(
@@ -71,9 +70,7 @@ const NestedObjectVisualization = ({obj}: props) => {
     return (
         <table className="rounded-lg font-[Calibri] border-2 border-separate border-tno-blue">
             <tbody className={"text-white"}>
-            {Object.entries(obj).map(([property, value]) =>
-                renderProperty(property, value)
-            )}
+            {Object.entries(obj).map(([property, value]) => renderProperty(property, value))}
             </tbody>
         </table>
     );

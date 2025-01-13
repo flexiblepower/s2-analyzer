@@ -5,8 +5,8 @@ import { Filters } from "../../models/dataStructures/filters.ts";
 import { parser } from "../../parser/Parser.ts";
 import FilterMenu from "./navbar_items/FilterMenu.tsx";
 import SearchBar from "./navbar_items/SearchBar.tsx";
-import useCloseFilterMenu from "../../hooks/useCloseFilterMenu.tsx";
-import useToggle from "../../hooks/useToggle"; // Assuming you have a useToggle hook
+import useToggle from "../../hooks/useToggle";
+import useOutsideClick from "../../hooks/useOutsideClick.tsx";
 
 interface NavBarProps {
     messages: React.Dispatch<React.SetStateAction<MessageHeader[]>>;
@@ -34,7 +34,8 @@ const NavigationBar = ({
     const [showSpecialKeys, toggleSpecialKeys] = useToggle(false);
     const [index, setIndex] = useState(2);
     const alignments = ["justify-self-auto", "justify-center", "justify-end"];
-    const filterMenuRef = useRef(null);
+    const filterMenuRef = useRef<HTMLDivElement>(null);
+    const specialKeysRef = useRef<HTMLDivElement>(null);
 
     const getFiles = async () => messages(await parser.parseLogFile());
     const pauseMessages = () => parser.setPause(!parser.getIsPaused());
@@ -43,9 +44,10 @@ const NavigationBar = ({
         onAlignmentChange(alignments[index]);
     };
 
-    const handleClosingFilterMenu = () => toggleFilterMenu();
-    useCloseFilterMenu(filterMenuRef, handleClosingFilterMenu);
-
+    useOutsideClick([filterMenuRef, specialKeysRef], [
+        () => { if (isVisibleFilterMenu) { toggleFilterMenu(); } },
+        () => { if (showSpecialKeys) { toggleSpecialKeys(); } }
+    ]);
     useEffect(() => {
         const interval = setInterval(async () => {
             try {
@@ -58,15 +60,10 @@ const NavigationBar = ({
         return () => clearInterval(interval);
     }, [messages]);
 
-
     return (
         <nav className="bg-base-gray w-full z-20 top-0 start-0 border-b border-tno-blue">
             <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-                <a href="https://s2standard.org/"
-                   className="flex items-center space-x-3 rtl:space-x-reverse"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                >
+                <a href="https://s2standard.org/" className="flex items-center space-x-3 rtl:space-x-reverse" target="_blank" rel="noopener noreferrer">
                     <img src={s2AnalyzerLogo} className="h-10" alt="TNO Logo" />
                 </a>
                 <button
@@ -91,21 +88,16 @@ const NavigationBar = ({
                             { onClick: toggleSpecialKeys, label: "Special Keys", isSpecialKey: true },
                         ].map((button, index) => (
                             <li key={index}>
-                                <button className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0"
-                                        onClick={button.onClick}
-                                >
+                                <button className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0" onClick={button.onClick}>
                                     {button.label}
                                 </button>
                                 {button.isFilter && (
-                                    <div className="clickable-heading md:absolute">
-                                        <FilterMenu filters={filters}
-                                                    onFilterChange={onFilterChange}
-                                                    isVisible={isVisibleFilterMenu}
-                                        />
+                                    <div className="clickable-heading md:absolute" ref={filterMenuRef}>
+                                        <FilterMenu filters={filters} onFilterChange={onFilterChange} isVisible={isVisibleFilterMenu} />
                                     </div>
                                 )}
                                 {button.isSpecialKey && (
-                                    <div className="relative">
+                                    <div className="relative" ref={specialKeysRef}>
                                         {showSpecialKeys && (
                                             <div className="absolute mt-2 w-60 origin-top-right rounded-md bg-base-gray shadow-lg ring-1 ring-black/5">
                                                 <ul className="text-white">
