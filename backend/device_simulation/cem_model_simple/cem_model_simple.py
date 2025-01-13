@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from s2_analyzer_backend.async_application import APPLICATIONS
 from mocks.cem_model_simple.device_model import DeviceModel
 from mocks.cem_model_simple.common import now_as_utc
-from backend.mocks.model import Model
+from backend.device_simulation.cem_model_simple.model import Model
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.connection import Connection, ConnectionClosedReason, ModelConnection
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
+"""Brings together DeviceModel and Model to integrate into S2 analyzer backend"""
 class CEM(Model):
     SCHEDULE_INTERVAL = datetime.timedelta(minutes=1)
 

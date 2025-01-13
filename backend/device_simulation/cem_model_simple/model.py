@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 import logging
 from enum import Enum
 from s2_analyzer_backend.async_application import AsyncApplication
-from s2_analyzer_backend.async_selectable import AsyncSelect
+from backend.device_simulation.async_selectable import AsyncSelect
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.envelope import Envelope
@@ -22,7 +22,7 @@ class ConnectionClosedReason(Enum):
     DISCONNECT = 'disconnect'
     TIMEOUT = 'timeout'
 
-
+"""Interacts with the analyzer backend"""
 class Model(AsyncApplication):
     model_id: str
     msg_router: "MessageRouter"
@@ -80,18 +80,18 @@ class DummyModel(Model):
         self._select_on_connections.remove_selectable(closed_connection)
 
 
-class ModelRegistry:
-    def __init__(self) -> None:
-        self.models: list[Model] = []
+# class ModelRegistry:
+#     def __init__(self) -> None:
+#         self.models: list[Model] = []
 
-    def add_model(self, model: Model) -> None:
-        self.models.append(model)
+#     def add_model(self, model: Model) -> None:
+#         self.models.append(model)
 
-    def remove_model(self, model: Model) -> None:
-        self.models.remove(model)
+#     def remove_model(self, model: Model) -> None:
+#         self.models.remove(model)
 
-    def lookup_by_id(self, model_id: str) -> 'Model|None':
-        for model in self.models:
-            if model.model_id == model_id:
-                return model
-        return None
+#     def lookup_by_id(self, model_id: str) -> 'Model|None':
+#         for model in self.models:
+#             if model.model_id == model_id:
+#                 return model
+#         return None

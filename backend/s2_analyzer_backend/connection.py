@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from fastapi import WebSocket
     from s2_analyzer_backend.router import MessageRouter
     from s2_analyzer_backend.envelope import Envelope, S2Message
-    from backend.mocks.model import Model
+    from backend.device_simulation.cem_model_simple.model import Model
     from s2_analyzer_backend.origin_type import S2OriginType
     from s2_analyzer_backend.async_application import ApplicationName
     from s2_analyzer_backend.history import MessageHistory
