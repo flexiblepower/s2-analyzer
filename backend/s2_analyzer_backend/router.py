@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 from typing import TYPE_CHECKING
 import logging
 
@@ -51,29 +52,6 @@ class MessageRouter:
         dest_id = origin.dest_id
         dest = self.get_reverse_connection(origin.origin_id, origin.dest_id)
 
-        # Determine msg type
-        # message_type = self.s2_parser.parse_message_type(s2_json_msg)
-        # if message_type is None:
-            # raise ValueError('Unknown message type')
-
-        # Parse msg
-        # validation_error = None
-        # s2_msg = None
-        # try:
-        #     s2_msg = self.s2_parser.parse_as_any_message(s2_json_msg)
-        # except S2ValidationError as e:
-        #     validation_error = e
-        #     LOGGER.warning('%s send invalid message: %s\n Error: %s', origin.origin_id, s2_msg, validation_error)
-        #     # origin.msg_history.receive_line(f"[Message validation not successful][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_json_msg)} Issue:\n{str(validation_error)}")
-        # else:
-        #     LOGGER.debug('%s send valid message: %s', origin.origin_id, s2_msg)
-            
-
-        # Assemble envelope
-
-        # Process Message
-        # if s2_msg:
-        
         # Prepare the message to be processed 
         message = Message(
             origin.origin_id,
@@ -82,7 +60,8 @@ class MessageRouter:
             s2_json_msg,
             None, 
             None,
-            None
+            None,
+            datetime.now()
         )
 
         self._msg_processor_handler.add_message_to_process(message)

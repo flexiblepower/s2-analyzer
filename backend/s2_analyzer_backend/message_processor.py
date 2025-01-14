@@ -1,6 +1,12 @@
 import abc
 import asyncio
 from dataclasses import dataclass
+from datetime import datetime
+
+from jsonschema import ValidationError
+from sqlalchemy import Engine
+from sqlmodel import Session
+from s2_analyzer_backend.database import Communication
 from s2_analyzer_backend.origin_type import S2OriginType
 from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.async_application import LOGGER, AsyncApplication
@@ -18,6 +24,7 @@ class Message:
     s2_msg: S2Message | None
     s2_msg_type: str | None
     s2_validation_error: S2ValidationError | None
+    timestamp: datetime | None
 
 
 class MessageProcessor(abc.ABC):
@@ -63,15 +70,42 @@ class MessageParserProcessor(MessageProcessor):
         message.s2_msg = s2_message
         message.s2_msg_type = s2_message_type
         message.s2_validation_error = validation_error
-        
+
         return message
 
+
 class MessageStorageProcessor(MessageProcessor):
+    def __init__(self, engine: "Engine"):
+        super().__init__()
+        self.engine = engine
+
     async def process_message(
-        self, message: Envelope, loop: asyncio.AbstractEventLoop
+        self, message: Message, loop: asyncio.AbstractEventLoop
     ) -> str:
-        LOGGER.info(f"Message stored: {message}")
-        return message
+        with Session(self.engine) as session:
+            validation_error = None
+
+            # if message.s2_validation_error:
+            #     validation_error = ValidationError(
+            #         error_details=message.s2_validation_error
+            #     )
+            #     session.add(validation_error)
+            #     session.commit()
+
+            db_message = Communication(
+                cem_id=message.cem_id,
+                rm_id=message.rm_id,
+                origin=message.origin.__str__(),
+                s2_msg=message.s2_msg.to_json() if message.s2_msg else None,
+                s2_msg_type=message.s2_msg_type,
+                timestamp=message.timestamp,
+                # validation_error=validation_error,
+            )
+
+            session.add(db_message)
+            session.commit()
+
+            return message
 
 
 class MessageProcessorHandler(AsyncApplication):
@@ -94,7 +128,6 @@ class MessageProcessorHandler(AsyncApplication):
 
     async def process_message(self, message: Message, loop: asyncio.AbstractEventLoop):
         result = message
-        # ! Not sure if the results is necessary
         for message_processor in self.message_processors:
             result = await message_processor.process_message(result, loop)
 

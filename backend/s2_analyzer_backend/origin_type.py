@@ -17,3 +17,6 @@ class S2OriginType(Enum):
 
     def is_cem(self):
         return self is S2OriginType.CEM
+    
+    def __str__(self):
+        return self.value
