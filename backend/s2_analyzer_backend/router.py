@@ -5,6 +5,7 @@ import logging
 from s2python.s2_parser import S2Parser
 from s2python.s2_validation_error import S2ValidationError
 
+from s2_analyzer_backend.message_processor import MessageProcessorHandler
 from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.connection import ConnectionType
 
@@ -20,9 +21,10 @@ class MessageRouter:
     s2_parser: "S2Parser"
     _buffer_queue_by_origin_dest_id: dict[tuple[str, str], asyncio.Queue]
 
-    def __init__(self) -> None:
+    def __init__(self, msg_processor_handler: MessageProcessorHandler) -> None:
         self.connections = {}
         self.s2_parser = S2Parser()
+        self._msg_processor_handler = msg_processor_handler
         #self.model_registry = model_registry
         self._buffer_queue_by_origin_dest_id = {}
 
@@ -50,24 +52,29 @@ class MessageRouter:
         dest = self.get_reverse_connection(origin.origin_id, origin.dest_id)
 
         # Determine msg type
-        message_type = self.s2_parser.parse_message_type(s2_json_msg)
-        if message_type is None:
-            raise ValueError('Unknown message type')
+        # message_type = self.s2_parser.parse_message_type(s2_json_msg)
+        # if message_type is None:
+        #     raise ValueError('Unknown message type')
 
         # Parse msg
-        validation_error = None
-        s2_msg = None
-        try:
-            s2_msg = self.s2_parser.parse_as_any_message(s2_json_msg)
-        except S2ValidationError as e:
-            validation_error = e
-            LOGGER.warning('%s send invalid message: %s\n Error: %s', origin.origin_id, s2_msg, validation_error)
-            origin.msg_history.receive_line(f"[Message validation not successful][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_json_msg)} Issue:\n{str(validation_error)}")
-        else:
-            LOGGER.debug('%s send valid message: %s', origin.origin_id, s2_msg)
+        # validation_error = None
+        # s2_msg = None
+        # try:
+        #     s2_msg = self.s2_parser.parse_as_any_message(s2_json_msg)
+        # except S2ValidationError as e:
+        #     validation_error = e
+        #     LOGGER.warning('%s send invalid message: %s\n Error: %s', origin.origin_id, s2_msg, validation_error)
+        #     # origin.msg_history.receive_line(f"[Message validation not successful][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_json_msg)} Issue:\n{str(validation_error)}")
+        # else:
+        #     LOGGER.debug('%s send valid message: %s', origin.origin_id, s2_msg)
+            
 
         # Assemble envelope
-        envelope = Envelope(origin, dest, message_type, s2_json_msg, validation_error)
+        envelope = Envelope(origin, dest, None, s2_json_msg, None)
+
+        # Process Message
+        # if s2_msg:
+        self._msg_processor_handler.add_message_to_process(envelope)
 
         # Buffer or Route
         if dest is None:
@@ -75,13 +82,13 @@ class MessageRouter:
             LOGGER.error("Connection %s->%s is unavailable. Buffering message.", dest_id, origin.origin_id)
             queue = self._get_buffer_queue(dest_id, origin.origin_id)
             await queue.put(envelope)
-            origin.msg_history.receive_line(f"[Message buffered][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_json_msg)}")
+            # origin.msg_history.receive_line(f"[Message buffered][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_json_msg)}")
         else:
             await self.route_envelope(envelope)
 
     async def _forward_envelope_to_connect(self, envelope: Envelope, conn: "Connection") -> None:
         LOGGER.debug("Envelope is forwarded to %s: %s", conn, envelope)
-        conn.msg_history.receive_line(f"[Message forwarded][Sender: {conn.s2_origin_type.value} {conn.origin_id}][Receiver: {conn.destination_type.value} {conn.dest_id}] Message: {str(envelope.msg)}")
+        # conn.msg_history.receive_line(f"[Message forwarded][Sender: {conn.s2_origin_type.value} {conn.origin_id}][Receiver: {conn.destination_type.value} {conn.dest_id}] Message: {str(envelope.msg)}")
         await conn.receive_envelope(envelope)
 
     async def route_envelope(self, envelope: Envelope) -> None:
@@ -99,7 +106,7 @@ class MessageRouter:
 
     async def receive_new_connection(self, conn: "Connection") -> None:
         self.connections[(conn.origin_id, conn.dest_id)] = conn
-        conn.msg_history.receive_line(f"Connection initiated from '{conn.origin_id}' to S2-analyzer.")
+        # conn.msg_history.receive_line(f"Connection initiated from '{conn.origin_id}' to S2-analyzer.")
 
         buffered_messages = self._consume_buffer_queue(conn.origin_id, conn.dest_id)
 
@@ -116,7 +123,7 @@ class MessageRouter:
 
     def connection_has_closed(self, conn: "Connection") -> None:
         del self.connections[(conn.origin_id, conn.dest_id)]
-        conn.msg_history.receive_line(f"Connection from '{conn.origin_id}' to S2-analyzer has closed.")
+        # conn.msg_history.receive_line(f"Connection from '{conn.origin_id}' to S2-analyzer has closed.")
 
         # model = self.model_registry.lookup_by_id(conn.dest_id)
         # if model:

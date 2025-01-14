@@ -34,15 +34,13 @@ class Connection(AsyncApplication, ABC):
     s2_origin_type: 'S2OriginType'
     msg_router: 'MessageRouter'
     _queue: 'asyncio.Queue[Envelope]'
-    msg_history: 'MessageHistory'
 
-    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', msg_history: 'MessageHistory'):
+    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter'):
         super().__init__()
         self.origin_id = origin_id
         self.dest_id = dest_id
         self.s2_origin_type = origin_type
         self.msg_router = msg_router
-        self.msg_history = msg_history
         self._queue = asyncio.Queue()
 
     @abstractmethod
@@ -68,8 +66,8 @@ class Connection(AsyncApplication, ABC):
 
 
 class WebSocketConnection(Connection):
-    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', msg_history: 'MessageHistory', websocket: 'WebSocket'):
-        super().__init__(origin_id, dest_id, origin_type, msg_router, msg_history)
+    def __init__(self, origin_id: str, dest_id: str, origin_type: 'S2OriginType', msg_router: 'MessageRouter', websocket: 'WebSocket'):
+        super().__init__(origin_id, dest_id, origin_type, msg_router)
         self.websocket = websocket
 
     def __str__(self):
@@ -95,7 +93,8 @@ class WebSocketConnection(Connection):
                 else:
                     raise exc from exc_group
         finally:
-            self.msg_history.notify_terminated_conn(self)
+            # self.msg_history.notify_terminated_conn(self)
+            pass
 
     async def receiver(self) -> None:
         while self._running:
@@ -103,7 +102,7 @@ class WebSocketConnection(Connection):
             try:
                 message_str = await self.websocket.receive_text()
                 LOGGER.debug('%s received message across websocket to %s: %s', self.origin_id, self.dest_id, message_str)
-                self.msg_history.receive_line(f"[Message received][Sender: {self.s2_origin_type.value} {self.origin_id}][Receiver: {self.destination_type.value} {self.dest_id}] Message: {message_str}")
+                # self.msg_history.receive_line(f"[Message received][Sender: {self.s2_origin_type.value} {self.origin_id}][Receiver: {self.destination_type.value} {self.dest_id}] Message: {message_str}")
                 message = json.loads(message_str)
                 await self.msg_router.route_s2_message(self, message)
             except WebSocketException:
