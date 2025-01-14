@@ -1,11 +1,14 @@
 import {useState} from "react";
-import {parser} from "../../parser/Parser.ts";
+
+interface TerminalProps {
+    parserLines: string;
+}
 
 /**
  * The TerminalController component handles the display of a collapsible terminal section
  * @returns The TerminalController component
  */
-function TerminalController() {
+function TerminalController({ parserLines }: TerminalProps) {
     const [isOpen, setIsOpen] = useState(false); // State to manage the open/close state of the accordion
 
     /**
@@ -52,7 +55,7 @@ function TerminalController() {
                          style={{maxHeight: window.innerHeight / 2, fontFamily: "Cascadia Code"}}
                     >
                         {/* Display the lines from the parser */}
-                        {parser.getLines()}
+                        {parserLines}
                     </pre>
                 </div>
             </div>

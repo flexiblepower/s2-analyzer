@@ -1,15 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import {useState, useRef} from "react";
 import s2AnalyzerLogo from "../../assets/s2AnalyzerLogo.png";
-import MessageHeader from "../../models/messages/messageHeader.ts";
-import { Filters } from "../../models/dataStructures/filters.ts";
-import { parser } from "../../parser/Parser.ts";
+import {Filters} from "../../models/dataStructures/filters.ts";
 import FilterMenu from "./navbar_items/FilterMenu.tsx";
 import SearchBar from "./navbar_items/SearchBar.tsx";
 import useToggle from "../../hooks/useToggle";
 import useOutsideClick from "../../hooks/useOutsideClick.tsx";
 
 interface NavBarProps {
-    messages: React.Dispatch<React.SetStateAction<MessageHeader[]>>;
     filters: Filters;
     search: string;
     onFilterChange: (filters: Filters) => void;
@@ -17,10 +14,12 @@ interface NavBarProps {
     onAlignmentChange: (alignment: string) => void;
     toggleSideBar: () => void;
     toggleView: () => void;
+    getFiles: () => void;
+    pauseMessages: () => void;
+    isPaused: boolean;
 }
 
 const NavigationBar = ({
-                           messages,
                            filters,
                            onFilterChange,
                            search,
@@ -28,6 +27,9 @@ const NavigationBar = ({
                            onAlignmentChange,
                            toggleSideBar,
                            toggleView,
+                           getFiles,
+                           pauseMessages,
+                           isPaused,
                        }: NavBarProps) => {
     const [isVisibleFilterMenu, toggleFilterMenu] = useToggle(false);
     const [showAllOptions, toggleAllOptions] = useToggle(false);
@@ -37,8 +39,6 @@ const NavigationBar = ({
     const filterMenuRef = useRef<HTMLDivElement>(null);
     const specialKeysRef = useRef<HTMLDivElement>(null);
 
-    const getFiles = async () => messages(await parser.parseLogFile());
-    const pauseMessages = () => parser.setPause(!parser.getIsPaused());
     const changeAlignment = () => {
         setIndex((index + 1) % 3);
         onAlignmentChange(alignments[index]);
@@ -48,17 +48,6 @@ const NavigationBar = ({
         () => { if (isVisibleFilterMenu) { toggleFilterMenu(); } },
         () => { if (showSpecialKeys) { toggleSpecialKeys(); } }
     ]);
-    useEffect(() => {
-        const interval = setInterval(async () => {
-            try {
-                const newMessages = await parser.getMessages();
-                messages(newMessages);
-            } catch (error) {
-                console.error("Error fetching messages:", error);
-            }
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [messages]);
 
     return (
         <nav className="bg-base-gray w-full z-20 top-0 start-0 border-b border-tno-blue">
@@ -81,7 +70,7 @@ const NavigationBar = ({
                         {[
                             { onClick: toggleSideBar, label: "Ξ" },
                             { onClick: toggleView, label: "Toggle View" },
-                            { onClick: pauseMessages, label: parser.getIsPaused() ? "Continue Real-Time" : "Pause Real-Time" },
+                            { onClick: pauseMessages, label: isPaused ? "Continue Real-Time" : "Pause Real-Time" },
                             { onClick: getFiles, label: "Load File" },
                             { onClick: toggleFilterMenu, label: "Filters", isFilter: true },
                             { onClick: changeAlignment, label: "Change Alignment" },

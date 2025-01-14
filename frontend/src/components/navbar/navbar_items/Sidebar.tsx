@@ -1,5 +1,8 @@
-import { useState, useEffect, useRef } from "react";
-import { parser } from "../../../parser/Parser.ts";
+import {useState, useEffect, useRef} from "react";
+
+interface SidebarProps {
+    errors: string[];
+}
 
 const [minWidth, maxWidth, defaultWidth] = [
     200,
@@ -7,7 +10,7 @@ const [minWidth, maxWidth, defaultWidth] = [
     window.innerWidth / 4,
 ];
 
-function Sidebar() {
+function Sidebar({ errors }: SidebarProps) {
     const [width, setWidth] = useState(defaultWidth);
     const isResizing = useRef(false);
 
@@ -42,8 +45,8 @@ function Sidebar() {
         <div className="flex absolute overflow-auto transition-colors">
             <div style={{ width: `${width}px`, height: '86vh' }} className="border-tno-blue border-r bg-base-gray">
                 <h1 className="text-lg text-white">All errors:</h1>
-                {parser.getErrors().length ? (
-                    parser.getErrors().map((s, index) => (
+                {errors.length ? (
+                    errors.map((s, index) => (
                         <pre key={index}
                              className="text-white overflow-auto bg-base-gray"
                              style={{ maxWidth: width, overflowX: "hidden" }}

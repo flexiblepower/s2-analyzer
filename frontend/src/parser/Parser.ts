@@ -52,7 +52,7 @@ export class Parser {
     }
 
     /**
-     * Returns the current errors array ecountered during parsing
+     * Returns the current errors array encountered during parsing
      * @returns The errors array
      */
     getErrors() {
