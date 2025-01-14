@@ -5,7 +5,7 @@ import signal
 import threading
 import asyncio
 
-from s2_analyzer_backend.message_processor import MessageLoggerProcessor, MessageProcessorHandler
+from s2_analyzer_backend.message_processor import MessageLoggerProcessor, MessageProcessorHandler, MessageParserProcessor
 from s2_analyzer_backend.rest_api import RestAPI
 from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.app_logging import LogLevel, setup_logging
@@ -22,6 +22,8 @@ def main():
     setup_logging(LogLevel.parse(os.getenv('LOG_LEVEL', 'INFO')))
     
     msg_processor_handler = MessageProcessorHandler()
+    msg_processor_handler.add_message_processor(MessageLoggerProcessor())
+    msg_processor_handler.add_message_processor(MessageParserProcessor())
     msg_processor_handler.add_message_processor(MessageLoggerProcessor())
     msg_router = MessageRouter(msg_processor_handler=msg_processor_handler)
 

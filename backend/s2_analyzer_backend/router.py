@@ -5,7 +5,7 @@ import logging
 from s2python.s2_parser import S2Parser
 from s2python.s2_validation_error import S2ValidationError
 
-from s2_analyzer_backend.message_processor import MessageProcessorHandler
+from s2_analyzer_backend.message_processor import Message, MessageProcessorHandler
 from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.connection import ConnectionType
 
@@ -54,7 +54,7 @@ class MessageRouter:
         # Determine msg type
         # message_type = self.s2_parser.parse_message_type(s2_json_msg)
         # if message_type is None:
-        #     raise ValueError('Unknown message type')
+            # raise ValueError('Unknown message type')
 
         # Parse msg
         # validation_error = None
@@ -70,12 +70,25 @@ class MessageRouter:
             
 
         # Assemble envelope
-        envelope = Envelope(origin, dest, None, s2_json_msg, None)
 
         # Process Message
         # if s2_msg:
-        self._msg_processor_handler.add_message_to_process(envelope)
+        
+        # Prepare the message to be processed 
+        message = Message(
+            origin.origin_id,
+            dest_id,
+            origin.s2_origin_type,
+            s2_json_msg,
+            None, 
+            None,
+            None
+        )
 
+        self._msg_processor_handler.add_message_to_process(message)
+
+        # Prepare envelope to forward message to destination
+        envelope = Envelope(origin, dest, s2_json_msg)
         # Buffer or Route
         if dest is None:
             # LOGGER.error("Destination connection is unavailable: %s", dest_id)
