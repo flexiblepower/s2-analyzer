@@ -6,6 +6,7 @@ import logging
 from s2python.s2_parser import S2Parser
 from s2python.s2_validation_error import S2ValidationError
 
+from s2_analyzer_backend.origin_type import S2OriginType
 from s2_analyzer_backend.message_processor import Message, MessageProcessorHandler
 from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.connection import ConnectionType
@@ -54,14 +55,14 @@ class MessageRouter:
 
         # Prepare the message to be processed 
         message = Message(
-            origin.origin_id,
-            dest_id,
-            origin.s2_origin_type,
-            s2_json_msg,
-            None, 
-            None,
-            None,
-            datetime.now()
+            cem_id=origin.origin_id if origin.s2_origin_type == S2OriginType.CEM else dest_id,
+            rm_id=origin.origin_id if origin.s2_origin_type == S2OriginType.RM else dest_id,
+            origin=origin.s2_origin_type,
+            msg=s2_json_msg,
+            s2_msg=None, 
+            s2_msg_type=None,
+            s2_validation_error=None,
+            timestamp= datetime.now()
         )
 
         self._msg_processor_handler.add_message_to_process(message)

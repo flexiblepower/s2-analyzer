@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -5,6 +6,7 @@ import asyncio
 import json
 import logging
 import threading
+from uuid import UUID
 from fastapi import WebSocketException, WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedOK
 from s2_analyzer_backend.async_application import AsyncApplication
@@ -168,6 +170,18 @@ class WebSocketConnection(Connection):
                 )
 
 
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            # Convert UUID to a string
+            return str(obj)
+        elif isinstance(obj, datetime):
+            # Convert datetime to ISO 8601 string format
+            return obj.isoformat()
+        # Call the default method for other types
+        return super().default(obj)
+
+
 class DebuggerFrontendWebsocketConnection(AsyncApplication):
     _queue: "asyncio.Queue[Message]"
 
@@ -221,11 +235,20 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
         while self._running:
             message: Message = await self._queue.get()
 
+            LOGGER.info(message.model_dump_json())
+            # content = {
+            #     "cem_id": message.cem_id,
+            #     "rm_id": message.rm_id,
+            #     "origin": message.origin.__str__(),
+            #     "message": message.s2_msg.to_dict() if message.s2_msg else None,
+            #     "message_type": message.s2_msg_type,
+            #     # "timestamp": message.timestamp,
+            # }
+
             try:
-                await self.websocket.send_text(message.s2_msg.to_json())
+                await self.websocket.send_text(message.model_dump_json())
                 LOGGER.debug(
-                    "Sent message across websocket to frontend: %s",
-                    message.s2_msg.to_json(),
+                    "Sent message across websocket to frontend",
                 )
                 self._queue.task_done()
             except ConnectionClosedOK:

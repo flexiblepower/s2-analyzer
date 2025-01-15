@@ -183,12 +183,6 @@ export class Parser {
      * @param i - The line index
      * @returns The extracted header or null if extraction failed
      */
-    /**
-     * Extracts the header from a log line
-     * @param line - The line to extract the header from
-     * @param i - The line index
-     * @returns The extracted header or null if extraction failed
-     */
     public extractHeader(line: string, i: number): MessageHeader | null {
         const dateTimeMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
         // Extracting JSON message after ensuring it's properly formatted
