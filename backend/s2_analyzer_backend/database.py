@@ -28,7 +28,7 @@ class Communication(SQLModel, table=True):
 
 
 # Database setup
-DATABASE_URL = "sqlite:///database/database.db"  # Replace with your database URL
+DATABASE_URL = "sqlite:///data/database.sqlite3"  # Replace with your database URL
 engine = create_engine(DATABASE_URL)
 
 
