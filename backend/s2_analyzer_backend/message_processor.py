@@ -3,6 +3,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 
+from pydantic import BaseModel
 from sqlalchemy import Engine
 from sqlmodel import Session
 from s2_analyzer_backend.connection import DebuggerFrontendWebsocketConnection
@@ -14,16 +15,18 @@ from s2_analyzer_backend.async_application import LOGGER, AsyncApplication
 from s2python.s2_parser import S2Parser, S2Message
 from s2python.s2_validation_error import S2ValidationError
 
-
-@dataclass
-class Message:
+class MessageValidationDetails(BaseModel):
+    msg: str
+    errors : list[dict] | None
+    
+class Message(BaseModel):
     cem_id: str
     rm_id: str
     origin: S2OriginType
     msg: dict
     s2_msg: S2Message | None
     s2_msg_type: str | None
-    s2_validation_error: S2ValidationError | None
+    s2_validation_error: MessageValidationDetails | None
     timestamp: datetime | None
 
 
@@ -63,7 +66,9 @@ class MessageParserProcessor(MessageProcessor):
         try:
             s2_message = self.s2_parser.parse_as_any_message(message.msg)
         except S2ValidationError as e:
-            validation_error = e
+            LOGGER.warning(e.pydantic_validation_error.json())
+            validation_error = MessageValidationDetails(msg=e.msg, errors=e.pydantic_validation_error.errors())
+            # validation_error = e
             # raise ValueError(f"Error parsing message: {e}")
             # LOGGER.exception(f"Error parsing message: {e}")
             LOGGER.warning(f"Error parsing message: {e}")
@@ -86,12 +91,12 @@ class MessageStorageProcessor(MessageProcessor):
         with Session(self.engine) as session:
             validation_error = None
 
-            if message.s2_validation_error:
-                validation_error = ValidationError(
-                    error_details=str(message.s2_validation_error)
-                )
-                session.add(validation_error)
-                session.commit()
+            # if message.s2_validation_error:
+            #     validation_error = ValidationError(
+            #         error_details=str(message.s2_validation_error)
+            #     )
+            #     session.add(validation_error)
+            #     session.commit()
 
             db_message = Communication(
                 cem_id=message.cem_id,
