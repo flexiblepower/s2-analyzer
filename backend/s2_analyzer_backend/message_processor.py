@@ -3,10 +3,9 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 
-from jsonschema import ValidationError
 from sqlalchemy import Engine
 from sqlmodel import Session
-from s2_analyzer_backend.database import Communication
+from s2_analyzer_backend.database import Communication, ValidationError
 from s2_analyzer_backend.origin_type import S2OriginType
 from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.async_application import LOGGER, AsyncApplication
@@ -55,8 +54,8 @@ class MessageParserProcessor(MessageProcessor):
 
         s2_message_type = self.s2_parser.parse_message_type(message.msg)
 
-        if s2_message_type is None:
-            raise ValueError("Unknown message type")
+        # if s2_message_type is None:
+        #     raise ValueError("Unknown message type")
 
         s2_message = None
         validation_error = None
@@ -65,7 +64,8 @@ class MessageParserProcessor(MessageProcessor):
         except S2ValidationError as e:
             validation_error = e
             # raise ValueError(f"Error parsing message: {e}")
-            LOGGER.exception(f"Error parsing message: {e}")
+            # LOGGER.exception(f"Error parsing message: {e}")
+            LOGGER.warning(f"Error parsing message: {e}")
 
         message.s2_msg = s2_message
         message.s2_msg_type = s2_message_type
@@ -85,12 +85,12 @@ class MessageStorageProcessor(MessageProcessor):
         with Session(self.engine) as session:
             validation_error = None
 
-            # if message.s2_validation_error:
-            #     validation_error = ValidationError(
-            #         error_details=message.s2_validation_error
-            #     )
-            #     session.add(validation_error)
-            #     session.commit()
+            if message.s2_validation_error:
+                validation_error = ValidationError(
+                    error_details=str(message.s2_validation_error)
+                )
+                session.add(validation_error)
+                session.commit()
 
             db_message = Communication(
                 cem_id=message.cem_id,
@@ -99,7 +99,7 @@ class MessageStorageProcessor(MessageProcessor):
                 s2_msg=message.s2_msg.to_json() if message.s2_msg else None,
                 s2_msg_type=message.s2_msg_type,
                 timestamp=message.timestamp,
-                # validation_error=validation_error,
+                validation_error=validation_error,
             )
 
             session.add(db_message)
