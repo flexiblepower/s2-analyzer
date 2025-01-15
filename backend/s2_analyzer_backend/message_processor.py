@@ -5,6 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import Engine
 from sqlmodel import Session
+from s2_analyzer_backend.connection import DebuggerFrontendWebsocketConnection
 from s2_analyzer_backend.database import Communication, ValidationError
 from s2_analyzer_backend.origin_type import S2OriginType
 from s2_analyzer_backend.envelope import Envelope
@@ -106,6 +107,34 @@ class MessageStorageProcessor(MessageProcessor):
             session.commit()
 
             return message
+        
+class DebuggerFrontendMessageProcessor(MessageProcessor):
+    connections : list[DebuggerFrontendWebsocketConnection] 
+
+    def __init__(self):
+        self.connections = []
+        
+    def add_connection(self, connection: DebuggerFrontendWebsocketConnection):
+        LOGGER.info(f"Adding connection: {connection}")
+        self.connections.append(connection)
+    
+    async def process_message(self, message: Message, loop: asyncio.AbstractEventLoop) -> str:
+        LOGGER.info(f"Sending message to debugger frontends. {len(self.connections)}")
+        closed_connections = []
+        for i, connection in enumerate(self.connections):
+            if connection._running:
+                await connection.enqueue_message(message)
+            else:
+                closed_connections.append(i)
+        
+        self.cleanup_closed_connections(closed_connections)
+                
+        return message
+    
+    def cleanup_closed_connections(self, closed_connections: list[int]):
+        for i in closed_connections:
+            self.connections.pop(i)
+            LOGGER.info(f"Removed closed connection at index {i}")
 
 
 class MessageProcessorHandler(AsyncApplication):

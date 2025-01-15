@@ -6,33 +6,48 @@ import threading
 import asyncio
 
 from s2_analyzer_backend.database import create_db_and_tables, engine
-from s2_analyzer_backend.message_processor import MessageLoggerProcessor, MessageProcessorHandler, MessageParserProcessor, MessageStorageProcessor
+from s2_analyzer_backend.message_processor import (
+    DebuggerFrontendMessageProcessor,
+    MessageLoggerProcessor,
+    MessageProcessorHandler,
+    MessageParserProcessor,
+    MessageStorageProcessor,
+)
 from s2_analyzer_backend.rest_api import RestAPI
 from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.app_logging import LogLevel, setup_logging
 from s2_analyzer_backend.router import MessageRouter
-from s2_analyzer_backend.config import CONFIG #, #init_models
+from s2_analyzer_backend.config import CONFIG  # , #init_models
 
 LOGGER = logging.getLogger(__name__)
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='S2 analyzer backend')
+    parser = argparse.ArgumentParser(prog="S2 analyzer backend")
     args = parser.parse_args()
 
-    setup_logging(LogLevel.parse(os.getenv('LOG_LEVEL', 'INFO')))
-    
+    setup_logging(LogLevel.parse(os.getenv("LOG_LEVEL", "INFO")))
+
     create_db_and_tables()
-    
+
     msg_processor_handler = MessageProcessorHandler()
 
     msg_processor_handler.add_message_processor(MessageLoggerProcessor())
     msg_processor_handler.add_message_processor(MessageParserProcessor())
     msg_processor_handler.add_message_processor(MessageStorageProcessor(engine))
+    debugger_frontend_msg_processor = DebuggerFrontendMessageProcessor()
+    msg_processor_handler.add_message_processor(debugger_frontend_msg_processor)
 
     msg_router = MessageRouter(msg_processor_handler=msg_processor_handler)
 
-    APPLICATIONS.add_and_start_application(RestAPI(CONFIG.http_listen_address, CONFIG.http_port, msg_router))
+    APPLICATIONS.add_and_start_application(
+        RestAPI(
+            CONFIG.http_listen_address,
+            CONFIG.http_port,
+            msg_router,
+            debugger_frontend_msg_processor,
+        )
+    )
     APPLICATIONS.add_and_start_application(msg_processor_handler)
 
     def handle_exit(sig, frame):
@@ -43,7 +58,7 @@ def main():
     signal.signal(signal.SIGTERM, handle_exit)
     signal.signal(signal.SIGQUIT, handle_exit)
 
-    '''Gordei: Commented out code to run mock models'''
+    """Gordei: Commented out code to run mock models"""
     # models = init_models(msg_router, CONFIG)
     # for model in models:
     #     APPLICATIONS.add_and_start_application(model)
@@ -51,5 +66,5 @@ def main():
     APPLICATIONS.run_all()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -5,8 +5,8 @@ from typing import Optional, TYPE_CHECKING
 from fastapi import FastAPI, WebSocket, APIRouter, WebSocketException
 import uvicorn
 import uvicorn.server
-from s2_analyzer_backend.message_processor import MessageProcessor
-from s2_analyzer_backend.connection import Connection, WebSocketConnection
+from s2_analyzer_backend.message_processor import DebuggerFrontendMessageProcessor, MessageProcessor
+from s2_analyzer_backend.connection import Connection, DebuggerFrontendWebsocketConnection, WebSocketConnection
 
 from s2_analyzer_backend.async_application import AsyncApplication
 
@@ -30,7 +30,7 @@ class RestAPI(AsyncApplication):
     fastapi_router: APIRouter
 
     def __init__(
-        self, listen_address: str, listen_port: int, msg_router: "MessageRouter"
+        self, listen_address: str, listen_port: int, msg_router: "MessageRouter", debugger_frontend_msg_processor : "DebuggerFrontendMessageProcessor"
     ) -> None:
         super().__init__()
         self.listen_address = listen_address
@@ -39,6 +39,7 @@ class RestAPI(AsyncApplication):
 
         self.fastapi_router = APIRouter()
         self.msg_router = msg_router
+        self.debugger_frontend_msg_processor  = debugger_frontend_msg_processor
 
         self.fastapi_router.add_api_route("/", self.get_root)
         self.fastapi_router.add_api_websocket_route(
@@ -46,6 +47,9 @@ class RestAPI(AsyncApplication):
         )
         self.fastapi_router.add_api_websocket_route(
             "/backend/cem/{cem_id}/rm/{rm_id}/ws", self.receive_new_cem_connection
+        )
+        self.fastapi_router.add_api_websocket_route(
+            "/backend/debugger/", self.receive_new_debugger_frontend_connection
         )
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
@@ -118,3 +122,24 @@ class RestAPI(AsyncApplication):
             )
 
         await self.handle_connection(websocket, cem_id, rm_id)
+    
+    async def receive_new_debugger_frontend_connection(
+        self, websocket: WebSocket
+    ) -> None:
+        LOGGER.info("Received connection from debugger frontend.")
+        try:
+            await websocket.accept()
+            LOGGER.info("Received connection from debugger frontend.")
+        except WebSocketException:
+            LOGGER.exception(
+                "Debugger frontend WS connection had an exception while accepting."
+            )
+
+        conn = DebuggerFrontendWebsocketConnection(websocket)
+
+        APPLICATIONS.add_and_start_application(conn)
+        self.debugger_frontend_msg_processor.add_connection(conn)
+
+        await conn.wait_till_done_async(
+            timeout=None, kill_after_timeout=False, raise_on_timeout=False
+        )
