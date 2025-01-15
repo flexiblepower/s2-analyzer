@@ -19,12 +19,12 @@ import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 import SessionRequest from "../models/messages/sessionRequest.ts";
 
 export class Parser {
-    public messageMap: MessageHeader[] = [];
-    public lines: string = "";
-    public errors: string[] = [];
-    public isPaused: boolean = false;
-    public bufferedMessages: MessageHeader[] = [];
-    public bufferedLines: string = "";
+    private messageMap: MessageHeader[] = [];
+    private lines: string = "";
+    private errors: string[] = [];
+    private isPaused: boolean = false;
+    private bufferedMessages: MessageHeader[] = [];
+    private bufferedLines: string = "";
 
     /**
      * Returns the current lines
@@ -59,23 +59,6 @@ export class Parser {
     }
 
     /**
-     * Adds a line to the log, buffering if paused
-     * @param m - The line to add
-     */
-    addLine(m: string) {
-        const m_temp = m.charAt(m.length - 1) == "\n" ? m : m.concat("\n");
-        if (this.isPaused) {
-            this.bufferedLines = this.bufferedLines.concat(m_temp);
-        } else {
-            if (this.bufferedLines.length > 0) {
-                this.lines = this.lines.concat(this.bufferedLines);
-                this.bufferedLines = "";
-            }
-            this.lines = this.lines.concat(m_temp);
-        }
-    }
-
-    /**
      * Processes the parsed message map and updates message statuses if needed
      * @returns The processed message map
      */
@@ -92,32 +75,29 @@ export class Parser {
                 const temp = this.messageMap[i] as RevokeObject;
                 for (let j = 0; j < this.messageMap.length; j++) {
                     if (this.messageMap[j].message_id == temp.object_id) {
-                        this.messageMap[j].status =
-                            "revoked by message_id: " + this.messageMap[i].message_id;
+                        this.messageMap[j].status = "revoked by message_id: " + this.messageMap[i].message_id;
                     }
                 }
             }
         }
-        return this.messageMap
-            .filter((m) => !("subject_message_id" in m))
-            .reverse();
+        return this.messageMap.filter((m) => !("subject_message_id" in m)).reverse();
     }
 
     /**
-     * Parses log files selected by the user
-     * @returns The processed messages
+     * Adds a line to the log, buffering if paused
+     * @param m - The line to add
      */
-    async parseLogFile() {
-        const fileHandles = await window.showOpenFilePicker({multiple: true});
-        this.messageMap = [];
-        this.errors = [];
-        for (const fileHandle of fileHandles) {
-            const file = await fileHandle.getFile();
-            this.lines = await file.text();
-            this.lines = this.lines.replace("Issue:\n", "Issue: ");
-            this.parse(this.lines);
+    addLine(m: string) {
+        const m_temp = m.charAt(m.length - 1) == "\n" ? m : m.concat("\n");
+        if (this.isPaused) {
+            this.bufferedLines = this.bufferedLines.concat(m_temp);
+        } else {
+            if (this.bufferedLines.length > 0) {
+                this.lines = this.lines.concat(this.bufferedLines);
+                this.bufferedLines = "";
+            }
+            this.lines = this.lines.concat(m_temp);
         }
-        return this.getMessages();
     }
 
     /**
@@ -140,6 +120,23 @@ export class Parser {
     }
 
     /**
+     * Parses log files selected by the user
+     * @returns The processed messages
+     */
+    async parseLogFile() {
+        const fileHandles = await window.showOpenFilePicker({multiple: true});
+        this.messageMap = [];
+        this.errors = [];
+        for (const fileHandle of fileHandles) {
+            const file = await fileHandle.getFile();
+            this.lines = await file.text();
+            this.lines = this.lines.replace("Issue:\n", "Issue: ");
+            this.parse(this.lines);
+        }
+        return this.getMessages();
+    }
+
+    /**
      * Adds buffered messages to the message map if they are not duplicates
      */
     public emptyBufferedMessages() {
@@ -158,10 +155,7 @@ export class Parser {
      */
     public removeDuplicates(header: MessageHeader) {
         for (let i = 0; i < this.messageMap.length; i++) {
-            if (
-                this.messageMap[i].message_id &&
-                this.messageMap[i].message_id == header.message_id
-            ) {
+            if (this.messageMap[i].message_id && this.messageMap[i].message_id == header.message_id) {
                 if (this.messageMap[i].status.toString().includes("invalid"))
                     return true;
                 this.messageMap[i] = header;
@@ -172,66 +166,59 @@ export class Parser {
     }
 
     /**
+     * Extracts a specific field from a line
+     * @param line The line to extract from
+     * @param fieldName The name of the field to extract
+     * @returns The extracted field value if found, otherwise null
+     */
+    public extractField(line: string, fieldName: string): string | null {
+        const regex = new RegExp(`${fieldName} ([^\\]]+)`);
+        const match = line.match(regex);
+        return match ? match[1].trim() : null;
+    }
+
+    /**
      * Extracts the header from a log line
      * @param line - The line to extract the header from
      * @param i - The line index
      * @returns The extracted header or null if extraction failed
      */
     public extractHeader(line: string, i: number): MessageHeader | null {
-        const dateTimeMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
-        // Extracting JSON message after ensuring it's properly formatted
-        const jsonMessageMatch = line.match(/Message: (\{.*\})/s); // 's' flag for capturing multiline JSON
-        if (this.extractField(line, "Message") == "forwarded") {
+        // Match JSON messages directly on the line
+        const jsonMessageMatch = line.match(/^\{.*\}$/s); // Matches the entire line if it starts and ends with curly braces
+
+        if (this.extractField(line, "Message") === "forwarded") {
             return null;
         }
 
-        // Check if it is a message
-        if (dateTimeMatch && jsonMessageMatch) {
-            let messageStr = jsonMessageMatch[1];
-            // Convert single quotes to double quotes for valid parsing formatting
+        // Check if it's a valid JSON message
+        if (jsonMessageMatch) {
+            let messageStr = jsonMessageMatch[0];
+            // Convert single quotes to double quotes for valid parsing
             messageStr = messageStr.replace(/'/g, '"');
-            // Convert the boolean literals to lowercase for parsing compat.
-            messageStr = messageStr.replace(/\b(True|False)\b/g, (match) =>
-                match.toLowerCase()
-            );
+            // Convert the boolean literals to lowercase for parsing compatibility
+            messageStr = messageStr.replace(/\b(True|False)\b/g, (match) => match.toLowerCase());
 
             try {
-                const header: MessageHeader | null = this.castToMessageType(
-                    messageStr,
-                    i
-                );
-                if (header == null) return null;
+                const header: MessageHeader | null = this.castToMessageType(messageStr, i);
+                if (header === null) return null;
 
-                let status = this.extractField(line, "Message");
-                if (status && status == "validation not successful") {
-                    status = "invalid " + this.extractField(line, "Issue:");
-                }
-                const sender = this.extractField(line, "Sender:");
-                const receiver = this.extractField(line, "Receiver:");
+                const status = this.extractField(line, "Message") || "";
+                const sender = this.extractField(line, "Sender:") || "";
+                const receiver = this.extractField(line, "Receiver:") || "";
 
-                header.time = new Date(dateTimeMatch[1]);
-                header.status = status ? status : "";
+                // Add header information
+                header.time = new Date(); // Assign current time since no timestamp exists in the message
+                header.status = status;
                 header.sender = sender;
                 header.receiver = receiver;
 
                 return header;
             } catch (error) {
-                this.errors.push(
-                    i +
-                    '. Error parsing message JSON: "' +
-                    error +
-                    '"\n at line: "' +
-                    line +
-                    '"'
-                );
+                this.errors.push(`${i}. Error parsing message JSON: "${error}"\n at line: "${line}"`);
             }
-        } else if (dateTimeMatch) {
-            // Check if it is a connection log
-            return this.parseBackendLog(line, dateTimeMatch[1]);
         }
-        this.errors.push(
-            i + '. Line did not contribute to any object: "' + line + '"'
-        );
+        this.errors.push(`${i}. Line did not contribute to any object: "${line}"`);
         return null;
     }
 
@@ -249,26 +236,13 @@ export class Parser {
             return {
                 time: new Date(time),
                 status: "",
-                sender:
-                    (match[1].toUpperCase().includes("CEM") ? "CEM " : "RM ") + match[1],
+                sender: (match[1].toUpperCase().includes("CEM") ? "CEM " : "RM ") + match[1],
                 receiver: null,
                 message_type: "Connection Lost",
                 message_id: null,
             } as MessageHeader;
         }
         return null;
-    }
-
-    /**
-     * Extracts a specific field from a line
-     * @param line The line to extract from
-     * @param fieldName The name of the field to extract
-     * @returns The extracted field value if found, otherwise null
-     */
-    public extractField(line: string, fieldName: string): string | null {
-        const regex = new RegExp(`${fieldName} ([^\\]]+)`);
-        const match = line.match(regex);
-        return match ? match[1].trim() : null;
     }
 
     /**
@@ -322,12 +296,7 @@ export class Parser {
                 return message as MessageHeader;
             default:
                 // If no matching type is found, log an error and return null
-                this.errors.push(
-                    i +
-                    ". Did not find a matching message type interface for " +
-                    message.message_type.toString() +
-                    "."
-                );
+                this.errors.push(i + ". Did not find a matching message type interface for " + message.message_type.toString() + ".");
                 return null;
         }
     }

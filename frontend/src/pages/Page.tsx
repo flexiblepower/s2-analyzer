@@ -48,9 +48,9 @@ const Page = () => {
     // Initialize WebSocket client
     useEffect(() => {
         console.log("Creating WS");
-        const websocket = new WebSocketClient("ws://localhost:8001/backend/debugger/");
+        const websocket: WebSocketClient = new WebSocketClient("ws://localhost:8001/backend/debugger/");
 
-        // Cleanup function to close the WebSocket when the component unmounts
+        // Cleanup logic when component unmounts
         return () => {
             console.log("Cleaning up WebSocketClient");
             websocket.close();

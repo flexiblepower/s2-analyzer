@@ -26,7 +26,6 @@ class WebSocketClient {
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
-            console.log("Receiving message");
             this.onReceive(event.data);
         };
 
