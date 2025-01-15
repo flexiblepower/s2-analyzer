@@ -183,42 +183,55 @@ export class Parser {
      * @param i - The line index
      * @returns The extracted header or null if extraction failed
      */
+    /**
+     * Extracts the header from a log line
+     * @param line - The line to extract the header from
+     * @param i - The line index
+     * @returns The extracted header or null if extraction failed
+     */
     public extractHeader(line: string, i: number): MessageHeader | null {
-        // Match JSON messages directly on the line
-        const jsonMessageMatch = line.match(/^\{.*\}$/s); // Matches the entire line if it starts and ends with curly braces
-
-        if (this.extractField(line, "Message") === "forwarded") {
+        const dateTimeMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
+        // Extracting JSON message after ensuring it's properly formatted
+        const jsonMessageMatch = line.match(/Message: (\{.*\})/s); // 's' flag for capturing multiline JSON
+        if (this.extractField(line, "Message") == "forwarded") {
             return null;
         }
 
-        // Check if it's a valid JSON message
-        if (jsonMessageMatch) {
-            let messageStr = jsonMessageMatch[0];
-            // Convert single quotes to double quotes for valid parsing
+        // Check if it is a message
+        if (dateTimeMatch && jsonMessageMatch) {
+            let messageStr = jsonMessageMatch[1];
+            // Convert single quotes to double quotes for valid parsing formatting
             messageStr = messageStr.replace(/'/g, '"');
-            // Convert the boolean literals to lowercase for parsing compatibility
-            messageStr = messageStr.replace(/\b(True|False)\b/g, (match) => match.toLowerCase());
+            // Convert the boolean literals to lowercase for parsing compat.
+            messageStr = messageStr.replace(/\b(True|False)\b/g, (match) =>
+                match.toLowerCase()
+            );
 
             try {
                 const header: MessageHeader | null = this.castToMessageType(messageStr, i);
-                if (header === null) return null;
+                if (header == null) return null;
 
-                const status = this.extractField(line, "Message") || "";
-                const sender = this.extractField(line, "Sender:") || "";
-                const receiver = this.extractField(line, "Receiver:") || "";
+                let status = this.extractField(line, "Message");
+                if (status && status == "validation not successful") {
+                    status = "invalid " + this.extractField(line, "Issue:");
+                }
+                const sender = this.extractField(line, "Sender:");
+                const receiver = this.extractField(line, "Receiver:");
 
-                // Add header information
-                header.time = new Date(); // Assign current time since no timestamp exists in the message
-                header.status = status;
+                header.time = new Date(dateTimeMatch[1]);
+                header.status = status ? status : "";
                 header.sender = sender;
                 header.receiver = receiver;
 
                 return header;
             } catch (error) {
-                this.errors.push(`${i}. Error parsing message JSON: "${error}"\n at line: "${line}"`);
+                this.errors.push(i + '. Error parsing message JSON: "' + error + '"\n at line: "' + line + '"');
             }
+        } else if (dateTimeMatch) {
+            // Check if it is a connection log
+            return this.parseBackendLog(line, dateTimeMatch[1]);
         }
-        this.errors.push(`${i}. Line did not contribute to any object: "${line}"`);
+        this.errors.push(i + '. Line did not contribute to any object: "' + line + '"');
         return null;
     }
 
