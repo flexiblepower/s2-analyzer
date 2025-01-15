@@ -5,14 +5,14 @@ import logging
 from typing import Optional, Callable, TYPE_CHECKING
 import uuid
 
-from s2_analyzer_backend.cem_model_simple.common import (CemModelS2DeviceControlStrategy,
+from mocks.cem_model_simple.cem_model_simple import (CemModelS2DeviceControlStrategy,
                                                          NumericalRange,
                                                          get_active_s2_message)
-from s2_analyzer_backend.common import parse_timestamp_as_utc
+from mocks.cem_model_simple.common import parse_timestamp_as_utc
 from s2_analyzer_backend.connection import ModelConnection
 
 if TYPE_CHECKING:
-    from s2_analyzer_backend.cem_model_simple.device_model import DeviceModel
+    from mocks.cem_model_simple.device_model import DeviceModel
     from s2_analyzer_backend.envelope import Envelope, S2Message
 
 LOGGER = logging.getLogger(__name__)
@@ -120,7 +120,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                 fill_level_at_start_of_timestep,
                 timestep_end,
                 active_fill_level_target_profile)
-            target_fill_level_range_at_end_of_timestep = range(max(allowed_fill_level_range['start_of_range'],
+            target_fill_level_range_at_end_of_timestep = (max(allowed_fill_level_range['start_of_range'],
                                                                    expected_fill_level_range_at_end_of_timestep.start),
                                                                min(allowed_fill_level_range['end_of_range'],
                                                                    expected_fill_level_range_at_end_of_timestep.end))
@@ -133,12 +133,12 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
             fill_level_if_no_action = fill_level_at_start_of_timestep + \
                 expected_usage_during_timestep + expected_leakage_during_timestep
 
-            if target_fill_level_range_at_end_of_timestep.start <= fill_level_if_no_action < target_fill_level_range_at_end_of_timestep.stop:
+            if target_fill_level_range_at_end_of_timestep[0] <= fill_level_if_no_action < target_fill_level_range_at_end_of_timestep[1]:
                 actuate_fill_level = 0
-            elif fill_level_if_no_action < target_fill_level_range_at_end_of_timestep.start:
-                actuate_fill_level = target_fill_level_range_at_end_of_timestep.start - fill_level_if_no_action
+            elif fill_level_if_no_action < target_fill_level_range_at_end_of_timestep[0]:
+                actuate_fill_level = target_fill_level_range_at_end_of_timestep[0] - fill_level_if_no_action
             else:
-                actuate_fill_level = target_fill_level_range_at_end_of_timestep.stop - fill_level_if_no_action
+                actuate_fill_level = target_fill_level_range_at_end_of_timestep[0] - fill_level_if_no_action
 
             LOGGER.debug('[%s] '
                          'Expected end fill level: %s\n'
@@ -207,10 +207,22 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
                                            timestep_start: datetime.datetime,
                                            timestep_end: datetime.datetime) -> float:
         expected_usage = 0.0
+        relevant_usage_forecast = None
         for usage_forecast in self.usage_forecasts:
-            current_start = parse_timestamp_as_utc(usage_forecast['start_time'])
+            start_time = parse_timestamp_as_utc(usage_forecast['start_time'])
 
-            for usage_element in usage_forecast['elements']:
+            if relevant_usage_forecast:
+                start_time_of_relevant = parse_timestamp_as_utc(relevant_usage_forecast['start_time'])
+
+                if start_time_of_relevant < start_time < timestep_start:
+                    relevant_usage_forecast = usage_forecast
+            else:
+                relevant_usage_forecast = usage_forecast
+
+        if relevant_usage_forecast:
+            current_start = parse_timestamp_as_utc(relevant_usage_forecast['start_time'])
+
+            for usage_element in relevant_usage_forecast['elements']:
                 duration = datetime.timedelta(milliseconds=usage_element['duration'])
                 current_end = current_start + duration
 
@@ -222,6 +234,7 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
 
                     expected_usage = expected_usage + usage_duration.total_seconds() * usage_element[
                         'usage_rate_expected']
+                current_start = current_end
 
         return expected_usage
 
@@ -298,10 +311,8 @@ class FRBCStrategy(CemModelS2DeviceControlStrategy):
         current_best_actuate_fill_level = None
         for actuator_combination in itertools.product(*reachable_operation_mode_ids_per_actuator_id.values()):
             operation_mode_factors = []
-            for actuator, om, om_element in actuator_combination:
-                begin_factor = om_element['fill_level_range']['start_of_range']
-                end_factor = om_element['fill_level_range']['end_of_range']
-                all_factors = list(NumericalRange.inclusive(begin_factor, end_factor, self.OM_STEP_RESOLUTION))
+            for _ in actuator_combination:
+                all_factors = list(NumericalRange.inclusive(0, 1, self.OM_STEP_RESOLUTION))
                 # TODO move all_factors to previous for-loop into the tuple so it is not repeated so often
                 operation_mode_factors.append(all_factors)
 

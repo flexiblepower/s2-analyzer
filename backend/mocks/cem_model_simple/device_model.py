@@ -5,11 +5,11 @@ from typing import Optional, Callable, Awaitable, TYPE_CHECKING
 import uuid
 
 from s2_analyzer_backend.async_application import AsyncApplication, ApplicationName
-from s2_analyzer_backend.cem_model_simple.common import (CemModelS2DeviceControlStrategy,
+from mocks.cem_model_simple.common import (CemModelS2DeviceControlStrategy,
                                                          ControlType,
                                                          S2DeviceInitializationState,
                                                          S2_VERSION)
-from s2_analyzer_backend.cem_model_simple.strategies import SUPPORTED_CONTROL_TYPES
+from mocks.cem_model_simple.strategies import SUPPORTED_CONTROL_TYPES
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.connection import ModelConnection

@@ -13,14 +13,14 @@ class WebSocketClient {
      * @param url The URL to connect to
      */
     constructor(url: string) {
-        // Initiallize WebSocket connection
+        // Initialize WebSocket connection
         this.ws = new WebSocket(url);
-        // Initiallize set to store received messages
+        // Initialize set to store received messages
         this.receivedMessages = new Set<string>();
 
         // Event handlers for WebSocket connection lifecycle
         this.ws.onopen = () => {
-            // Send initial mesage to establish connection
+            // Send initial message to establish connection
             this.sendMessage("Hi from frontend");
             console.log("WebSocket connection opened");
         };
@@ -53,6 +53,7 @@ class WebSocketClient {
         }
 
         this.receivedMessages.add(message);
+
         try {
             console.log("Parsing message:" + message);
             // Add and parse message using parser

@@ -6,9 +6,6 @@ from dataclass_wizard import YAMLWizard
 from s2_analyzer_backend.origin_type import S2OriginType
 #from s2_analyzer_backend.cem_model_simple.cem_model_simple import CEM
 
-if TYPE_CHECKING:
-    from s2_analyzer_backend.router import MessageRouter
-    from s2_analyzer_backend.model import Model
 
 S2_ANALYZER_CONF = os.getenv('S2_ANALYZER_CONF', 'config.yaml')
 

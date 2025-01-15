@@ -2,39 +2,17 @@ services:
   backend:
     image: s2-analyzer-backend
     build: ./backend
+    volumes:
+      - ./data:/app/data
     ports:
       - "8001:8001"
     environment:
-      LOG_LEVEL: debug
-    volumes:
-      - "./connection_histories/:/app/connection_histories/"
-      - "./backend/deployment/config.yaml:/app/config.yaml"
-    networks:
-      - my_network
-    depends_on:
-      - frontend
+      LOG_LEVEL: info
 
   frontend:
     build:
       context: ./frontend
     ports:
       - "4173:4173"
-    networks:
-      - my_network
     depends_on:
-      - socket
-
-  socket:
-    image: python:3.9-slim
-    volumes:
-      - ./socket:/socket
-    working_dir: /socket
-    command: sh -c "pip install -r requirements.txt && python server.py"
-    ports:
-      - "5000:5000"
-    networks:
-      - my_network
-
-networks:
-  my_network:
-    driver: bridge
+      - backend

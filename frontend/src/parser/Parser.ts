@@ -27,23 +27,6 @@ export class Parser {
     public bufferedLines: string = "";
 
     /**
-     * Adds a line to the log, buffering if paused
-     * @param m - The line to add
-     */
-    addLine(m: string) {
-        const m_temp = m.charAt(m.length - 1) == "\n" ? m : m.concat("\n");
-        if (this.isPaused) {
-            this.bufferedLines = this.bufferedLines.concat(m_temp);
-        } else {
-            if (this.bufferedLines.length > 0) {
-                this.lines = this.lines.concat(this.bufferedLines);
-                this.bufferedLines = "";
-            }
-            this.lines = this.lines.concat(m_temp);
-        }
-    }
-
-    /**
      * Returns the current lines
      * @returns The lines
      */
@@ -73,6 +56,23 @@ export class Parser {
      */
     setPause(b: boolean) {
         this.isPaused = b;
+    }
+
+    /**
+     * Adds a line to the log, buffering if paused
+     * @param m - The line to add
+     */
+    addLine(m: string) {
+        const m_temp = m.charAt(m.length - 1) == "\n" ? m : m.concat("\n");
+        if (this.isPaused) {
+            this.bufferedLines = this.bufferedLines.concat(m_temp);
+        } else {
+            if (this.bufferedLines.length > 0) {
+                this.lines = this.lines.concat(this.bufferedLines);
+                this.bufferedLines = "";
+            }
+            this.lines = this.lines.concat(m_temp);
+        }
     }
 
     /**

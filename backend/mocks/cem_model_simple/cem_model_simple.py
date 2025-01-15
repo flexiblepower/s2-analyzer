@@ -6,9 +6,9 @@ import time
 from typing import TYPE_CHECKING
 
 from s2_analyzer_backend.async_application import APPLICATIONS
-from s2_analyzer_backend.cem_model_simple.device_model import DeviceModel
-from s2_analyzer_backend.common import now_as_utc
-from s2_analyzer_backend.model import Model
+from mocks.cem_model_simple.device_model import DeviceModel
+from mocks.cem_model_simple.common import now_as_utc
+from backend.mocks.model import Model
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.connection import Connection, ConnectionClosedReason, ModelConnection
