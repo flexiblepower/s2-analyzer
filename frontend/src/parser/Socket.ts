@@ -43,9 +43,7 @@ class WebSocketClient {
      * @param data The data received from the WebSocket
      */
     public onReceive(data: string): void {
-        // Convert data to string
         const message = data.toString();
-        // Check for duplicate messages
         if (this.receivedMessages.has(message)) {
             console.log("Duplicate message received, ignoring:", message);
             return;
@@ -54,8 +52,7 @@ class WebSocketClient {
         this.receivedMessages.add(message);
 
         try {
-            console.log("Parsing message:" + message);
-            // Add and parse message using parser
+            // Process the message using the parser
             this.parser.addLine(message);
             this.parser.parse(message);
         } catch (error) {

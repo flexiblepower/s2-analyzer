@@ -10,7 +10,6 @@ interface MessageTableProps<T extends MessageHeader> {
 function MessageTable<T extends MessageHeader>({ messages }: MessageTableProps<T>) {
     const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
     const [selectedMessages, setSelectedMessages] = useState<T[]>([]);
-    const [messageMap, setMessageMap] = useState<Map<string, string>>(new Map()); // Store generated IDs for messages without IDs
 
     // Memoize columns for performance
     const columns = useMemo<MRT_ColumnDef<T>[]>(() => [
@@ -36,23 +35,6 @@ function MessageTable<T extends MessageHeader>({ messages }: MessageTableProps<T
         },
     ], []);
 
-    const generateUniqueId = (message: T): string => {
-        if (message.message_id) {
-            return message.message_id; // Use the existing message_id
-        }
-
-        // For "Connection Lost" messages, generate a unique ID if it doesn't already exist
-        const messageTime = message.time.toISOString();
-        if (!messageMap.has(messageTime)) {
-            const randomString = Math.random().toString(36).substring(2, 15);
-            const generatedId = `connection-lost-${randomString}`;
-            setMessageMap((prev) => new Map(prev).set(messageTime, generatedId)); // Store the ID
-            return generatedId;
-        } else {
-            return messageMap.get(messageTime)!;
-        }
-    };
-
     // Use MaterialReactTable hook
     const table = useMaterialReactTable({
         columns,
@@ -64,7 +46,7 @@ function MessageTable<T extends MessageHeader>({ messages }: MessageTableProps<T
         enableStickyHeader: true,
         enableStickyFooter: true,
 
-        getRowId: (row) => generateUniqueId(row),
+        getRowId: (row) => row.message_id,
         onRowSelectionChange: setRowSelection,
         state: { rowSelection },
 
@@ -80,7 +62,7 @@ function MessageTable<T extends MessageHeader>({ messages }: MessageTableProps<T
     // Update selectedMessages only when rowSelection changes
     useEffect(() => {
         const selected = messages.filter((message) =>
-            Object.keys(rowSelection).includes(generateUniqueId(message))
+            Object.keys(rowSelection).includes(message.message_id)
         );
         setSelectedMessages(selected);
     }, [rowSelection, messages]);
@@ -90,12 +72,12 @@ function MessageTable<T extends MessageHeader>({ messages }: MessageTableProps<T
             <MaterialReactTable table={table} />
             {selectedMessages.map((message) => (
                 <MessagePopUp
-                    key={generateUniqueId(message)} // Use unique ID
+                    key={message.message_id}
                     trigger
                     setTrigger={() =>
                         setRowSelection((prev) => {
                             const newSelection = { ...prev };
-                            delete newSelection[generateUniqueId(message)];
+                            delete newSelection[message.message_id];
                             return newSelection;
                         })
                     }

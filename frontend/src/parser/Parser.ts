@@ -17,17 +17,18 @@ import SystemDescription from "../models/messages/frbc/systemDescription.ts";
 import TimerStatus from "../models/messages/frbc/timerStatus.ts";
 import UsageForecast from "../models/messages/frbc/usageForecast.ts";
 import SessionRequest from "../models/messages/sessionRequest.ts";
+import BackendMessage from "./backendTypes.ts";
 
 export class Parser {
     private messageMap: MessageHeader[] = [];
+    private bufferedMessages: MessageHeader[] = [];
     private lines: string = "";
+    private bufferedLines: string = "";
     private errors: string[] = [];
     private isPaused: boolean = false;
-    private bufferedMessages: MessageHeader[] = [];
-    private bufferedLines: string = "";
 
     /**
-     * Returns the current lines
+     * Returns the current lines to be displayed by the Terminal Component
      * @returns The lines
      */
     getLines() {
@@ -88,64 +89,82 @@ export class Parser {
      * @param m - The line to add
      */
     addLine(m: string) {
-        const m_temp = m.charAt(m.length - 1) == "\n" ? m : m.concat("\n");
+        const m_temp = m.endsWith("\n") ? m : `${m}\n`;
         if (this.isPaused) {
-            this.bufferedLines = this.bufferedLines.concat(m_temp);
+            this.bufferedLines += m_temp;
         } else {
-            if (this.bufferedLines.length > 0) {
-                this.lines = this.lines.concat(this.bufferedLines);
+            if (this.bufferedLines) {
+                this.lines += this.bufferedLines;
                 this.bufferedLines = "";
             }
-            this.lines = this.lines.concat(m_temp);
+            this.lines += m_temp;
         }
     }
 
+
     /**
-     * Parses the provided content string and extracts headers
-     * @param contents - The content to parse
+     * Parses message from the backend, provided as a string by the socket
+     * @param messageString - The message to be parsed
      */
-    public parse(contents: string) {
-        const lines = contents.split("\n");
-        lines.forEach((line, i) => {
-            const header = this.extractHeader(line, i);
-            if (header) {
-                if (this.isPaused) {
-                    this.bufferedMessages.push(header);
-                } else if (!this.removeDuplicates(header)) {
-                    if (this.bufferedMessages.length > 0) this.emptyBufferedMessages();
-                    this.messageMap.push(header);
+    parse(messageString: string) {
+        const header = this.extractHeader(messageString);
+        if (!header) return;
+
+        if (this.isPaused) {
+            this.bufferedMessages.push(header);
+        } else {
+            this.bufferedMessages.forEach(msg => {
+                if (!this.removeDuplicates(msg)) {
+                    this.messageMap.push(msg);
                 }
+            });
+            this.bufferedMessages = [];
+            if (!this.removeDuplicates(header)) {
+                this.messageMap.push(header);
             }
-        });
+        }
     }
 
     /**
-     * Parses log files selected by the user
-     * @returns The processed messages
+     * Creates an object of type MessageHeader from the received message
+     * @param messageStr - The message to extract the header from, passed as a JSON string
+     * @returns The extracted header or null if extraction failed
      */
-    async parseLogFile() {
-        const fileHandles = await window.showOpenFilePicker({multiple: true});
-        this.messageMap = [];
-        this.errors = [];
-        for (const fileHandle of fileHandles) {
-            const file = await fileHandle.getFile();
-            this.lines = await file.text();
-            this.lines = this.lines.replace("Issue:\n", "Issue: ");
-            this.parse(this.lines);
-        }
-        return this.getMessages();
-    }
+    public extractHeader(messageStr: string): MessageHeader | null {
+        try {
+            const parsedBackendMessage: BackendMessage = JSON.parse(messageStr);
 
-    /**
-     * Adds buffered messages to the message map if they are not duplicates
-     */
-    public emptyBufferedMessages() {
-        for (let i = 0; i < this.bufferedMessages.length; i++) {
-            if (!this.removeDuplicates(this.bufferedMessages[i])) {
-                this.messageMap.push(this.bufferedMessages[i]);
+            // Validate that required fields exist in the parsed object
+            if (!parsedBackendMessage.cem_id || !parsedBackendMessage.rm_id ||
+                !parsedBackendMessage.origin || !parsedBackendMessage.msg)
+            {
+                this.errors.push(`Invalid message structure: ${messageStr}`);
+                return null;
             }
+
+            const header: MessageHeader | null = this.castToMessageType(JSON.stringify(parsedBackendMessage.msg));
+
+            // Determine sender and receiver based on origin
+            const sender: string | null = parsedBackendMessage.origin === "RM" ? parsedBackendMessage.rm_id : parsedBackendMessage.cem_id;
+            const receiver: string | null = parsedBackendMessage.origin === "RM" ? parsedBackendMessage.cem_id : parsedBackendMessage.rm_id;
+
+            if (header) {
+                header.time = parsedBackendMessage.timestamp ? new Date(parsedBackendMessage.timestamp) : new Date();
+                header.sender = sender;
+                header.receiver = receiver;
+
+                // Set the status, including any validation error message if present
+                header.status = parsedBackendMessage.s2_validation_error
+                    ? `validation not successful: ${parsedBackendMessage.s2_validation_error.msg}`
+                    : "valid";
+            }
+
+            return header;
+        } catch (error) {
+            // If JSON parsing fails, log the error and return null
+            this.errors.push(`Error parsing JSON: "${error}"\nLine: "${messageStr}"`);
+            return null;
         }
-        this.bufferedMessages = [];
     }
 
     /**
@@ -166,99 +185,11 @@ export class Parser {
     }
 
     /**
-     * Extracts a specific field from a line
-     * @param line The line to extract from
-     * @param fieldName The name of the field to extract
-     * @returns The extracted field value if found, otherwise null
-     */
-    public extractField(line: string, fieldName: string): string | null {
-        const regex = new RegExp(`${fieldName} ([^\\]]+)`);
-        const match = line.match(regex);
-        return match ? match[1].trim() : null;
-    }
-
-    /**
-     * Extracts the header from a log line
-     * @param line - The line to extract the header from
-     * @param i - The line index
-     * @returns The extracted header or null if extraction failed
-     */
-    public extractHeader(line: string, i: number): MessageHeader | null {
-        const dateTimeMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
-        // Extracting JSON message after ensuring it's properly formatted
-        const jsonMessageMatch = line.match(/Message: (\{.*\})/s); // 's' flag for capturing multiline JSON
-        if (this.extractField(line, "Message") == "forwarded") {
-            return null;
-        }
-
-        // Check if it is a message
-        if (dateTimeMatch && jsonMessageMatch) {
-            let messageStr = jsonMessageMatch[1];
-            // Convert single quotes to double quotes for valid parsing formatting
-            messageStr = messageStr.replace(/'/g, '"');
-            // Convert the boolean literals to lowercase for parsing compat.
-            messageStr = messageStr.replace(/\b(True|False)\b/g, (match) =>
-                match.toLowerCase()
-            );
-
-            try {
-                const header: MessageHeader | null = this.castToMessageType(messageStr, i);
-                if (header == null) return null;
-
-                let status = this.extractField(line, "Message");
-                if (status && status == "validation not successful") {
-                    status = "invalid " + this.extractField(line, "Issue:");
-                }
-                const sender = this.extractField(line, "Sender:");
-                const receiver = this.extractField(line, "Receiver:");
-
-                header.time = new Date(dateTimeMatch[1]);
-                header.status = status ? status : "";
-                header.sender = sender;
-                header.receiver = receiver;
-
-                return header;
-            } catch (error) {
-                this.errors.push(i + '. Error parsing message JSON: "' + error + '"\n at line: "' + line + '"');
-            }
-        } else if (dateTimeMatch) {
-            // Check if it is a connection log
-            return this.parseBackendLog(line, dateTimeMatch[1]);
-        }
-        this.errors.push(i + '. Line did not contribute to any object: "' + line + '"');
-        return null;
-    }
-
-    /**
-     * Parses backend log lines
-     * @param line - The line to parse
-     * @param time - The time extracted from the line
-     * @returns The parsed MessageHeader or null
-     */
-    public parseBackendLog(line: string, time: string) {
-        const match = line.match(
-            /Connection from '(.*?)' to S2-analyzer has closed./
-        );
-        if (match) {
-            return {
-                time: new Date(time),
-                status: "",
-                sender: (match[1].toUpperCase().includes("CEM") ? "CEM " : "RM ") + match[1],
-                receiver: null,
-                message_type: "Connection Lost",
-                message_id: null,
-            } as MessageHeader;
-        }
-        return null;
-    }
-
-    /**
      * Casts a JSON message string to a specific message type based on the message_type field
      * @param messageStr The JSON string representing the message
-     * @param i The index of the message
      * @returns The parsed message object of the corresponding message type, or null if no matching type is found
      */
-    public castToMessageType(messageStr: string, i: number) {
+    public castToMessageType(messageStr: string) {
         // Parse the JSON message string
         const message = JSON.parse(messageStr);
         // Cast it according to message type
@@ -303,9 +234,26 @@ export class Parser {
                 return message as MessageHeader;
             default:
                 // If no matching type is found, log an error and return null
-                this.errors.push(i + ". Did not find a matching message type interface for " + message.message_type.toString() + ".");
+                this.errors.push("Did not find a matching message type interface for " + message.message_type.toString() + ".");
                 return null;
         }
+    }
+
+    /**
+     * Parses log files selected by the user.
+     * @returns The processed messages
+     */
+    async parseLogFile() {
+        const fileHandles = await window.showOpenFilePicker({multiple: true});
+        this.messageMap = [];
+        this.errors = [];
+        for (const fileHandle of fileHandles) {
+            const file = await fileHandle.getFile();
+            this.lines = await file.text();
+            this.lines = this.lines.replace("Issue:\n", "Issue: ");
+            this.parse(this.lines);
+        }
+        return this.getMessages();
     }
 }
 

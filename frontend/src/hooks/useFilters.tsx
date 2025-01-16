@@ -28,7 +28,7 @@ function useFilters(data: MessageHeader[], selectedFilters: Filters) {
     // Determine which filter for the message sender is applied
     function matchSender(sender: string | undefined, filters: Filters): boolean {
         const {CEM, RM} = filters;
-        return (CEM && sender === "CEM") || (RM && sender === "RM");
+        return true //(CEM && sender === "CEM") || (RM && sender === "RM");
     }
 
     // Determine whether logs or warnings or both are selected
