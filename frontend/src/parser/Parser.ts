@@ -31,7 +31,7 @@ export class Parser {
      * Returns the current lines to be displayed by the Terminal Component
      * @returns The lines
      */
-    getLines() {
+    public getLines() {
         return this.lines;
     }
 
@@ -39,7 +39,7 @@ export class Parser {
      * Returns the current errors array encountered during parsing
      * @returns The errors array
      */
-    getErrors() {
+    public getErrors() {
         return this.errors;
     }
 
@@ -47,7 +47,7 @@ export class Parser {
      * Returns the current paused state
      * @returns The paused state
      */
-    getIsPaused() {
+    public getIsPaused() {
         return this.isPaused;
     }
 
@@ -55,7 +55,7 @@ export class Parser {
      * Sets the paused state
      * @param b - The new paused state
      */
-    setPause(b: boolean) {
+    public setPause(b: boolean) {
         this.isPaused = b;
     }
 
@@ -63,7 +63,7 @@ export class Parser {
      * Processes the parsed message map and updates message statuses if needed
      * @returns The processed message map
      */
-    getMessages() {
+    public getMessages() {
         for (let i = 0; i < this.messageMap.length; i++) {
             if ("subject_message_id" in this.messageMap[i]) {
                 const temp = this.messageMap[i] as ReceptionStatus;
@@ -88,7 +88,7 @@ export class Parser {
      * Adds a line to the log, buffering if paused
      * @param m - The line to add
      */
-    addLine(m: string) {
+    public addLine(m: string) {
         const m_temp = m.endsWith("\n") ? m : `${m}\n`;
         if (this.isPaused) {
             this.bufferedLines += m_temp;
@@ -101,27 +101,20 @@ export class Parser {
         }
     }
 
-
     /**
      * Parses message from the backend, provided as a string by the socket
      * @param messageString - The message to be parsed
      */
-    parse(messageString: string) {
+    public parse(messageString: string) {
         const header = this.extractHeader(messageString);
         if (!header) return;
 
         if (this.isPaused) {
             this.bufferedMessages.push(header);
         } else {
-            this.bufferedMessages.forEach(msg => {
-                if (!this.removeDuplicates(msg)) {
-                    this.messageMap.push(msg);
-                }
-            });
+            this.bufferedMessages.forEach(msg => {this.messageMap.push(msg);});
             this.bufferedMessages = [];
-            if (!this.removeDuplicates(header)) {
-                this.messageMap.push(header);
-            }
+            this.messageMap.push(header);
         }
     }
 
@@ -130,7 +123,7 @@ export class Parser {
      * @param messageStr - The message to extract the header from, passed as a JSON string
      * @returns The extracted header or null if extraction failed
      */
-    public extractHeader(messageStr: string): MessageHeader | null {
+    private extractHeader(messageStr: string): MessageHeader | null {
         try {
             const parsedBackendMessage: BackendMessage = JSON.parse(messageStr);
 
@@ -168,28 +161,11 @@ export class Parser {
     }
 
     /**
-     * Removes duplicates from the message map based on message id
-     * @param header - The header to check for duplicates
-     * @returns True if a duplicate was found and removed, false otherwise
-     */
-    public removeDuplicates(header: MessageHeader) {
-        for (let i = 0; i < this.messageMap.length; i++) {
-            if (this.messageMap[i].message_id && this.messageMap[i].message_id == header.message_id) {
-                if (this.messageMap[i].status.toString().includes("invalid"))
-                    return true;
-                this.messageMap[i] = header;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Casts a JSON message string to a specific message type based on the message_type field
      * @param messageStr The JSON string representing the message
      * @returns The parsed message object of the corresponding message type, or null if no matching type is found
      */
-    public castToMessageType(messageStr: string) {
+    private castToMessageType(messageStr: string) {
         // Parse the JSON message string
         const message = JSON.parse(messageStr);
         // Cast it according to message type
@@ -243,7 +219,7 @@ export class Parser {
      * Parses log files selected by the user.
      * @returns The processed messages
      */
-    async parseLogFile() {
+    public async parseLogFile() {
         const fileHandles = await window.showOpenFilePicker({multiple: true});
         this.messageMap = [];
         this.errors = [];

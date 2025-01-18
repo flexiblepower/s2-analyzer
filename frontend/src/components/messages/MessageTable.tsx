@@ -55,7 +55,11 @@ function MessageTable<T extends MessageHeader>({ messages }: MessageTableProps<T
         },
         muiTableBodyRowProps: ({ row }) => ({
             onClick: row.getToggleSelectedHandler(),
-            sx: { cursor: 'pointer' },
+            sx: {
+                cursor: 'pointer',
+                backgroundColor: typeof row.original.status === 'string' &&
+                                 row.original.status.includes('validation not successful') ? 'red' : 'inherit'
+            },
         }),
     });
 

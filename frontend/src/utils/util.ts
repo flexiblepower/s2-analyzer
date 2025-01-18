@@ -8,9 +8,7 @@ export function getDurationTimestamps<T extends { duration: number }>(data: T[],
     const timestamps: number[] = [];
     for (let i = 0; i < data.length; i++) {
         timestamps.push(
-            (data[i].duration +
-                (i === 0 ? start.getMilliseconds() : timestamps[i - 1])) %
-            1000
+            (data[i].duration + (i === 0 ? start.getMilliseconds() : timestamps[i - 1])) % 1000
         );
     }
     return timestamps;
