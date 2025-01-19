@@ -2,18 +2,24 @@ import asyncio
 import logging
 from typing import Optional, TYPE_CHECKING
 
-from fastapi import FastAPI, WebSocket, APIRouter, WebSocketException
+from fastapi import FastAPI, WebSocket, APIRouter, WebSocketException, Body, Depends, Query, HTTPException
+from sqlmodel import Session, select
 import uvicorn
 import uvicorn.server
 from s2_analyzer_backend.message_processor import DebuggerFrontendMessageProcessor, MessageProcessor
 from s2_analyzer_backend.connection import Connection, DebuggerFrontendWebsocketConnection, WebSocketConnection
 
 from s2_analyzer_backend.async_application import AsyncApplication
+from s2_analyzer_backend.history_filter import HistoryFilter
+from datetime import datetime
+from pydantic import BaseModel
+
 
 # from s2_analyzer_backend.globals import BUILDERS
 # from s2_analyzer_backend.history import MESSAGE_HISTORY_REGISTRY
 from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.origin_type import S2OriginType
+from s2_analyzer_backend.history_filter import HistoryFilter
 import s2_analyzer_backend.app_logging
 
 if TYPE_CHECKING:
@@ -23,6 +29,13 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
+# class HistoryFilterDTO(BaseModel):
+#     cem_id: Optional[str] = Query(None, description="CEM ID filter")
+#     rm_id: Optional[str] = Query(None, description="RM ID filter")
+#     origin: Optional[str] = Query(None, description="Origin filter")
+#     s2_msg_type: Optional[str] = Query(None, description="S2 message type filter")
+#     start_date: Optional[datetime] = Query(None, description="Start date filter")
+#     end_date: Optional[datetime] = Query(None, description="End date filter")
 
 class RestAPI(AsyncApplication):
 
@@ -50,6 +63,13 @@ class RestAPI(AsyncApplication):
         )
         self.fastapi_router.add_api_websocket_route(
             "/backend/debugger/", self.receive_new_debugger_frontend_connection
+        )
+        self.fastapi_router.add_api_route(
+            "/backend/history_filter",
+            self.get_filtered_history,
+            methods=["GET"],
+            summary="Retrieve historical data with filters",
+            description="Query historical data filtered by criteria such as CEM ID, RM ID, origin, message type, and timestamp.",
         )
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
@@ -143,3 +163,24 @@ class RestAPI(AsyncApplication):
         await conn.wait_till_done_async(
             timeout=None, kill_after_timeout=False, raise_on_timeout=False
         )
+        
+    async def get_filtered_history(
+        self,
+        cem_id: Optional[str] = Query(None, description="CEM ID filter"),
+        rm_id: Optional[str] = Query(None, description="RM ID filter"),
+        origin: Optional[str] = Query(None, description="Origin filter"),
+        s2_msg_type: Optional[str] = Query(None, description="S2 message type filter"),
+        start_date: Optional[datetime] = Query(None, description="Start date filter"),
+        end_date: Optional[datetime] = Query(None, description="End date filter"),
+        history_filter: HistoryFilter = Depends(),
+    ):
+        try:
+            # Fetch filtered records
+            results = history_filter.get_filtered_records(
+                cem_id, rm_id, origin, s2_msg_type, start_date, end_date
+            )
+            LOGGER.info(f"Found {len(results)} matching records.")
+            return results
+        except Exception as e:
+            LOGGER.error(f"Error in get_filtered_history: {str(e)}")
+            raise HTTPException(status_code=500, detail="Internal Server Error")
