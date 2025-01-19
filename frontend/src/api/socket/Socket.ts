@@ -1,4 +1,4 @@
-import {parser as parserSingleton} from "./Parser";
+import {parser as parserSingleton} from "./Parser.ts";
 
 /**
  * Websocket class to connect to the python intermediary websocket server

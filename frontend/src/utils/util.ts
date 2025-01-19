@@ -1,3 +1,5 @@
+import {FilterQuery} from "../api/apiTypes.ts";
+
 /**
  * Generates an array of timestamps based on the duration of each data element.
  * @param data - Array of data elements with a `duration` field.
@@ -12,4 +14,25 @@ export function getDurationTimestamps<T extends { duration: number }>(data: T[],
         );
     }
     return timestamps;
+}
+
+
+/**
+ * Constructs a URL with query parameters based on the provided filter properties.
+ * @param url - The base URL to which query parameters will be appended.
+ * @param props - An object containing key-value pairs of query parameters.
+ * @returns The full URL with appended query parameters as a string.
+ */
+export function constructUrl(url: string, props: FilterQuery): string {
+    const newUrl = new URL(url);
+
+    const params = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(props)) {
+        if (value) {
+            params.set(key, value.toString());
+        }
+    }
+
+    return newUrl + '?' + params.toString();
 }

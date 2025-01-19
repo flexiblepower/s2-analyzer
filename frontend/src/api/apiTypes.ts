@@ -9,7 +9,7 @@ interface MessageValidationDetails {
     }> | null;
 }
 
-export default interface BackendMessage {
+export interface BackendMessage {
     cem_id: string;
     rm_id: string;
     origin: string;
@@ -22,4 +22,13 @@ export default interface BackendMessage {
     s2_msg_type: string | null;
     s2_validation_error: MessageValidationDetails | null;
     timestamp: string;
+}
+
+export interface FilterQuery {
+    cem_id?: string;
+    rm_id?: string;
+    origin?: string;
+    s2_msg_type?: string;
+    start_date?: string;
+    end_date?: string;
 }

@@ -6,13 +6,13 @@ import Sidebar from "../components/navbar/navbar_items/Sidebar";
 import TerminalController from "../components/terminal/Terminal";
 import useFilters from "../hooks/useFilters";
 import useSearch from "../hooks/useSearch";
-import WebSocketClient from "../parser/Socket";
+import WebSocketClient from "../api/socket/Socket";
 import MessageWidget from "../components/messages/MessageWidget";
 import MessageTable from "../components/messages/MessageTable";
 import useToggle from "../hooks/useToggle";
-import {parser} from "../parser/Parser.ts";
+import {parser} from "../api/socket/Parser.ts";
 
-const Page = () => {
+const MainPage = () => {
     const [messages, setMessages] = useState<MessageHeader[]>([]); // State for storing message data
     const [alignment, setAlignment] = useState("justify-center"); // State for alignment of message widget
     const [searchedMessage, setSearchedMessage] = useState(""); // State for searched message id
@@ -124,4 +124,4 @@ const Page = () => {
 
 };
 
-export default Page;
+export default MainPage;
