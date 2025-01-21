@@ -1,27 +1,23 @@
+
 import asyncio
 import logging
 from typing import Optional, TYPE_CHECKING
 
 from fastapi import (
     FastAPI,
-    Request,
     WebSocket,
     APIRouter,
     WebSocketException,
-    Body,
     Depends,
     Query,
     HTTPException,
 )
-from sqlmodel import Session, select
 import uvicorn
 import uvicorn.server
 from s2_analyzer_backend.message_processor import (
     DebuggerFrontendMessageProcessor,
-    MessageProcessor,
 )
 from s2_analyzer_backend.connection import (
-    Connection,
     DebuggerFrontendWebsocketConnection,
     WebSocketConnection,
 )
@@ -29,7 +25,6 @@ from s2_analyzer_backend.connection import (
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.history_filter import HistoryFilter
 from datetime import datetime
-from pydantic import BaseModel
 
 
 # from s2_analyzer_backend.globals import BUILDERS
@@ -41,7 +36,7 @@ import s2_analyzer_backend.app_logging
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.router import MessageRouter
-    from s2_analyzer_backend.async_application import ApplicationName, AsyncApplications
+    from s2_analyzer_backend.async_application import ApplicationName
 
 
 LOGGER = logging.getLogger(__name__)
@@ -55,37 +50,24 @@ LOGGER = logging.getLogger(__name__)
 #     end_date: Optional[datetime] = Query(None, description="End date filter")
 
 
-class RestAPI(AsyncApplication):
-    uvicorn_server: Optional[uvicorn.Server]
-    fastapi_router: APIRouter
+class DebuggerAPI:
+    router: APIRouter
 
     def __init__(
         self,
-        listen_address: str,
-        listen_port: int,
-        msg_router: "MessageRouter",
         debugger_frontend_msg_processor: "DebuggerFrontendMessageProcessor",
     ) -> None:
         super().__init__()
-        self.listen_address = listen_address
-        self.listen_port = listen_port
         self.uvicorn_server = None
 
-        self.fastapi_router = APIRouter()
-        self.msg_router = msg_router
+        self.router = APIRouter()
         self.debugger_frontend_msg_processor = debugger_frontend_msg_processor
 
-        self.fastapi_router.add_api_route("/", self.get_root)
-        self.fastapi_router.add_api_websocket_route(
-            "/backend/rm/{rm_id}/cem/{cem_id}/ws", self.receive_new_rm_connection
-        )
-        self.fastapi_router.add_api_websocket_route(
-            "/backend/cem/{cem_id}/rm/{rm_id}/ws", self.receive_new_cem_connection
-        )
-        self.fastapi_router.add_api_websocket_route(
+        self.router.add_api_route("/", self.get_root)
+        self.router.add_api_websocket_route(
             "/backend/debugger/", self.receive_new_debugger_frontend_connection
         )
-        self.fastapi_router.add_api_route(
+        self.router.add_api_route(
             "/backend/history_filter/",
             self.get_filtered_history,
             methods=["GET"],
@@ -93,82 +75,8 @@ class RestAPI(AsyncApplication):
             description="Query historical data filtered by criteria such as CEM ID, RM ID, origin, message type, and timestamp.",
         )
 
-    async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
-        app = FastAPI(title="S2 Analyzer", description="", version="v0.0.1")
-
-        app.include_router(self.fastapi_router)
-        config = uvicorn.Config(
-            app,
-            host=self.listen_address,
-            port=self.listen_port,
-            loop="none",
-            log_level=s2_analyzer_backend.app_logging.LOG_LEVEL.value,
-        )
-        self.uvicorn_server = uvicorn.Server(config)
-        # Prevent uvicorn from overwriting any signal handlers. Uvicorn does not yet has a nice way to do this.
-        uvicorn.server.HANDLED_SIGNALS = ()
-        await self.uvicorn_server.serve()
-
-    def get_name(self) -> "ApplicationName":
-        return "S2 REST API Server"
-
-    def stop(self, loop: asyncio.AbstractEventLoop) -> None:
-        if self.uvicorn_server is None:
-            raise RuntimeError("Stopping uvicorn failed: there is no uvicorn running!")
-        self.uvicorn_server.should_exit = True
-        # self.uvicorn_server.force_exit = True
-
     async def get_root(self):
         return {"status": "healthy"}
-
-    async def handle_connection(
-        self,
-        websocket,
-        connection_type: S2OriginType,
-        origin_id,
-        dest_id,
-    ) -> None:
-        conn = WebSocketConnection(
-            origin_id, dest_id, connection_type, self.msg_router, websocket
-        )
-
-        APPLICATIONS.add_and_start_application(conn)
-
-        await self.msg_router.receive_new_connection(conn)
-
-        await conn.wait_till_done_async(
-            timeout=None, kill_after_timeout=False, raise_on_timeout=False
-        )
-
-    async def receive_new_rm_connection(
-        self, websocket: WebSocket, rm_id: str, cem_id: str
-    ) -> None:
-        try:
-            await websocket.accept()
-            LOGGER.info("Received connection from rm %s to cem %s.", rm_id, cem_id)
-        except WebSocketException:
-            LOGGER.exception(
-                "RM WS connection from %s to %s had an exception while accepting.",
-                rm_id,
-                cem_id,
-            )
-
-        await self.handle_connection(websocket, S2OriginType.RM, rm_id, cem_id)
-
-    async def receive_new_cem_connection(
-        self, websocket: WebSocket, cem_id: str, rm_id: str
-    ) -> None:
-        try:
-            await websocket.accept()
-            LOGGER.info("Received connection from cem %s to rm %s.", cem_id, rm_id)
-        except WebSocketException:
-            LOGGER.exception(
-                "CEM WS connection from %s to %s had an exception while accepting.",
-                cem_id,
-                rm_id,
-            )
-
-        await self.handle_connection(websocket, S2OriginType.CEM, cem_id, rm_id)
 
     async def receive_new_debugger_frontend_connection(
         self, websocket: WebSocket
@@ -214,3 +122,5 @@ class RestAPI(AsyncApplication):
         except Exception as e:
             LOGGER.error(f"Error in get_filtered_history: {str(e)}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
+
+    

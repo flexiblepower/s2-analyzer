@@ -219,8 +219,14 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
             message_str = None
             try:
                 message_str = await self.websocket.receive_text()
-                LOGGER.debug("Received message across websocket: %s", message_str)
-                message = json.loads(message_str)
+                
+                if (message_str == "ping"):
+                    LOGGER.debug("Received ping message from frontend.")
+                    await self.websocket.send_text("pong")
+                    continue
+                else:
+                    LOGGER.debug("Received message across websocket: %s", message_str)
+                    message = json.loads(message_str)
 
                 # TODO: Do something with message? Or just block.
 

@@ -13,7 +13,7 @@ from s2_analyzer_backend.message_processor import (
     MessageParserProcessor,
     MessageStorageProcessor,
 )
-from s2_analyzer_backend.rest_api import RestAPI
+from s2_analyzer_backend.rest_apis.rest_api import RestAPI
 from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.app_logging import LogLevel, setup_logging
 from s2_analyzer_backend.router import MessageRouter
