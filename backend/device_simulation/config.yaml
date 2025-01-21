@@ -1,5 +1,0 @@
-api:
-  base_url: "http://rest-api:8000"
-  root_path: "/"
-  rm_ws_path: "/backend/rm/{rm_id}/cem/{cem_id}/ws"
-  cem_ws_path: "/backend/cem/{cem_id}/rm/{rm_id}/ws"

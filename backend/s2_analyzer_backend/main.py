@@ -3,7 +3,6 @@ import logging
 import os
 import signal
 import threading
-import asyncio
 
 from s2_analyzer_backend.database import create_db_and_tables, engine
 from s2_analyzer_backend.message_processor import (
@@ -17,7 +16,7 @@ from s2_analyzer_backend.rest_apis.rest_api import RestAPI
 from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.app_logging import LogLevel, setup_logging
 from s2_analyzer_backend.router import MessageRouter
-from s2_analyzer_backend.config import CONFIG  # , #init_models
+from s2_analyzer_backend.config import CONFIG
 
 LOGGER = logging.getLogger(__name__)
 
@@ -58,11 +57,6 @@ def main():
     signal.signal(signal.SIGTERM, handle_exit)
     signal.signal(signal.SIGQUIT, handle_exit)
 
-    """Gordei: Commented out code to run mock models"""
-    # models = init_models(msg_router, CONFIG)
-    # for model in models:
-    #     APPLICATIONS.add_and_start_application(model)
-    #     model_registry.add_model(model)
     APPLICATIONS.run_all()
 
 

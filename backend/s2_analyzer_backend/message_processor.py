@@ -9,7 +9,6 @@ from sqlmodel import Session
 from s2_analyzer_backend.connection import DebuggerFrontendWebsocketConnection
 from s2_analyzer_backend.database import Communication, ValidationError
 from s2_analyzer_backend.origin_type import S2OriginType
-from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.async_application import LOGGER, AsyncApplication
 
 from s2python.s2_parser import S2Parser, S2Message
@@ -180,4 +179,4 @@ class MessageProcessorHandler(AsyncApplication):
         ):
             self._main_task.cancel("Request to stop")
         else:
-            print(f"Message Processor Handler was already stopped!")
+            LOGGER.debug("Message Processor Handler was already stopped!")
