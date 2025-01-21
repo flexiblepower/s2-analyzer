@@ -86,7 +86,7 @@ class RestAPI(AsyncApplication):
             "/backend/debugger/", self.receive_new_debugger_frontend_connection
         )
         self.fastapi_router.add_api_route(
-            "/backend/history_filter",
+            "/backend/history_filter/",
             self.get_filtered_history,
             methods=["GET"],
             summary="Retrieve historical data with filters",
@@ -118,8 +118,8 @@ class RestAPI(AsyncApplication):
         self.uvicorn_server.should_exit = True
         # self.uvicorn_server.force_exit = True
 
-    async def get_root(self) -> str:
-        return "Hello world!"
+    async def get_root(self):
+        return {"status": "healthy"}
 
     async def handle_connection(
         self,
@@ -199,8 +199,11 @@ class RestAPI(AsyncApplication):
         s2_msg_type: Optional[str] = Query(None, description="S2 message type filter"),
         start_date: Optional[datetime] = Query(None, description="Start date filter"),
         end_date: Optional[datetime] = Query(None, description="End date filter"),
-        history_filter: HistoryFilter = Depends(),
+        history_filter: HistoryFilter = Depends(),  # Dependency injected history filter which queries database
     ):
+        LOGGER.info(
+            f"Received history filter request: cem_id={cem_id}, rm_id={rm_id}, origin={origin}, s2_msg_type={s2_msg_type}, start_date={start_date}, end_date={end_date}"
+        )
         try:
             # Fetch filtered records
             results = history_filter.get_filtered_records(
