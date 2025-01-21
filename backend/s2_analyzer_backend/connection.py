@@ -183,8 +183,6 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
                     )
                 else:
                     raise exc from exc_group
-        finally:
-            pass
 
     async def enqueue_message(self, message: "Message") -> None:
         await self._queue.put(message)

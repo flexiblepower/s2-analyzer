@@ -1,17 +1,15 @@
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from dataclass_wizard import YAMLWizard
 from s2_analyzer_backend.origin_type import S2OriginType
-#from s2_analyzer_backend.cem_model_simple.cem_model_simple import CEM
 
+S2_ANALYZER_CONF = os.getenv("S2_ANALYZER_CONF", "config.yaml")
 
-S2_ANALYZER_CONF = os.getenv('S2_ANALYZER_CONF', 'config.yaml')
 
 @dataclass
 class ModelConfig:
-    model_type: 'S2OriginType'
+    model_type: "S2OriginType"
     model_id: str
 
 
@@ -34,8 +32,10 @@ def read_s2_analyzer_conf() -> Config:
         result.connection_histories_dir_path.mkdir(parents=True, exist_ok=True)
 
     if not result.connection_histories_dir_path.is_dir():
-        raise RuntimeError(f"Connection histories location ({result.connection_histories_dir}) should be a directory "
-                           f"and it isn't.")
+        raise RuntimeError(
+            f"Connection histories location ({result.connection_histories_dir}) should be a directory "
+            f"and it isn't."
+        )
     return result
 
 

@@ -25,7 +25,6 @@ class MessageRouter:
         self.connections = {}
         self.s2_parser = S2Parser()
         self._msg_processor_handler = msg_processor_handler
-        # self.model_registry = model_registry
         self._buffer_queue_by_origin_dest_id = {}
 
     def _get_buffer_queue(self, origin_id: str, dest_id: str) -> asyncio.Queue:
@@ -72,7 +71,6 @@ class MessageRouter:
         envelope = Envelope(origin, dest, s2_json_msg)
         # Buffer or Route
         if dest is None:
-            # LOGGER.error("Destination connection is unavailable: %s", dest_id)
             LOGGER.error(
                 "Connection %s->%s is unavailable. Buffering message.",
                 dest_id,
@@ -80,7 +78,6 @@ class MessageRouter:
             )
             queue = self._get_buffer_queue(dest_id, origin.origin_id)
             await queue.put(envelope)
-            # origin.msg_history.receive_line(f"[Message buffered][Sender: {origin.s2_origin_type.value} {origin.origin_id}][Receiver: {origin.destination_type.value} {origin.dest_id}] Message: {str(s2_json_msg)}")
         else:
             await self.route_envelope(envelope)
 
@@ -88,7 +85,6 @@ class MessageRouter:
         self, envelope: Envelope, conn: "Connection"
     ) -> None:
         LOGGER.debug("Envelope is forwarded to %s: %s", conn, envelope)
-        # conn.msg_history.receive_line(f"[Message forwarded][Sender: {conn.s2_origin_type.value} {conn.origin_id}][Receiver: {conn.destination_type.value} {conn.dest_id}] Message: {str(envelope.msg)}")
         await conn.receive_envelope(envelope)
 
     async def route_envelope(self, envelope: Envelope) -> None:
@@ -103,7 +99,6 @@ class MessageRouter:
 
     async def receive_new_connection(self, conn: "Connection") -> None:
         self.connections[(conn.origin_id, conn.dest_id)] = conn
-        # conn.msg_history.receive_line(f"Connection initiated from '{conn.origin_id}' to S2-analyzer.")
 
         buffered_messages = self._consume_buffer_queue(conn.origin_id, conn.dest_id)
 

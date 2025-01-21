@@ -1,10 +1,7 @@
-
-import asyncio
 import logging
 from typing import Optional, TYPE_CHECKING
 
 from fastapi import (
-    FastAPI,
     WebSocket,
     APIRouter,
     WebSocketException,
@@ -12,43 +9,21 @@ from fastapi import (
     Query,
     HTTPException,
 )
-import uvicorn
-import uvicorn.server
 from s2_analyzer_backend.message_processor import (
     DebuggerFrontendMessageProcessor,
 )
 from s2_analyzer_backend.connection import (
     DebuggerFrontendWebsocketConnection,
-    WebSocketConnection,
 )
 
-from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.history_filter import HistoryFilter
 from datetime import datetime
 
 
-# from s2_analyzer_backend.globals import BUILDERS
-# from s2_analyzer_backend.history import MESSAGE_HISTORY_REGISTRY
 from s2_analyzer_backend.async_application import APPLICATIONS
-from s2_analyzer_backend.origin_type import S2OriginType
 from s2_analyzer_backend.history_filter import HistoryFilter
-import s2_analyzer_backend.app_logging
-
-if TYPE_CHECKING:
-    from s2_analyzer_backend.router import MessageRouter
-    from s2_analyzer_backend.async_application import ApplicationName
-
 
 LOGGER = logging.getLogger(__name__)
-
-# class HistoryFilterDTO(BaseModel):
-#     cem_id: Optional[str] = Query(None, description="CEM ID filter")
-#     rm_id: Optional[str] = Query(None, description="RM ID filter")
-#     origin: Optional[str] = Query(None, description="Origin filter")
-#     s2_msg_type: Optional[str] = Query(None, description="S2 message type filter")
-#     start_date: Optional[datetime] = Query(None, description="Start date filter")
-#     end_date: Optional[datetime] = Query(None, description="End date filter")
-
 
 class DebuggerAPI:
     router: APIRouter
@@ -122,5 +97,3 @@ class DebuggerAPI:
         except Exception as e:
             LOGGER.error(f"Error in get_filtered_history: {str(e)}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
-
-    

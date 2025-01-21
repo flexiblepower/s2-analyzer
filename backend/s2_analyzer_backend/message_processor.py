@@ -14,10 +14,12 @@ from s2_analyzer_backend.async_application import LOGGER, AsyncApplication
 from s2python.s2_parser import S2Parser, S2Message
 from s2python.s2_validation_error import S2ValidationError
 
+
 class MessageValidationDetails(BaseModel):
     msg: str
-    errors : list[dict] | None
-    
+    errors: list[dict] | None
+
+
 class Message(BaseModel):
     cem_id: str
     rm_id: str
@@ -66,7 +68,9 @@ class MessageParserProcessor(MessageProcessor):
             s2_message = self.s2_parser.parse_as_any_message(message.msg)
         except S2ValidationError as e:
             LOGGER.warning(e.pydantic_validation_error.json())
-            validation_error = MessageValidationDetails(msg=e.msg, errors=e.pydantic_validation_error.errors())
+            validation_error = MessageValidationDetails(
+                msg=e.msg, errors=e.pydantic_validation_error.errors()
+            )
             # validation_error = e
             # raise ValueError(f"Error parsing message: {e}")
             # LOGGER.exception(f"Error parsing message: {e}")
@@ -111,18 +115,21 @@ class MessageStorageProcessor(MessageProcessor):
             session.commit()
 
             return message
-        
+
+
 class DebuggerFrontendMessageProcessor(MessageProcessor):
-    connections : list[DebuggerFrontendWebsocketConnection] 
+    connections: list[DebuggerFrontendWebsocketConnection]
 
     def __init__(self):
         self.connections = []
-        
+
     def add_connection(self, connection: DebuggerFrontendWebsocketConnection):
         LOGGER.info(f"Adding connection: {connection}")
         self.connections.append(connection)
-    
-    async def process_message(self, message: Message, loop: asyncio.AbstractEventLoop) -> str:
+
+    async def process_message(
+        self, message: Message, loop: asyncio.AbstractEventLoop
+    ) -> str:
         LOGGER.info(f"Sending message to debugger frontends. {len(self.connections)}")
         closed_connections = []
         for i, connection in enumerate(self.connections):
@@ -130,11 +137,11 @@ class DebuggerFrontendMessageProcessor(MessageProcessor):
                 await connection.enqueue_message(message)
             else:
                 closed_connections.append(i)
-        
+
         self.cleanup_closed_connections(closed_connections)
-                
+
         return message
-    
+
     def cleanup_closed_connections(self, closed_connections: list[int]):
         for i in closed_connections:
             self.connections.pop(i)
@@ -156,7 +163,7 @@ class MessageProcessorHandler(AsyncApplication):
     def add_message_processor(self, message_processor: MessageProcessor):
         self.message_processors.append(message_processor)
 
-    def add_message_to_process(self, message: dict):
+    def add_message_to_process(self, message: Message):
         self._queue.put_nowait(message)
 
     async def process_message(self, message: Message, loop: asyncio.AbstractEventLoop):
