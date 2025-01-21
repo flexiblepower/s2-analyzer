@@ -2,12 +2,29 @@ import asyncio
 import logging
 from typing import Optional, TYPE_CHECKING
 
-from fastapi import FastAPI, WebSocket, APIRouter, WebSocketException, Body, Depends, Query, HTTPException
+from fastapi import (
+    FastAPI,
+    Request,
+    WebSocket,
+    APIRouter,
+    WebSocketException,
+    Body,
+    Depends,
+    Query,
+    HTTPException,
+)
 from sqlmodel import Session, select
 import uvicorn
 import uvicorn.server
-from s2_analyzer_backend.message_processor import DebuggerFrontendMessageProcessor, MessageProcessor
-from s2_analyzer_backend.connection import Connection, DebuggerFrontendWebsocketConnection, WebSocketConnection
+from s2_analyzer_backend.message_processor import (
+    DebuggerFrontendMessageProcessor,
+    MessageProcessor,
+)
+from s2_analyzer_backend.connection import (
+    Connection,
+    DebuggerFrontendWebsocketConnection,
+    WebSocketConnection,
+)
 
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.history_filter import HistoryFilter
@@ -37,13 +54,17 @@ LOGGER = logging.getLogger(__name__)
 #     start_date: Optional[datetime] = Query(None, description="Start date filter")
 #     end_date: Optional[datetime] = Query(None, description="End date filter")
 
-class RestAPI(AsyncApplication):
 
+class RestAPI(AsyncApplication):
     uvicorn_server: Optional[uvicorn.Server]
     fastapi_router: APIRouter
 
     def __init__(
-        self, listen_address: str, listen_port: int, msg_router: "MessageRouter", debugger_frontend_msg_processor : "DebuggerFrontendMessageProcessor"
+        self,
+        listen_address: str,
+        listen_port: int,
+        msg_router: "MessageRouter",
+        debugger_frontend_msg_processor: "DebuggerFrontendMessageProcessor",
     ) -> None:
         super().__init__()
         self.listen_address = listen_address
@@ -52,7 +73,7 @@ class RestAPI(AsyncApplication):
 
         self.fastapi_router = APIRouter()
         self.msg_router = msg_router
-        self.debugger_frontend_msg_processor  = debugger_frontend_msg_processor
+        self.debugger_frontend_msg_processor = debugger_frontend_msg_processor
 
         self.fastapi_router.add_api_route("/", self.get_root)
         self.fastapi_router.add_api_websocket_route(
@@ -100,9 +121,15 @@ class RestAPI(AsyncApplication):
     async def get_root(self) -> str:
         return "Hello world!"
 
-    async def handle_connection(self, websocket, origin_id, dest_id):
+    async def handle_connection(
+        self,
+        websocket,
+        connection_type: S2OriginType,
+        origin_id,
+        dest_id,
+    ) -> None:
         conn = WebSocketConnection(
-            origin_id, dest_id, S2OriginType.RM, self.msg_router, websocket
+            origin_id, dest_id, connection_type, self.msg_router, websocket
         )
 
         APPLICATIONS.add_and_start_application(conn)
@@ -126,7 +153,7 @@ class RestAPI(AsyncApplication):
                 cem_id,
             )
 
-        await self.handle_connection(websocket, rm_id, cem_id)
+        await self.handle_connection(websocket, S2OriginType.RM, rm_id, cem_id)
 
     async def receive_new_cem_connection(
         self, websocket: WebSocket, cem_id: str, rm_id: str
@@ -141,8 +168,8 @@ class RestAPI(AsyncApplication):
                 rm_id,
             )
 
-        await self.handle_connection(websocket, cem_id, rm_id)
-    
+        await self.handle_connection(websocket, S2OriginType.CEM, cem_id, rm_id)
+
     async def receive_new_debugger_frontend_connection(
         self, websocket: WebSocket
     ) -> None:
@@ -163,7 +190,7 @@ class RestAPI(AsyncApplication):
         await conn.wait_till_done_async(
             timeout=None, kill_after_timeout=False, raise_on_timeout=False
         )
-        
+
     async def get_filtered_history(
         self,
         cem_id: Optional[str] = Query(None, description="CEM ID filter"),

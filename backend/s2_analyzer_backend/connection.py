@@ -93,7 +93,7 @@ class WebSocketConnection(Connection):
         self.websocket = websocket
 
     def __str__(self):
-        return f"Websocket connection {self.origin_id}->{self.dest_id}"
+        return f"Websocket Connection {self.origin_id}->{self.dest_id} ({self.s2_origin_type.name})"
 
     def get_connection_type(self):
         return ConnectionType.WEBSOCKET
