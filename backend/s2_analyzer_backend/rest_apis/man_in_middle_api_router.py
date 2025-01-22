@@ -22,6 +22,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class InjectMessage(BaseModel):
+    origin_id: str
+    dest_id: str
     message: dict
 
 
@@ -50,7 +52,7 @@ class ManInTheMiddleAPI:
             "/backend/cem/{cem_id}/rm/{rm_id}/ws", self.receive_new_cem_connection
         )
         self.router.add_api_route(
-            "/backend/inject/source/{source_id}/dest/{dest_id}/",
+            "/backend/inject/",
             self.inject_message,
             methods=["POST"],
             tags=["inject"],
@@ -111,10 +113,8 @@ class ManInTheMiddleAPI:
 
         await self.handle_connection(websocket, S2OriginType.CEM, cem_id, rm_id)
 
-    async def inject_message(
-        self, source_id: str, dest_id: str, body: InjectMessage
-    ) -> None:
-        await self.msg_router.inject_message(source_id, dest_id, body.message)
+    async def inject_message(self, body: InjectMessage) -> None:
+        await self.msg_router.inject_message(body.origin_id, body.dest_id, body.message)
         return
 
     async def get_connections(self):

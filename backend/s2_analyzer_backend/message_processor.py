@@ -91,12 +91,9 @@ class MessageStorageProcessor(MessageProcessor):
 
     async def process_message(
         self, message: Message, loop: asyncio.AbstractEventLoop
-    ) -> str:
+    ) -> Message:
         with Session(self.engine) as session:
             validation_error = None
-
-            LOGGER.info("---------------------------------------------")
-            LOGGER.info(f"Storing validation error: {message.s2_validation_error}")
 
             db_message = Communication(
                 cem_id=message.cem_id,
@@ -135,7 +132,7 @@ class DebuggerFrontendMessageProcessor(MessageProcessor):
 
     async def process_message(
         self, message: Message, loop: asyncio.AbstractEventLoop
-    ) -> str:
+    ) -> Message:
         LOGGER.info(f"Sending message to debugger frontends. {len(self.connections)}")
         closed_connections = []
         for i, connection in enumerate(self.connections):
