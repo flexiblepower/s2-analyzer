@@ -52,18 +52,20 @@ class DebuggerAPI:
             "/backend/debugger/", self.receive_new_debugger_frontend_connection
         )
         self.router.add_api_route(
-            "/backend/history_filter/",
+            "/backend/history-filter/",
             self.get_filtered_history,
             methods=["GET"],
             summary="Retrieve historical data with filters",
             description="Query historical data filtered by criteria such as CEM ID, RM ID, origin, message type, and timestamp.",
+            tags=["debugger"],
         )
         self.router.add_api_route(
             "/backend/validate-message/",
             self.validate_s2_message,
-            methods=["GET"],
+            methods=["POST"],
             summary="Validate an S2 message",
             description="Validate an S2 message against the schema.",
+            tags=["debugger"],
         )
 
     async def get_root(self):

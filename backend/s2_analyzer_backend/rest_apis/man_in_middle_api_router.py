@@ -6,6 +6,7 @@ from fastapi import (
     APIRouter,
     WebSocketException,
 )
+from pydantic import BaseModel
 from s2_analyzer_backend.connection import (
     WebSocketConnection,
 )
@@ -18,6 +19,16 @@ if TYPE_CHECKING:
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+class InjectMessage(BaseModel):
+    message: dict
+
+
+class ConnectionDetails(BaseModel):
+    origin_id: str
+    dest_id: str
+    connection_type: S2OriginType
 
 
 class ManInTheMiddleAPI:
@@ -37,6 +48,18 @@ class ManInTheMiddleAPI:
         )
         self.router.add_api_websocket_route(
             "/backend/cem/{cem_id}/rm/{rm_id}/ws", self.receive_new_cem_connection
+        )
+        self.router.add_api_route(
+            "/backend/inject/source/{source_id}/dest/{dest_id}/",
+            self.inject_message,
+            methods=["POST"],
+            tags=["inject"],
+        )
+        self.router.add_api_route(
+            "/backend/connections/",
+            self.get_connections,
+            methods=["GET"],
+            tags=["connections"],
         )
 
     async def handle_connection(
@@ -87,3 +110,21 @@ class ManInTheMiddleAPI:
             )
 
         await self.handle_connection(websocket, S2OriginType.CEM, cem_id, rm_id)
+
+    async def inject_message(
+        self, source_id: str, dest_id: str, body: InjectMessage
+    ) -> None:
+        await self.msg_router.inject_message(source_id, dest_id, body.message)
+        return
+
+    async def get_connections(self):
+        connections = []
+        for conn in self.msg_router.connections.values():
+            connections.append(
+                ConnectionDetails(
+                    origin_id=conn.origin_id,
+                    dest_id=conn.dest_id,
+                    connection_type=conn.s2_origin_type,
+                )
+            )
+        return connections
