@@ -138,8 +138,8 @@ export class Parser {
             const header: MessageHeader | null = this.castToMessageType(JSON.stringify(parsedBackendMessage.msg));
 
             // Determine sender and receiver based on origin
-            const sender: string | null = parsedBackendMessage.origin === "RM" ? parsedBackendMessage.rm_id : parsedBackendMessage.cem_id;
-            const receiver: string | null = parsedBackendMessage.origin === "RM" ? parsedBackendMessage.cem_id : parsedBackendMessage.rm_id;
+            const sender: string = parsedBackendMessage.origin;
+            const receiver: string = sender === "RM" ? "CEM" : "RM";
 
             if (header) {
                 header.time = parsedBackendMessage.timestamp ? new Date(parsedBackendMessage.timestamp) : new Date();

@@ -52,8 +52,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                 return props.message.status.status;
             } else if (
                 (props.message.message_type === "FRBC.UsageForecast" || props.message.message_type === "PowerForecast") &&
-                key === "elements" &&
-                !isJSON
+                key === "elements" && !isJSON
             ) {
                 return "See graph";
             } else if (key === "time") {

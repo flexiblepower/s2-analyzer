@@ -44,6 +44,7 @@ class WebSocketClient {
      */
     public onReceive(data: string): void {
         const message = data.toString();
+
         if (this.receivedMessages.has(message)) {
             console.log("Duplicate message received, ignoring:", message);
             return;
@@ -72,8 +73,7 @@ class WebSocketClient {
             console.warn("WebSocket is not open. Ready state:", this.ws.readyState);
         }
     }
-
-
+    
     public close() {
         this.ws.close()
     }
