@@ -2,6 +2,7 @@ import abc
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
+import json
 
 from pydantic import BaseModel
 from sqlalchemy import Engine
@@ -94,24 +95,29 @@ class MessageStorageProcessor(MessageProcessor):
         with Session(self.engine) as session:
             validation_error = None
 
-            # if message.s2_validation_error:
-            #     validation_error = ValidationError(
-            #         error_details=str(message.s2_validation_error)
-            #     )
-            #     session.add(validation_error)
-            #     session.commit()
+            LOGGER.info("---------------------------------------------")
+            LOGGER.info(f"Storing validation error: {message.s2_validation_error}")
 
             db_message = Communication(
                 cem_id=message.cem_id,
                 rm_id=message.rm_id,
                 origin=message.origin.__str__(),
-                s2_msg=message.s2_msg.to_json() if message.s2_msg else None,
+                s2_msg=json.dumps(message.msg),
                 s2_msg_type=message.s2_msg_type,
                 timestamp=message.timestamp,
                 validation_error=validation_error,
             )
-
             session.add(db_message)
+
+            if message.s2_validation_error:
+                for error in message.s2_validation_error.errors:
+                    validation_error = ValidationError(
+                        type=error["type"],
+                        loc=str(error["loc"]),
+                        msg=error["msg"],
+                        communication=db_message,
+                    )
+                    session.add(validation_error)
             session.commit()
 
             return message

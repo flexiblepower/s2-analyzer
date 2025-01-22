@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 
 from fastapi import (
     WebSocket,
@@ -9,6 +9,7 @@ from fastapi import (
     Query,
     HTTPException,
 )
+from s2_analyzer_backend.database import CommunicationWithValidationErrors
 from s2_analyzer_backend.message_processor import (
     DebuggerFrontendMessageProcessor,
 )
@@ -24,6 +25,7 @@ from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.history_filter import HistoryFilter
 
 LOGGER = logging.getLogger(__name__)
+
 
 class DebuggerAPI:
     router: APIRouter
@@ -92,6 +94,7 @@ class DebuggerAPI:
             results = history_filter.get_filtered_records(
                 cem_id, rm_id, origin, s2_msg_type, start_date, end_date
             )
+            
             LOGGER.info(f"Found {len(results)} matching records.")
             return results
         except Exception as e:
