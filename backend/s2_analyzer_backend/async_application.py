@@ -8,7 +8,7 @@ LOGGER = logging.getLogger(__name__)
 ApplicationName = str
 
 
-class AsyncApplicationNotStoppedException(BaseException):
+class AsyncApplicationNotStoppedException(Exception):
     pass
 
 

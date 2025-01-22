@@ -1,11 +1,16 @@
-from fastapi import HTTPException, Query, Depends
+from fastapi import HTTPException, Depends
 from typing import Optional, List
 from datetime import datetime
 import logging
 from sqlmodel import Session, select
-from s2_analyzer_backend.database import Communication, get_session
+from s2_analyzer_backend.database import (
+    Communication,
+    get_session,
+    serialize_communication_with_validation_errors,
+)
 
 LOGGER = logging.getLogger(__name__)
+
 
 class HistoryFilter:
     def __init__(self, session: Session = Depends(get_session)):
@@ -42,8 +47,12 @@ class HistoryFilter:
             if end_date:
                 query = query.where(Communication.timestamp <= end_date)
 
-            # Execute the query and return results
-            results = self.session.exec(query).all()
+            results = []
+            for comm in self.session.exec(query).all():
+                results.append(
+                    serialize_communication_with_validation_errors(comm).model_dump()
+                )
+
             return results
 
         except Exception as e:

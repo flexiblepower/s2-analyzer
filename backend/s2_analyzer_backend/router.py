@@ -114,3 +114,8 @@ class MessageRouter:
 
     def connection_has_closed(self, conn: "Connection") -> None:
         del self.connections[(conn.origin_id, conn.dest_id)]
+
+    async def inject_message(self, origin_id, dest_id, message: dict):
+        origin = self.connections.get((origin_id, dest_id))
+
+        await self.route_s2_message(origin, message)
