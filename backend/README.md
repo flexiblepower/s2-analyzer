@@ -1,5 +1,6 @@
 # S2 analyzer backend
 
+
 ## Quickstart
 
 In order to run the s2 analyzer both an S2 resource manager (RM) and an S2 Customer Energy Manager (CEM) are also
@@ -19,6 +20,8 @@ docker compose up --build
 ## Features
 
 The s2 analyzer acts as a man in the middle between a CEM and RM connection. All messages sent between the CEM and RM are forwarded through the S2 analyzer. The S2 analyzer also keeps a history of all messages sent between the CEM and RM. 
+
+FastAPI provides OpenAPI documentation for the API endpoints. The OpenAPI documentation is available at `http://localhost:8001/docs`. Consult this documentation for more information on the available endpoints.
 
 ### CEM & RM Connections
 
@@ -73,6 +76,23 @@ You can inject messages into a channel between 2 CEM or RM devices by sending a 
 ```
 
 This will inject the message into the channel to `rm1` and will look like it came from `cem1`. No validation is performed on this message.
+
+## Design
+
+![Analyzer Structure](../diagrams/s2-project_new_structure.png)
+
+The S2 analyzer backend has 2 distinct parts:
+1. The part that acts as a man in the middle between the CEM and RM device
+2. The debugging and persistence part
+
+Our primary design goal was to keep these 2 parts separate. This involved moving all of the debugging functionality out of the path of the CEM and RM message routing. 
+
+Our second main design goal was to make the processing of messages modular to allow for additional functionality to be added in the future. This is why the message processing is done in a separate module. To this end we created the `MessageProcessorHandler` class which is a pipeline handler. It holds a number of `MessageProcessor` implementations which are called in order to process a message. To add additional functionality to the message processing, a new `MessageProcessor` implementation can be added to the pipeline.
+
+Currently there are 3 Message processors:
+1. `MessageValidator` - Validates the s2 message.
+2. `MessageStorage` - Stores the message and any validation errors in the SQLite database.
+3. `FrontendMessageProcessor` - Sends the message to all open debugger websockets. 
 
 ## Configuration
 Main configuration parameters may be passed through a `.yaml` file. An example:
