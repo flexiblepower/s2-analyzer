@@ -1,5 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import { MaterialReactTable, type MRT_ColumnDef, MRT_RowSelectionState, useMaterialReactTable } from 'material-react-table';
+import {useEffect, useMemo, useRef, useState} from 'react';
+import {
+    MaterialReactTable,
+    type MRT_ColumnDef,
+    MRT_RowSelectionState,
+    MRT_RowVirtualizer, MRT_SortingState,
+    useMaterialReactTable
+} from 'material-react-table';
 import MessageHeader from '../../models/messages/messageHeader';
 import MessagePopUp from '../popups/MessagePopUp';
 
@@ -10,6 +16,9 @@ interface MessageTableProps<T extends MessageHeader> {
 function MessageTable<T extends MessageHeader>({ messages }: MessageTableProps<T>) {
     const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
     const [selectedMessages, setSelectedMessages] = useState<T[]>([]);
+
+    const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
+    const [sorting, setSorting] = useState<MRT_SortingState>([]);
 
     // Memoize columns for performance
     const columns = useMemo<MRT_ColumnDef<T>[]>(() => [
@@ -35,24 +44,38 @@ function MessageTable<T extends MessageHeader>({ messages }: MessageTableProps<T
         },
     ], []);
 
+    useEffect(() => {
+        //scroll to the top of the table when the sorting changes
+        try {
+            rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
+        } catch (error) {
+            console.error(error);
+        }
+    }, [sorting]);
+
     // Use MaterialReactTable hook
     const table = useMaterialReactTable({
         columns,
         data: messages, // Ensure messages are stable or memoized
+        enableBottomToolbar: false,
         enableRowSelection: true,
-        initialState: { pagination: { pageIndex: 0, pageSize: 5 } },
-        autoResetPageIndex: false,
         enableColumnResizing: true,
-        enableStickyHeader: true,
-        enableStickyFooter: true,
+        enableColumnVirtualization: true,
+        enableGlobalFilterModes: true,
+        enablePagination: false,
+        enableColumnPinning: true,
+        enableRowNumbers: true,
+        enableRowVirtualization: true,
 
         getRowId: (row) => row.message_id,
         onRowSelectionChange: setRowSelection,
-        state: { rowSelection },
+        onSortingChange: setSorting,
+        state: { rowSelection, sorting },
+        rowVirtualizerInstanceRef, //optional
+        rowVirtualizerOptions: { overscan: 5 }, //optionally customize the row virtualizer
+        columnVirtualizerOptions: { overscan: 2 }, //optionally customize the column virtualizer
 
-        muiTableProps: {
-            sx: {height: 'calc(100vh - 300px)'},
-        },
+        muiTableContainerProps: { sx: { height: 'calc(100vh - 300px)' } },
         muiTableBodyRowProps: ({ row }) => ({
             onClick: row.getToggleSelectedHandler(),
             sx: {

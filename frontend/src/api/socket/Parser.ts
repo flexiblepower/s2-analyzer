@@ -19,13 +19,23 @@ import UsageForecast from "../../models/messages/frbc/usageForecast.ts";
 import SessionRequest from "../../models/messages/sessionRequest.ts";
 import {BackendMessage} from "../apiTypes.ts";
 
-export class Parser {
+class Parser {
+    static #instance: Parser;
     private messageMap: MessageHeader[] = [];
     private bufferedMessages: MessageHeader[] = [];
     private lines: string = "";
     private bufferedLines: string = "";
     private errors: string[] = [];
     private isPaused: boolean = false;
+
+    private constructor() {};
+
+    public static get instance(): Parser {
+        if (!Parser.#instance) {
+            Parser.#instance = new Parser();
+        }
+        return Parser.#instance;
+    }
 
     /**
      * Returns the current lines to be displayed by the Terminal Component
@@ -233,8 +243,5 @@ export class Parser {
     }
 }
 
-// Create a singleton instance of the Parser class
-const parser = new Parser();
-
 // Export the singleton instance
-export {parser};
+export const parser = Parser.instance;
