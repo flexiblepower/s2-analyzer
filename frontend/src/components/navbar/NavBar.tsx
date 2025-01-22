@@ -1,6 +1,6 @@
-import {useState, useRef} from "react";
+import { useState, useRef } from "react";
 import s2AnalyzerLogo from "../../assets/s2AnalyzerLogo.png";
-import {Filters} from "../../models/dataStructures/filters.ts";
+import { Filters } from "../../models/dataStructures/filters.ts";
 import FilterMenu from "./navbar_items/FilterMenu.tsx";
 import SearchBar from "./navbar_items/SearchBar.tsx";
 import useToggle from "../../hooks/useToggle";
@@ -17,6 +17,7 @@ interface NavBarProps {
     getFiles: () => void;
     pauseMessages: () => void;
     isPaused: boolean;
+    toggleMode: () => void;
 }
 
 const NavigationBar = ({
@@ -30,7 +31,7 @@ const NavigationBar = ({
                            getFiles,
                            pauseMessages,
                            isPaused,
-                       }: NavBarProps) => {
+                           toggleMode}: NavBarProps) => {
     const [isVisibleFilterMenu, toggleFilterMenu] = useToggle(false);
     const [showAllOptions, toggleAllOptions] = useToggle(false);
     const [showSpecialKeys, toggleSpecialKeys] = useToggle(false);
@@ -49,16 +50,26 @@ const NavigationBar = ({
         () => { if (showSpecialKeys) { toggleSpecialKeys(); } }
     ]);
 
+    const buttonConfigs = [
+        { onClick: toggleSideBar, label: "Ξ" },
+        { onClick: toggleMode, label: "Change Mode" },
+        { onClick: toggleView, label: "Toggle View" },
+        { onClick: pauseMessages, label: isPaused ? "Continue Real-Time" : "Pause Real-Time" },
+        { onClick: toggleFilterMenu, label: "Filters", isFilter: true },
+        { onClick: changeAlignment, label: "Change Alignment" },
+        { onClick: toggleSpecialKeys, label: "Special Keys", isSpecialKey: true },
+        { onClick: getFiles, label: "Load File" },
+    ];
+
     return (
-        <nav className="bg-base-gray w-full z-20 top-0 start-0 border-b border-tno-blue">
-            <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+        <nav className="bg-base-gray w-full z-10 top-0 start-0 border-b border-tno-blue">
+            <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto py-2 px-4">
                 <a href="https://s2standard.org/" className="flex items-center space-x-3 rtl:space-x-reverse" target="_blank" rel="noopener noreferrer">
-                    <img src={s2AnalyzerLogo} className="h-10" alt="TNO Logo" />
+                    <img src={s2AnalyzerLogo} className="h-8" alt="TNO Logo" />
                 </a>
-                <button
-                    type="button"
-                    className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-tno-blue"
-                    onClick={toggleAllOptions}
+                <button type="button"
+                        className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-tno-blue"
+                        onClick={toggleAllOptions}
                 >
                     <span className="sr-only">Open main menu</span>
                     <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
@@ -66,18 +77,10 @@ const NavigationBar = ({
                     </svg>
                 </button>
                 <div className={`${showAllOptions ? "flex" : "hidden"} items-center justify-start w-full md:flex md:w-auto md:order-1 mt-2 md:mt-0`}>
-                    <ul className="flex flex-col md:flex-row md:space-x-8 md:border-0">
-                        {[
-                            { onClick: toggleSideBar, label: "Ξ" },
-                            { onClick: toggleView, label: "Toggle View" },
-                            { onClick: pauseMessages, label: isPaused ? "Continue Real-Time" : "Pause Real-Time" },
-                            { onClick: getFiles, label: "Load File" },
-                            { onClick: toggleFilterMenu, label: "Filters", isFilter: true },
-                            { onClick: changeAlignment, label: "Change Alignment" },
-                            { onClick: toggleSpecialKeys, label: "Special Keys", isSpecialKey: true },
-                        ].map((button, index) => (
+                    <ul className="flex flex-col md:flex-row md:space-x-4 md:border-0">
+                        {buttonConfigs.map((button, index) => (
                             <li key={index}>
-                                <button className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0" onClick={button.onClick}>
+                                <button className="block py-1 px-2 md:py-1 md:px-2 text-white rounded md:hover:text-tno-blue md:p-0" onClick={button.onClick}>
                                     {button.label}
                                 </button>
                                 {button.isFilter && (

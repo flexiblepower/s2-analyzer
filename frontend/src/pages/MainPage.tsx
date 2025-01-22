@@ -3,14 +3,13 @@ import NavBar from "../components/navbar/NavBar";
 import MessageHeader from "../models/messages/messageHeader";
 import { Filters } from "../models/dataStructures/filters";
 import Sidebar from "../components/navbar/navbar_items/Sidebar";
-import TerminalController from "../components/terminal/Terminal";
 import useFilters from "../hooks/useFilters";
 import useSearch from "../hooks/useSearch";
 import WebSocketClient from "../api/socket/Socket";
-import MessageWidget from "../components/messages/MessageWidget";
-import MessageTable from "../components/messages/MessageTable";
 import useToggle from "../hooks/useToggle";
 import {parser} from "../api/socket/Parser.ts";
+import HistoricalMessages from "../components/HistoricalMessages.tsx";
+import RealTimeMessages from "../components/RealTimeMessages.tsx";
 
 const MainPage = () => {
     const [messages, setMessages] = useState<MessageHeader[]>([]); // State for storing message data
@@ -18,6 +17,7 @@ const MainPage = () => {
     const [searchedMessage, setSearchedMessage] = useState(""); // State for searched message id
     const [isWidgetView, toggleWidgetView] = useToggle(false); // Using useToggle for widget view toggle
     const [isSideBarVisible, toggleSideBar] = useToggle(false); // Using useToggle for sidebar visibility
+    const [isRealTime, toggleRealTime] = useToggle(true);
 
     // State for selected filters
     const [selectedFilters, setSelectedFilters] = useState<Filters>({
@@ -102,6 +102,7 @@ const MainPage = () => {
                         getFiles={getFiles}
                         pauseMessages={pauseMessages}
                         isPaused={parser.getIsPaused()}
+                        toggleMode={toggleRealTime}
                 />
             </div>
             {isSideBarVisible && (
@@ -109,19 +110,14 @@ const MainPage = () => {
                     <Sidebar errors={parser.getErrors()}/>
                 </div>
             )}
-            <div className={`col-start-1 col-end-13 row-start-1 row-end-12 flex items-center ${alignment}`}>
-                {isWidgetView ? (
-                    <MessageWidget<MessageHeader> searchedMessages={searchedMessages}/>
-                ) : (
-                    <MessageTable messages={searchedMessages}/>
-                )}
-            </div>
-            <div className="col-start-1 col-end-13 row-start-12 row-end-13 z-40">
-                <TerminalController parserLines={parser.getLines()}/>
-            </div>
+            {isRealTime ? (
+                <RealTimeMessages isWidgetView={isWidgetView} searchedMessages={searchedMessages} alignment={alignment}
+                parserLines={parser.getLines()}/>
+            ) : (
+                <HistoricalMessages isWidgetView={isWidgetView}/>
+            )}
         </div>
     );
-
 };
 
 export default MainPage;

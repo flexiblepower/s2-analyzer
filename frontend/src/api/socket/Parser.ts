@@ -133,7 +133,7 @@ class Parser {
      * @param messageStr - The message to extract the header from, passed as a JSON string
      * @returns The extracted header or null if extraction failed
      */
-    private extractHeader(messageStr: string): MessageHeader | null {
+    public extractHeader(messageStr: string): MessageHeader | null {
         try {
             const parsedBackendMessage: BackendMessage = JSON.parse(messageStr);
 
