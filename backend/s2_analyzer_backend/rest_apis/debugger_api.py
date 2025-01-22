@@ -105,6 +105,7 @@ class DebuggerAPI:
         LOGGER.info(
             f"Received history filter request: cem_id={cem_id}, rm_id={rm_id}, origin={origin}, s2_msg_type={s2_msg_type}, start_date={start_date}, end_date={end_date}"
         )
+
         try:
             # Fetch filtered records
             results = history_filter.get_filtered_records(
