@@ -10,7 +10,7 @@ const [minWidth, maxWidth, defaultWidth] = [
     window.innerWidth / 4,
 ];
 
-function Sidebar({ errors }: SidebarProps) {
+function ErrorSidebar({ errors }: SidebarProps) {
     const [width, setWidth] = useState(defaultWidth);
     const isResizing = useRef(false);
 
@@ -63,4 +63,4 @@ function Sidebar({ errors }: SidebarProps) {
     );
 }
 
-export default Sidebar;
+export default ErrorSidebar;

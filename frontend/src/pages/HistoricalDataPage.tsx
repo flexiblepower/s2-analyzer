@@ -4,14 +4,10 @@ import BackendContext from "../BackendContext.tsx";
 import { api } from "../api/api.ts";
 import { parser } from "../api/socket/Parser.ts";
 import MessageHeader from "../models/messages/messageHeader.ts";
-import MessageWidget from "./messages/MessageWidget.tsx";
-import MessageTable from "./messages/MessageTable.tsx";
+import MessageTable from "../components/messages/MessageTable.tsx";
+import NavBar from "../components/actionbar/ActionBar.tsx";
 
-interface HistoricalMessagesProps {
-    isWidgetView: boolean;
-}
-
-const HistoricalMessages = ({isWidgetView}: HistoricalMessagesProps) => {
+const HistoricalDataPage = () => {
     const backendUrl = useContext(BackendContext);
     const [filters, setFilters] = useState<FilterQuery>({
         cem_id: '',
@@ -61,14 +57,17 @@ const HistoricalMessages = ({isWidgetView}: HistoricalMessagesProps) => {
     ];
 
     return (
-        <>
+        <div className="w-full h-screen m-auto bg-base-backgroung grid grid-cols-12 grid-rows-12">
             <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white">
                 Historical Data
+            </div>
+            <div className="col-start-1 col-end-13 row-start-0 row-end-1 z-40">
+                <NavBar/>
             </div>
             <div className="col-start-1 col-end-13 row-start-2 row-end-5 flex gap-4">
                 {/* Filter Inputs */}
                 <div className="flex-1 grid lg:grid-cols-3 gap-4">
-                    {filterFields.map(({ name, placeholder, type }) => (
+                    {filterFields.map(({name, placeholder, type}) => (
                         <input key={name}
                                type={type}
                                name={name}
@@ -87,15 +86,11 @@ const HistoricalMessages = ({isWidgetView}: HistoricalMessagesProps) => {
 
                 {/* Results Display */}
                 <div>
-                    {isWidgetView ? (
-                        <MessageWidget<MessageHeader> messages={data || []} />
-                    ) : (
-                        <MessageTable messages={data || []} />
-                    )}
+                    <MessageTable messages={data || []}/>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
-export default HistoricalMessages;
+export default HistoricalDataPage;

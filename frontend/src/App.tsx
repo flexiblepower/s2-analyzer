@@ -1,6 +1,9 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import BackendContext from "./BackendContext";
-import MainPage from "./pages/MainPage.tsx";
+import {BrowserRouter as Router, Navigate, Route, Routes} from 'react-router-dom';
+import BackendContext from './BackendContext';
+import RealtimeDataPage from './pages/RealtimeDataPage.tsx';
+import HistoricalDataPage from "./pages/HistoricalDataPage.tsx";
+import {useState} from "react";
+import NavSidebarComponent from "./pages/NavSidebar.tsx";
 
 /**
  * The Visual Application that contains the page(s) (or components)
@@ -8,14 +11,29 @@ import MainPage from "./pages/MainPage.tsx";
  */
 function App() {
     const backend = 'http://localhost:8001';
+    const [toggled, setToggled] = useState(false);
 
     return (
         <Router>
-            {/* Wrap the Routes in BackendContext.Provider */}
             <BackendContext.Provider value={backend}>
-                <Routes>
-                    <Route path="/" element={<MainPage/>} />
-                </Routes>
+                <div className="flex">
+                    {/* ErrorSidebar */}
+                    <NavSidebarComponent toggled={toggled} setToggled={setToggled} />
+
+                    {/* Main Content */}
+                    <main className="flex-1 bg-base-gray">
+                        <button className="w-full bg-tno-blue" onClick={() => setToggled(!toggled)}
+                                style={{ color: 'white' }}
+                        >
+                            Toggle Navigation Menu
+                        </button>
+                        <Routes>
+                            <Route path="/" element={<Navigate to="/real-time" />} />
+                            <Route path="/real-time" element={<RealtimeDataPage />} />
+                            <Route path="/historical-data" element={<HistoricalDataPage/>} />
+                        </Routes>
+                    </main>
+                </div>
             </BackendContext.Provider>
         </Router>
     );

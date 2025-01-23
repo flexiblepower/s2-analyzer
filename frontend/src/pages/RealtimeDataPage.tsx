@@ -1,23 +1,23 @@
 import {useState, useEffect} from 'react';
-import NavBar from "../components/navbar/NavBar";
+import NavBar from "../components/actionbar/ActionBar.tsx";
 import MessageHeader from "../models/messages/messageHeader";
 import { Filters } from "../models/dataStructures/filters";
-import Sidebar from "../components/navbar/navbar_items/Sidebar";
+import ErrorSidebar from "../components/actionbar/actionbar_items/ErrorSidebar.tsx";
 import useFilters from "../hooks/useFilters";
 import useSearch from "../hooks/useSearch";
 import WebSocketClient from "../api/socket/Socket";
 import useToggle from "../hooks/useToggle";
 import {parser} from "../api/socket/Parser.ts";
-import HistoricalMessages from "../components/HistoricalMessages.tsx";
-import RealTimeMessages from "../components/RealTimeMessages.tsx";
+import MessageWidget from "../components/messages/MessageWidget.tsx";
+import MessageTable from "../components/messages/MessageTable.tsx";
+import TerminalController from "../components/terminal/Terminal.tsx";
 
-const MainPage = () => {
+const RealtimeDataPage = () => {
     const [messages, setMessages] = useState<MessageHeader[]>([]); // State for storing message data
     const [alignment, setAlignment] = useState("justify-center"); // State for alignment of message widget
     const [searchedMessage, setSearchedMessage] = useState(""); // State for searched message id
     const [isWidgetView, toggleWidgetView] = useToggle(false); // Using useToggle for widget view toggle
     const [isSideBarVisible, toggleSideBar] = useToggle(false); // Using useToggle for sidebar visibility
-    const [isRealTime, toggleRealTime] = useToggle(true);
 
     // State for selected filters
     const [selectedFilters, setSelectedFilters] = useState<Filters>({
@@ -102,22 +102,28 @@ const MainPage = () => {
                         getFiles={getFiles}
                         pauseMessages={pauseMessages}
                         isPaused={parser.getIsPaused()}
-                        toggleMode={toggleRealTime}
                 />
             </div>
             {isSideBarVisible && (
                 <div className={"col-start-1 col-end-5 row-start-1 row-end-12 z-10"}>
-                    <Sidebar errors={parser.getErrors()}/>
+                    <ErrorSidebar errors={parser.getErrors()}/>
                 </div>
             )}
-            {isRealTime ? (
-                <RealTimeMessages isWidgetView={isWidgetView} searchedMessages={searchedMessages} alignment={alignment}
-                parserLines={parser.getLines()}/>
-            ) : (
-                <HistoricalMessages isWidgetView={isWidgetView}/>
-            )}
+            <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white">
+                Real-Time Data
+            </div>
+            <div className={`col-start-1 col-end-13 row-start-1 row-end-12 flex items-center ${alignment}`}>
+                {isWidgetView ? (
+                    <MessageWidget<MessageHeader> messages={searchedMessages} />
+                ) : (
+                    <MessageTable messages={searchedMessages} />
+                )}
+            </div>
+            <div className="col-start-1 col-end-13 row-start-12 row-end-13 z-40">
+                <TerminalController parserLines={parser.getLines()} />
+            </div>
         </div>
     );
 };
 
-export default MainPage;
+export default RealtimeDataPage;

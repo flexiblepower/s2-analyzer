@@ -23,7 +23,7 @@ This project involves the development of a frontend to TNO’s S2-Analyzer.
 
 ## Project Description
 
-S2-Analyzer is a program that verifies and logs messages exchanged between two devices (namely a Resource Manager and a Client Energy Manager) as defined by the S2 Standard and its FRBC (Fill Rate Based Control) Control Type. In this project, we developed Single MainPage Application to visualize connection histories and adding additional features such as filtering capabilities.
+S2-Analyzer is a program that verifies and logs messages exchanged between two devices (namely a Resource Manager and a Client Energy Manager) as defined by the S2 Standard and its FRBC (Fill Rate Based Control) Control Type. In this project, we developed Single RealtimeDataPage Application to visualize connection histories and adding additional features such as filtering capabilities.
 
 ## Running the Application
 
@@ -73,7 +73,7 @@ docker compose up --build
 ## Frontend Features
 Here is an exhaustive list of the application's features:
 
-### Sidebar Menu
+### ErrorSidebar Menu
 By clicking the sidebar icon on the navigation bar (the three horizontal lines) a resizable container will appear on the left side of the screen.
 Here, all the parsing errors will be listed alongside the number of the line where they occurred. This number corresponds to their line number as seen in the Terminal View.
 To close this view, simply press the same button again.

@@ -37,7 +37,7 @@ function SearchBar({searchId, onSearchChange}: SearchBarProps) {
                           d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
                     />
                 </svg>
-                <Combobox.Input className="p-2 w-auto border border-white rounded-lg"
+                <Combobox.Input className="py-0.5 w-auto border border-white rounded-lg"
                                 placeholder="Search Messages by ID"
                                 onChange={(event) => onSearchChange(event.target.value)}
                 />
