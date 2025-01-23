@@ -3,9 +3,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 import logging
 
-from s2python.s2_parser import S2Parser
-
-from s2_analyzer_backend.origin_type import S2OriginType
 from s2_analyzer_backend.message_processor import Message, MessageProcessorHandler
 from s2_analyzer_backend.envelope import Envelope
 
@@ -18,12 +15,10 @@ LOGGER = logging.getLogger(__name__)
 
 class MessageRouter:
     connections: dict[tuple[str, str], "Connection"]
-    s2_parser: "S2Parser"
     _buffer_queue_by_origin_dest_id: dict[tuple[str, str], asyncio.Queue]
 
     def __init__(self, msg_processor_handler: MessageProcessorHandler) -> None:
         self.connections = {}
-        self.s2_parser = S2Parser()
         self._msg_processor_handler = msg_processor_handler
         self._buffer_queue_by_origin_dest_id = {}
 
