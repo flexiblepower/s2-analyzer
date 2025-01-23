@@ -3,10 +3,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 import logging
 
-from s2python.s2_parser import S2Parser
-from s2python.s2_validation_error import S2ValidationError
-
-from s2_analyzer_backend.origin_type import S2OriginType
 from s2_analyzer_backend.message_processor import Message, MessageProcessorHandler
 from s2_analyzer_backend.envelope import Envelope
 
