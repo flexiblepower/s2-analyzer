@@ -1,74 +1,66 @@
-import { useState, useEffect, useRef } from "react";
-import { parser } from "../../../parser/Parser.ts";
+import {useState, useEffect, useRef} from "react";
+
+interface SidebarProps {
+    errors: string[];
+}
 
 const [minWidth, maxWidth, defaultWidth] = [
-  200,
-  window.innerWidth / 2,
-  window.innerWidth / 4,
+    200,
+    window.innerWidth / 2,
+    window.innerWidth / 4,
 ];
 
-/**
- * Sidebar component that displays parser errors and allows resizing
- * @returns The Sidebar component
- */
-function Sidebar() {
-  const [width, setWidth] = useState(defaultWidth);
-  const isResized = useRef(false);
+function Sidebar({ errors }: SidebarProps) {
+    const [width, setWidth] = useState(defaultWidth);
+    const isResizing = useRef(false);
 
-  useEffect(() => {
-    // Handle mousemove event to resize the sidebar
-    window.addEventListener("mousemove", (e) => {
-      if (!isResized.current) {
-        return;
-      }
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (isResizing.current) {
+                const newWidth = e.clientX;
+                setWidth((newWidth >= minWidth && newWidth <= maxWidth) ? newWidth : width);
+            }
+        };
 
-      setWidth((previousWidth) => {
-        const newWidth = previousWidth + e.movementX / 3;
+        const stopResizing = () => {
+            isResizing.current = false;
+            document.body.style.cursor = 'default';
+        };
 
-        const isWidthInRange = newWidth >= minWidth && newWidth <= maxWidth;
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", stopResizing);
 
-        return isWidthInRange ? newWidth : previousWidth;
-      });
-    });
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", stopResizing);
+        };
+    }, [width]);
 
-    // Handle mouseup event to stop resizing
-    window.addEventListener("mouseup", () => {
-      isResized.current = false;
-    });
-  }, []);
+    const startResizing = () => {
+        isResizing.current = true;
+        document.body.style.cursor = 'col-resize';
+    };
 
-  return (
-    <div className="overflow-auto flex absolute transition-colors">
-      <div
-        style={{ width: `${width / 16}rem`, height: window.innerHeight * 0.86 }}
-        className="border-tno-blue border-r bg-base-gray"
-      >
-        <h1 className={"text-lg text-white"}>All errors:</h1>
-        {parser.getErrors().length != 0 &&
-          parser.getErrors().map((s: string, index) => {
-            return (
-              <pre
-                key={index}
-                className={"text-white overflow-auto bg-base-gray"}
-                style={{ maxWidth: width, overflowX: "hidden" }}
-              >
-                {s}
-              </pre>
-            );
-          })}
-        {parser.getErrors().length == 0 && (
-          <pre className={"text-white"}>None.</pre>
-        )}
-      </div>
-
-      <div
-        className="w-2 cursor-col-resize"
-        onMouseDown={() => {
-          isResized.current = true;
-        }}
-      />
-    </div>
-  );
+    return (
+        <div className="flex absolute overflow-auto transition-colors">
+            <div style={{ width: `${width}px`, height: '86vh' }} className="border-tno-blue border-r bg-base-gray">
+                <h1 className="text-lg text-white">All errors:</h1>
+                {errors.length ? (
+                    errors.map((s, index) => (
+                        <pre key={index}
+                             className="text-white overflow-auto bg-base-gray"
+                             style={{ maxWidth: width, overflowX: "hidden" }}
+                        >
+                            {s}
+                        </pre>
+                    ))
+                ) : (
+                    <pre className="text-white">None.</pre>
+                )}
+            </div>
+            <div className="w-2 cursor-col-resize" onMouseDown={startResizing}/>
+        </div>
+    );
 }
 
 export default Sidebar;

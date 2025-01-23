@@ -15,11 +15,9 @@ from s2_analyzer_backend.async_application import APPLICATIONS
 if TYPE_CHECKING:
     from fastapi import WebSocket
     from s2_analyzer_backend.router import MessageRouter
-    from s2_analyzer_backend.envelope import Envelope, S2Message
-    from backend.device_simulation.cem_model_simple.model import Model
+    from s2_analyzer_backend.envelope import Envelope
     from s2_analyzer_backend.origin_type import S2OriginType
     from s2_analyzer_backend.async_application import ApplicationName
-    from s2_analyzer_backend.history import MessageHistory
     from s2_analyzer_backend.message_processor import Message
 
 
@@ -51,14 +49,6 @@ class Connection(AsyncApplication, ABC):
         self.s2_origin_type = origin_type
         self.msg_router = msg_router
         self._queue = asyncio.Queue()
-
-    @abstractmethod
-    def get_connection_type(self):
-        return ConnectionType(type(self))
-
-    @property
-    def destination_type(self):
-        return self.s2_origin_type.reverse()
 
     async def receive_envelope(self, envelope: "Envelope") -> None:
         await self._queue.put(envelope)
@@ -93,10 +83,7 @@ class WebSocketConnection(Connection):
         self.websocket = websocket
 
     def __str__(self):
-        return f"Websocket connection {self.origin_id}->{self.dest_id}"
-
-    def get_connection_type(self):
-        return ConnectionType.WEBSOCKET
+        return f"Websocket Connection {self.origin_id}->{self.dest_id} ({self.s2_origin_type.name})"
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         try:
@@ -170,18 +157,6 @@ class WebSocketConnection(Connection):
                 )
 
 
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, UUID):
-            # Convert UUID to a string
-            return str(obj)
-        elif isinstance(obj, datetime):
-            # Convert datetime to ISO 8601 string format
-            return obj.isoformat()
-        # Call the default method for other types
-        return super().default(obj)
-
-
 class DebuggerFrontendWebsocketConnection(AsyncApplication):
     _queue: "asyncio.Queue[Message]"
 
@@ -208,8 +183,6 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
                     )
                 else:
                     raise exc from exc_group
-        finally:
-            pass
 
     async def enqueue_message(self, message: "Message") -> None:
         await self._queue.put(message)
@@ -219,8 +192,14 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
             message_str = None
             try:
                 message_str = await self.websocket.receive_text()
-                LOGGER.debug("Received message across websocket: %s", message_str)
-                message = json.loads(message_str)
+
+                if message_str == "ping":
+                    LOGGER.debug("Received ping message from frontend.")
+                    await self.websocket.send_text("pong")
+                    continue
+                else:
+                    LOGGER.debug("Received message across websocket: %s", message_str)
+                    message = json.loads(message_str)
 
                 # TODO: Do something with message? Or just block.
 
@@ -234,16 +213,6 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
     async def sender(self) -> None:
         while self._running:
             message: Message = await self._queue.get()
-
-            LOGGER.info(message.model_dump_json())
-            # content = {
-            #     "cem_id": message.cem_id,
-            #     "rm_id": message.rm_id,
-            #     "origin": message.origin.__str__(),
-            #     "message": message.s2_msg.to_dict() if message.s2_msg else None,
-            #     "message_type": message.s2_msg_type,
-            #     # "timestamp": message.timestamp,
-            # }
 
             try:
                 await self.websocket.send_text(message.model_dump_json())
@@ -270,8 +239,3 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
             self._main_task.cancel("Request to stop")
         else:
             LOGGER.warning("Connection %s was already stopped!", self)
-
-
-class ConnectionType(Enum):
-    WEBSOCKET = "WebSocketConnection"
-    MODEL = "ModelConnection"

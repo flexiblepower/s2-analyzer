@@ -1,4 +1,4 @@
-import { Parser } from "../../src/parser/Parser";
+import { Parser } from "../../src/api/socket/Parser";
 
 /**
  * Unit tests for the Parser.

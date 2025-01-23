@@ -8,7 +8,7 @@ import { useState } from "react";
 import MessageHeader from "../../models/messages/messageHeader.ts";
 
 interface Props {
-  header: MessageHeader;
+    header: MessageHeader;
 }
 
 /**
@@ -16,69 +16,47 @@ interface Props {
  * @param props - The properties for the ReceptionStatusIcon component, including a message header
  * @returns The ReceptionStatusIcon component
  */
-function ReceptionStatusIcon(props: Props) {
-  const [isPopUpVisible, setIsPopUpVisible] = useState(false);
+function ReceptionStatusIcon({ header }: Props) {
+    const [isPopUpVisible, setIsPopUpVisible] = useState(false);
 
-  let imgSrc = Valid;
-  let label = "";
+    // Mapping status labels to image sources
+    const statusMap: { [key: string]: string } = {
+        revoked: Revoked,
+        buffered: Buffered,
+        invalid: Error,
+    };
 
-  if (typeof props.header.status == "object") {
-    label = props.header.status.status;
-  } else {
-    label = props.header.status.split(" ")[0];
-  }
+    const statusLabel = typeof header.status === "object" ? header.status.status : header.status.split(" ")[0];
+    const imgSrc = statusMap[statusLabel] || Valid;
 
-  // Determine the appropriate image source based on the status label
-  if (label === "revoked") {
-    imgSrc = Revoked;
-  } else if (label === "buffered") {
-    imgSrc = Buffered;
-  } else if (label === "invalid") {
-    imgSrc = Error;
-  }
+    // Create the ReceptionStatus object
+    const createReceptionStatus = (text: string) => ({
+        time: header.time,
+        sender: header.sender,
+        receiver: header.receiver,
+        message_type: "ReceptionStatus",
+        subject_message_id: header.message_id,
+        status: text,
+    } as ReceptionStatus);
 
-  /**
-   * Creates a ReceptionStatus object
-   * @param text - The status text
-   * @returns A ReceptionStatus object
-   */
-  const createReceptionStatus = (text: string) => {
-    return {
-      time: props.header.time,
-      sender: props.header.sender,
-      receiver: props.header.receiver,
-      message_type: "ReceptionStatus",
-      subject_message_id: props.header.message_id,
-      status: text,
-    } as ReceptionStatus;
-  };
-
-  return (
-    <>
-      {/* Pop-up component for displaying reception status details */}
-      <MessagePopUp<ReceptionStatus>
-        trigger={isPopUpVisible}
-        setTrigger={setIsPopUpVisible}
-        message={
-          typeof props.header.status == "object"
-            ? props.header.status
-            : createReceptionStatus(
-                props.header.status.replace("invalid", "Invalid because:\n")
-              )
-        }
-      />
-      {/* Status icon with click handler to toggle pop-up visibility */}
-      <img
-        className="cursor-pointer"
-        onClick={() => setIsPopUpVisible(!isPopUpVisible)}
-        onKeyDown={() => setIsPopUpVisible(!isPopUpVisible)}
-        src={imgSrc}
-        alt={label}
-        title={label}
-        style={{ width: "15px", height: "15px", marginLeft: "0.2em" }}
-      />
-    </>
-  );
+    return (
+        <>
+            <MessagePopUp<ReceptionStatus>
+                trigger={isPopUpVisible}
+                setTrigger={setIsPopUpVisible}
+                message={typeof header.status === "object"
+                        ? header.status : createReceptionStatus(header.status.replace("invalid", "Invalid because:\n"))}
+            />
+            <img className="cursor-pointer"
+                 onClick={() => setIsPopUpVisible((prev) => !prev)}
+                 onKeyDown={() => setIsPopUpVisible((prev) => !prev)}
+                 src={imgSrc}
+                 alt={statusLabel}
+                 title={statusLabel}
+                 style={{ width: "15px", height: "15px", marginLeft: "0.2em" }}
+            />
+        </>
+    );
 }
 
 export default ReceptionStatusIcon;

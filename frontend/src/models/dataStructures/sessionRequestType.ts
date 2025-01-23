@@ -1,4 +1,4 @@
 export enum SessionRequestType {
-  RECONNECT = "RECONNECT",
-  TERMINATE = "TERMINATE",
+    RECONNECT = "RECONNECT",
+    TERMINATE = "TERMINATE",
 }

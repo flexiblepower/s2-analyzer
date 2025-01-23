@@ -2,6 +2,7 @@ import abc
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
+import json
 
 from pydantic import BaseModel
 from sqlalchemy import Engine
@@ -9,16 +10,17 @@ from sqlmodel import Session
 from s2_analyzer_backend.connection import DebuggerFrontendWebsocketConnection
 from s2_analyzer_backend.database import Communication, ValidationError
 from s2_analyzer_backend.origin_type import S2OriginType
-from s2_analyzer_backend.envelope import Envelope
 from s2_analyzer_backend.async_application import LOGGER, AsyncApplication
 
 from s2python.s2_parser import S2Parser, S2Message
 from s2python.s2_validation_error import S2ValidationError
 
+
 class MessageValidationDetails(BaseModel):
     msg: str
-    errors : list[dict] | None
-    
+    errors: list[dict] | None
+
+
 class Message(BaseModel):
     cem_id: str
     rm_id: str
@@ -67,7 +69,9 @@ class MessageParserProcessor(MessageProcessor):
             s2_message = self.s2_parser.parse_as_any_message(message.msg)
         except S2ValidationError as e:
             LOGGER.warning(e.pydantic_validation_error.json())
-            validation_error = MessageValidationDetails(msg=e.msg, errors=e.pydantic_validation_error.errors())
+            validation_error = MessageValidationDetails(
+                msg=e.msg, errors=e.pydantic_validation_error.errors()
+            )
             # validation_error = e
             # raise ValueError(f"Error parsing message: {e}")
             # LOGGER.exception(f"Error parsing message: {e}")
@@ -87,43 +91,48 @@ class MessageStorageProcessor(MessageProcessor):
 
     async def process_message(
         self, message: Message, loop: asyncio.AbstractEventLoop
-    ) -> str:
+    ) -> Message:
         with Session(self.engine) as session:
             validation_error = None
-
-            # if message.s2_validation_error:
-            #     validation_error = ValidationError(
-            #         error_details=str(message.s2_validation_error)
-            #     )
-            #     session.add(validation_error)
-            #     session.commit()
 
             db_message = Communication(
                 cem_id=message.cem_id,
                 rm_id=message.rm_id,
                 origin=message.origin.__str__(),
-                s2_msg=message.s2_msg.to_json() if message.s2_msg else None,
+                s2_msg=json.dumps(message.msg),
                 s2_msg_type=message.s2_msg_type,
                 timestamp=message.timestamp,
                 validation_error=validation_error,
             )
-
             session.add(db_message)
+
+            if message.s2_validation_error:
+                for error in message.s2_validation_error.errors:
+                    validation_error = ValidationError(
+                        type=error["type"],
+                        loc=str(error["loc"]),
+                        msg=error["msg"],
+                        communication=db_message,
+                    )
+                    session.add(validation_error)
             session.commit()
 
             return message
-        
+
+
 class DebuggerFrontendMessageProcessor(MessageProcessor):
-    connections : list[DebuggerFrontendWebsocketConnection] 
+    connections: list[DebuggerFrontendWebsocketConnection]
 
     def __init__(self):
         self.connections = []
-        
+
     def add_connection(self, connection: DebuggerFrontendWebsocketConnection):
         LOGGER.info(f"Adding connection: {connection}")
         self.connections.append(connection)
-    
-    async def process_message(self, message: Message, loop: asyncio.AbstractEventLoop) -> str:
+
+    async def process_message(
+        self, message: Message, loop: asyncio.AbstractEventLoop
+    ) -> Message:
         LOGGER.info(f"Sending message to debugger frontends. {len(self.connections)}")
         closed_connections = []
         for i, connection in enumerate(self.connections):
@@ -131,11 +140,11 @@ class DebuggerFrontendMessageProcessor(MessageProcessor):
                 await connection.enqueue_message(message)
             else:
                 closed_connections.append(i)
-        
+
         self.cleanup_closed_connections(closed_connections)
-                
+
         return message
-    
+
     def cleanup_closed_connections(self, closed_connections: list[int]):
         for i in closed_connections:
             self.connections.pop(i)
@@ -157,7 +166,7 @@ class MessageProcessorHandler(AsyncApplication):
     def add_message_processor(self, message_processor: MessageProcessor):
         self.message_processors.append(message_processor)
 
-    def add_message_to_process(self, message: dict):
+    def add_message_to_process(self, message: Message):
         self._queue.put_nowait(message)
 
     async def process_message(self, message: Message, loop: asyncio.AbstractEventLoop):
@@ -180,4 +189,4 @@ class MessageProcessorHandler(AsyncApplication):
         ):
             self._main_task.cancel("Request to stop")
         else:
-            print(f"Message Processor Handler was already stopped!")
+            LOGGER.debug("Message Processor Handler was already stopped!")

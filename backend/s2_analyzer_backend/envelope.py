@@ -3,8 +3,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import uuid1
 
-from s2python.s2_validation_error import S2ValidationError
-
 if TYPE_CHECKING:
     from s2_analyzer_backend.connection import Connection
 

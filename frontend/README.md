@@ -23,7 +23,7 @@ This project involves the development of a frontend to TNO’s S2-Analyzer.
 
 ## Project Description
 
-S2-Analyzer is a program that verifies and logs messages exchanged between two devices (namely a Resource Manager and a Client Energy Manager) as defined by the S2 Standard and its FRBC (Fill Rate Based Control) Control Type. In this project, we developed Single Page Application to visualize connection histories and adding additional features such as filtering capabilities.
+S2-Analyzer is a program that verifies and logs messages exchanged between two devices (namely a Resource Manager and a Client Energy Manager) as defined by the S2 Standard and its FRBC (Fill Rate Based Control) Control Type. In this project, we developed Single MainPage Application to visualize connection histories and adding additional features such as filtering capabilities.
 
 ## Running the Application
 
