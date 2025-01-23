@@ -5,7 +5,7 @@ import { api } from "../api/api.ts";
 import { parser } from "../api/socket/Parser.ts";
 import MessageHeader from "../models/messages/messageHeader.ts";
 import MessageTable from "../components/messages/MessageTable.tsx";
-import NavBar from "../components/actionbar/ActionBar.tsx";
+import ActionBar from "../components/actionbar/ActionBar.tsx";
 
 const HistoricalDataPage = () => {
     const backendUrl = useContext(BackendContext);
@@ -58,15 +58,13 @@ const HistoricalDataPage = () => {
 
     return (
         <div className="w-full h-screen m-auto bg-base-backgroung grid grid-cols-12 grid-rows-12">
-            <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white">
+            <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white py-4">
                 Historical Data
             </div>
-            <div className="col-start-1 col-end-13 row-start-0 row-end-1 z-40">
-                <NavBar/>
-            </div>
+            <ActionBar/>
             <div className="col-start-1 col-end-13 row-start-2 row-end-5 flex gap-4">
                 {/* Filter Inputs */}
-                <div className="flex-1 grid lg:grid-cols-3 gap-4">
+                <div className="flex-1 grid lg:grid-cols-2 gap-3">
                     {filterFields.map(({name, placeholder, type}) => (
                         <input key={name}
                                type={type}
@@ -77,8 +75,8 @@ const HistoricalDataPage = () => {
                                className="w-full max-w-md p-2 rounded-lg"
                         />
                     ))}
-                    <button onClick={fetchHistoricalData}
-                            className="lg:col-span-1 w-full max-w-md p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    <button className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                            onClick={fetchHistoricalData}
                     >
                         Fetch
                     </button>

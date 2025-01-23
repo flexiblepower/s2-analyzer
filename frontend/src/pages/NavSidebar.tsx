@@ -2,12 +2,12 @@ import { Sidebar, Menu, MenuItem, sidebarClasses } from 'react-pro-sidebar';
 import { Link } from 'react-router-dom';
 import s2AnalyzerLogo from '../assets/s2AnalyzerLogo.png';
 
-interface SidebarProps {
+interface NavSidebarProps {
     toggled: boolean;
     setToggled: (arg0: boolean) => void;
 }
 
-const NavSidebarComponent = ({ toggled, setToggled }:SidebarProps) => {
+const NavSidebarComponent = ({ toggled, setToggled }:NavSidebarProps) => {
     return (
         <Sidebar onBackdropClick={() => setToggled(false)}
                  toggled={toggled}
@@ -35,8 +35,9 @@ const NavSidebarComponent = ({ toggled, setToggled }:SidebarProps) => {
                     },
                 }}
             >
-                <MenuItem component={<Link to="/" />}>Real-Time Data</MenuItem>
+                <MenuItem component={<Link to="/real-time" />}>Real-Time Data</MenuItem>
                 <MenuItem component={<Link to="/historical-data" />}>Historical Data</MenuItem>
+                <MenuItem component={<Link to="/validate-message" />}>Validate Message</MenuItem>
             </Menu>
         </Sidebar>
     );

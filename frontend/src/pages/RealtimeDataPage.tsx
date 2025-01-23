@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import NavBar from "../components/actionbar/ActionBar.tsx";
+import ActionBar from "../components/actionbar/ActionBar.tsx";
 import MessageHeader from "../models/messages/messageHeader";
 import { Filters } from "../models/dataStructures/filters";
 import ErrorSidebar from "../components/actionbar/actionbar_items/ErrorSidebar.tsx";
@@ -82,8 +82,6 @@ const RealtimeDataPage = () => {
         setSearchedMessage(search);
     };
 
-    // Get files and pause messages logic
-    const getFiles = async () => setMessages(await parser.parseLogFile());
     const pauseMessages = () => parser.setPause(!parser.getIsPaused());
 
     const filteredMessages = useFilters(messages, selectedFilters);         // Get filtered messages based on selected filters
@@ -91,26 +89,23 @@ const RealtimeDataPage = () => {
 
     return (
         <div className="w-full h-screen m-auto bg-base-backgroung grid grid-cols-12 grid-rows-12">
-            <div className="col-start-1 col-end-13 row-start-0 row-end-1 z-40">
-                <NavBar filters={selectedFilters}
-                        onFilterChange={handleFilterChange}
-                        search={searchedMessage}
-                        onSearchChange={handleSearch}
-                        onAlignmentChange={setAlignment}
-                        toggleSideBar={toggleSideBar}
-                        toggleView={toggleWidgetView}
-                        getFiles={getFiles}
-                        pauseMessages={pauseMessages}
-                        isPaused={parser.getIsPaused()}
-                />
-            </div>
+            <ActionBar filters={selectedFilters}
+                       onFilterChange={handleFilterChange}
+                       search={searchedMessage}
+                       onSearchChange={handleSearch}
+                       onAlignmentChange={setAlignment}
+                       toggleSideBar={toggleSideBar}
+                       toggleView={toggleWidgetView}
+                       pauseMessages={pauseMessages}
+                       isPaused={parser.getIsPaused()}
+            />
             {isSideBarVisible && (
                 <div className={"col-start-1 col-end-5 row-start-1 row-end-12 z-10"}>
                     <ErrorSidebar errors={parser.getErrors()}/>
                 </div>
             )}
-            <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white">
-                Real-Time Data
+            <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white py-4">
+                Real-Time Data Page
             </div>
             <div className={`col-start-1 col-end-13 row-start-1 row-end-12 flex items-center ${alignment}`}>
                 {isWidgetView ? (

@@ -224,23 +224,6 @@ class Parser {
                 return null;
         }
     }
-
-    /**
-     * Parses log files selected by the user.
-     * @returns The processed messages
-     */
-    public async parseLogFile() {
-        const fileHandles = await window.showOpenFilePicker({multiple: true});
-        this.messageMap = [];
-        this.errors = [];
-        for (const fileHandle of fileHandles) {
-            const file = await fileHandle.getFile();
-            this.lines = await file.text();
-            this.lines = this.lines.replace("Issue:\n", "Issue: ");
-            this.parse(this.lines);
-        }
-        return this.getMessages();
-    }
 }
 
 // Export the singleton instance

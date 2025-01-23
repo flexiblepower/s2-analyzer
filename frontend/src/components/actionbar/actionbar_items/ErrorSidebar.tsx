@@ -1,6 +1,6 @@
 import {useState, useEffect, useRef} from "react";
 
-interface SidebarProps {
+interface ErrorSidebarProps {
     errors: string[];
 }
 
@@ -10,7 +10,7 @@ const [minWidth, maxWidth, defaultWidth] = [
     window.innerWidth / 4,
 ];
 
-function ErrorSidebar({ errors }: SidebarProps) {
+function ErrorSidebar({ errors }: ErrorSidebarProps) {
     const [width, setWidth] = useState(defaultWidth);
     const isResizing = useRef(false);
 
