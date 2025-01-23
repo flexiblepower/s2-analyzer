@@ -5,7 +5,6 @@ import { api } from "../api/api.ts";
 import { parser } from "../api/socket/Parser.ts";
 import MessageHeader from "../models/messages/messageHeader.ts";
 import MessageTable from "../components/messages/MessageTable.tsx";
-import ActionBar from "../components/actionbar/ActionBar.tsx";
 
 const HistoricalDataPage = () => {
     const backendUrl = useContext(BackendContext);
@@ -61,7 +60,6 @@ const HistoricalDataPage = () => {
             <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white py-4">
                 Historical Data
             </div>
-            <ActionBar/>
             <div className="col-start-1 col-end-13 row-start-2 row-end-5 flex gap-4">
                 {/* Filter Inputs */}
                 <div className="flex-1 grid lg:grid-cols-2 gap-3">

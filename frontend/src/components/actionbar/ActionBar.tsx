@@ -6,15 +6,15 @@ import useToggle from "../../hooks/useToggle";
 import useOutsideClick from "../../hooks/useOutsideClick.tsx";
 
 interface ActionBarProps {
-    filters?: Filters;
-    search?: string;
-    onFilterChange?: (filters: Filters) => void;
-    onSearchChange?: (search: string) => void;
-    onAlignmentChange?: (alignment: string) => void;
-    toggleSideBar?: () => void;
-    toggleView?: () => void;
-    pauseMessages?: () => void;
-    isPaused?: boolean;
+    filters: Filters;
+    search: string;
+    onFilterChange: (filters: Filters) => void;
+    onSearchChange: (search: string) => void;
+    onAlignmentChange: (alignment: string) => void;
+    toggleSideBar: () => void;
+    toggleView: () => void;
+    pauseMessages: () => void;
+    isPaused: boolean;
 }
 
 const ActionBar = ({
@@ -38,7 +38,7 @@ const ActionBar = ({
 
     const changeAlignment = () => {
         setIndex((index + 1) % 3);
-        if (onAlignmentChange) onAlignmentChange(alignments[index]);
+        onAlignmentChange(alignments[index]);
     };
 
     useOutsideClick([filterMenuRef, specialKeysRef], [
@@ -61,87 +61,44 @@ const ActionBar = ({
                 </button>
                 <div className={`${showAllOptions ? "flex" : "hidden"} w-full md:flex md:w-auto md:order-1 mt-2 md:mt-0`}>
                     <ul className="flex flex-col md:flex-row md:space-x-3.5">
-                        {toggleSideBar && (
-                            <li>
-                                <button
-                                    className="block py-1 px-2 md:py-1 md:px-2 text-white rounded md:hover:text-tno-blue md:p-0"
-                                    onClick={toggleSideBar}>
-                                    Error Menu
+                        {[
+                            { onClick: toggleSideBar, label: "Errors Sidebar" },
+                            { onClick: toggleView, label: "Toggle View" },
+                            { onClick: pauseMessages, label: isPaused ? "Continue Real-Time" : "Pause Real-Time" },
+                            { onClick: toggleFilterMenu, label: "Filters", isFilter: true },
+                            { onClick: changeAlignment, label: "Change Alignment" },
+                            { onClick: toggleSpecialKeys, label: "Special Keys", isSpecialKey: true },
+                        ].map((button, index) => (
+                            <li key={index}>
+                                <button className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0" onClick={button.onClick}>
+                                    {button.label}
                                 </button>
-                            </li>
-                        )}
-                        {toggleView && (
-                            <li>
-                                <button
-                                    className="block py-1 px-2 md:py-1 md:px-2 text-white rounded md:hover:text-tno-blue md:p-0"
-                                    onClick={toggleView}>
-                                    Toggle View
-                                </button>
-                            </li>
-                        )}
-                        {pauseMessages && isPaused !== undefined && (
-                            <li>
-                                <button
-                                    className="block py-1 px-2 md:py-1 md:px-2 text-white rounded md:hover:text-tno-blue md:p-0"
-                                    onClick={pauseMessages}>
-                                    {isPaused ? "Continue Real-Time" : "Pause Real-Time"}
-                                </button>
-                            </li>
-                        )}
-                        {onAlignmentChange && (
-                            <li>
-                                <button
-                                    className="block py-1 px-2 md:py-1 md:px-2 text-white rounded md:hover:text-tno-blue md:p-0"
-                                    onClick={changeAlignment}>
-                                    Change Alignment
-                                </button>
-                            </li>
-                        )}
-                        {filters && onFilterChange && (
-                            <li>
-                                <div ref={filterMenuRef}>
-                                    <button
-                                        className="block py-1 px-2 md:py-1 md:px-2 text-white rounded md:hover:text-tno-blue md:p-0"
-                                        onClick={toggleFilterMenu}>
-                                        Filters
-                                    </button>
-                                    {isVisibleFilterMenu && (
-                                        <div
-                                            className="absolute mt-2 w-60 origin-top-right rounded-md bg-base-gray shadow-lg ring-1 ring-black/5">
-                                            <FilterMenu filters={filters} onFilterChange={onFilterChange}
-                                                        isVisible={isVisibleFilterMenu}/>
-                                        </div>
-                                    )}
-                                </div>
-                            </li>
-                        )}
-                        <li>
-                            <div className="relative" ref={specialKeysRef}>
-                                <button
-                                    className="py-1 px-2 md:py-1 md:px-2 text-white rounded md:hover:text-tno-blue"
-                                    onClick={toggleSpecialKeys}>
-                                    Special Keys
-                                </button>
-                                {showSpecialKeys && (
-                                    <div
-                                        className="absolute mt-2 w-60 origin-top-right rounded-md bg-base-gray shadow-lg ring-1 ring-black/5">
-                                        <ul className="text-white">
-                                            <li className="py-1 px-2">
-                                                <strong>X:</strong> Close all message popups
-                                            </li>
-                                            <li className="py-1 px-2">
-                                                <strong>C:</strong> Toggle draggable mode
-                                            </li>
-                                        </ul>
+                                {button.isFilter && (
+                                    <div className="clickable-heading md:absolute" ref={filterMenuRef}>
+                                        <FilterMenu filters={filters} onFilterChange={onFilterChange} isVisible={isVisibleFilterMenu} />
                                     </div>
                                 )}
-                            </div>
-                        </li>
-                        {search !== undefined && onSearchChange && (
-                            <li>
-                                <SearchBar searchId={search} onSearchChange={onSearchChange}/>
+                                {button.isSpecialKey && (
+                                    <div className="relative" ref={specialKeysRef}>
+                                        {showSpecialKeys && (
+                                            <div className="absolute mt-2 w-60 origin-top-right rounded-md bg-base-gray shadow-lg ring-1 ring-black/5">
+                                                <ul className="text-white">
+                                                    <li className="py-1 px-2">
+                                                        <strong>X:</strong> Close all message popups
+                                                    </li>
+                                                    <li className="py-1 px-2">
+                                                        <strong>C:</strong> Toggle draggable mode
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </li>
-                        )}
+                        ))}
+                        <li>
+                            <SearchBar searchId={search} onSearchChange={onSearchChange} />
+                        </li>
                     </ul>
                 </div>
             </div>
