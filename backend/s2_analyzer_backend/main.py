@@ -58,11 +58,6 @@ def main():
     signal.signal(signal.SIGTERM, handle_exit)
     signal.signal(signal.SIGQUIT, handle_exit)
 
-    """Gordei: Commented out code to run mock models"""
-    # models = init_models(msg_router, CONFIG)
-    # for model in models:
-    #     APPLICATIONS.add_and_start_application(model)
-    #     model_registry.add_model(model)
     APPLICATIONS.run_all()
 
 

@@ -3,9 +3,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 import logging
 
-from s2python.s2_parser import S2Parser
-from s2python.s2_validation_error import S2ValidationError
-
 from s2_analyzer_backend.origin_type import S2OriginType
 from s2_analyzer_backend.message_processor import Message, MessageProcessorHandler
 from s2_analyzer_backend.envelope import Envelope
@@ -20,14 +17,11 @@ LOGGER = logging.getLogger(__name__)
 
 class MessageRouter:
     connections: dict[tuple[str, str], "Connection"]
-    s2_parser: "S2Parser"
     _buffer_queue_by_origin_dest_id: dict[tuple[str, str], asyncio.Queue]
 
     def __init__(self, msg_processor_handler: MessageProcessorHandler) -> None:
         self.connections = {}
-        self.s2_parser = S2Parser()
         self._msg_processor_handler = msg_processor_handler
-        #self.model_registry = model_registry
         self._buffer_queue_by_origin_dest_id = {}
 
     def _get_buffer_queue(self, origin_id: str, dest_id: str) -> asyncio.Queue:
@@ -108,11 +102,6 @@ class MessageRouter:
 
         for message in buffered_messages:
             await self._forward_envelope_to_connect(message, conn)
-
-        # model = self.model_registry.lookup_by_id(conn.dest_id)
-        # if model:
-        #     model_conn = await BUILDER.build_model_connection(conn.dest_id, conn.origin_id, conn.s2_origin_type.reverse(), self, model)
-        #     model.receive_new_connection(model_conn)
 
     def connection_has_closed(self, conn: "Connection") -> None:
         del self.connections[(conn.origin_id, conn.dest_id)]
