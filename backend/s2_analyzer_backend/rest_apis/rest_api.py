@@ -8,6 +8,8 @@ from fastapi import (
 )
 import uvicorn
 import uvicorn.server
+from starlette.middleware.cors import CORSMiddleware
+
 from .man_in_middle_api_router import (
     ManInTheMiddleAPI,
 )
@@ -57,7 +59,17 @@ class RestAPI(AsyncApplication):
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         app = FastAPI(title="S2 Analyzer", description="", version="v0.0.1")
 
+        # Add CORS middleware
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],  # Allow all origins
+            allow_credentials=True,
+            allow_methods=["*"],  # Allow all HTTP methods
+            allow_headers=["*"],  # Allow all HTTP headers
+        )
+
         app.include_router(self.fastapi_router)
+
         config = uvicorn.Config(
             app,
             host=self.listen_address,

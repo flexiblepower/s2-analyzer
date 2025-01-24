@@ -70,13 +70,13 @@ const MessageValidationPage = () => {
                 <div className="flex flex-col bg-white shadow-lg rounded p-4 w-full max-w-[600px] h-80 overflow-auto mr-4">
                     <h3 className="text-lg font-semibold">Read Message:</h3>
                     <pre className="text-gray-800">
-                    {message ? JSON.stringify(message, null, 2) : "No message loaded (json required)."}
+                        {message ? JSON.stringify(message, null, 2) : "No message loaded (json required)."}
                     </pre>
                 </div>
                 <div className="flex flex-col bg-white shadow-lg rounded p-4 w-full max-w-[600px] h-80 overflow-auto">
                     <h3 className="text-lg font-semibold">Validation Result:</h3>
                     <pre className="text-gray-800">
-                    {validationResult ? validationResult : "No validation performed."}
+                        {validationResult ? validationResult : "No validation performed."}
                     </pre>
                 </div>
             </div>

@@ -39,7 +39,7 @@ class Api {
      * If the request fails or encounters an error, `undefined` is returned.
      */
     public async getHistoryFilter(backend: string, params: FilterQuery): Promise<string[] | undefined> {
-        const url = `${backend}/history-filter`;
+        const url = `${backend}/history-filter/`;
         return axios.get<string[]>(url, { params })
             .then(response => response.data)
             .catch(error => {return this.handleError(error);});
@@ -55,11 +55,7 @@ class Api {
      */
     public async validateMessage(backend: string, message: object): Promise<string | undefined> {
         const url = `${backend}/validate-message/`;
-        return axios.post(url, { message }, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        })
+        return axios.post(url, { message })
             .then(response => response.data)
             .catch(error => {return this.handleError(error);});
     }
@@ -80,10 +76,6 @@ class Api {
             origin_id: originId,
             dest_id: destId,
             message: message,
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
         })
             .then(response => response.data)
             .catch(error => {return this.handleError(error)});
