@@ -6,6 +6,9 @@ from fastapi import (
     FastAPI,
     APIRouter,
 )
+from fastapi.middleware.cors import CORSMiddleware
+
+
 import uvicorn
 import uvicorn.server
 from starlette.middleware.cors import CORSMiddleware
@@ -14,7 +17,7 @@ from .man_in_middle_api_router import (
     ManInTheMiddleAPI,
 )
 from .debugger_api import DebuggerAPI
-from s2_analyzer_backend.message_processor import (
+from s2_analyzer_backend.message_processor.message_processor import (
     DebuggerFrontendMessageProcessor,
 )
 
@@ -22,7 +25,7 @@ from s2_analyzer_backend.async_application import AsyncApplication
 import s2_analyzer_backend.app_logging
 
 if TYPE_CHECKING:
-    from s2_analyzer_backend.router import MessageRouter
+    from s2_analyzer_backend.device_connection.router import MessageRouter
     from s2_analyzer_backend.async_application import ApplicationName
 
 
@@ -58,6 +61,14 @@ class RestAPI(AsyncApplication):
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         app = FastAPI(title="S2 Analyzer", description="", version="v0.0.1")
+        
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],  # Adjust to specific origins instead of "*" for security
+            allow_credentials=True,
+            allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
+            allow_headers=["*"],  # Allows all headers
+        )
 
         # Add CORS middleware
         app.add_middleware(

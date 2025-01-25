@@ -7,15 +7,15 @@ from fastapi import (
     WebSocketException,
 )
 from pydantic import BaseModel
-from s2_analyzer_backend.connection import (
+from s2_analyzer_backend.device_connection.connection import (
     WebSocketConnection,
 )
 
 from s2_analyzer_backend.async_application import APPLICATIONS
-from s2_analyzer_backend.origin_type import S2OriginType
+from s2_analyzer_backend.device_connection.origin_type import S2OriginType
 
 if TYPE_CHECKING:
-    from s2_analyzer_backend.router import MessageRouter
+    from s2_analyzer_backend.device_connection.router import MessageRouter
 
 
 LOGGER = logging.getLogger(__name__)

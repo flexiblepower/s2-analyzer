@@ -7,9 +7,9 @@ import json
 from pydantic import BaseModel
 from sqlalchemy import Engine
 from sqlmodel import Session
-from s2_analyzer_backend.connection import DebuggerFrontendWebsocketConnection
-from s2_analyzer_backend.database import Communication, ValidationError
-from s2_analyzer_backend.origin_type import S2OriginType
+from s2_analyzer_backend.device_connection.connection import DebuggerFrontendWebsocketConnection
+from s2_analyzer_backend.message_processor.database import Communication, ValidationError
+from s2_analyzer_backend.device_connection.origin_type import S2OriginType
 from s2_analyzer_backend.async_application import LOGGER, AsyncApplication
 
 from s2python.s2_parser import S2Parser, S2Message
