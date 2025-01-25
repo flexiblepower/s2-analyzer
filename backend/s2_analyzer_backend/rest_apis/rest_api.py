@@ -6,6 +6,9 @@ from fastapi import (
     FastAPI,
     APIRouter,
 )
+from fastapi.middleware.cors import CORSMiddleware
+
+
 import uvicorn
 import uvicorn.server
 from .man_in_middle_api_router import (
@@ -56,6 +59,14 @@ class RestAPI(AsyncApplication):
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         app = FastAPI(title="S2 Analyzer", description="", version="v0.0.1")
+        
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],  # Adjust to specific origins instead of "*" for security
+            allow_credentials=True,
+            allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
+            allow_headers=["*"],  # Allows all headers
+        )
 
         app.include_router(self.fastapi_router)
         config = uvicorn.Config(
