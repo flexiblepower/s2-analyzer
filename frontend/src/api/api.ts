@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { FilterQuery } from "./apiTypes.ts";
+import {BackendMessage, FilterQuery} from "./apiTypes.ts";
 
 class Api {
     static #instance: Api;
@@ -38,9 +38,9 @@ class Api {
      * @returns {Promise<BackendMessage | undefined>} - Resolves with the historical data on success.
      * If the request fails or encounters an error, `undefined` is returned.
      */
-    public async getHistoryFilter(backend: string, params: FilterQuery): Promise<string[] | undefined> {
+    public async getHistoryFilter(backend: string, params: FilterQuery): Promise<BackendMessage[] | undefined> {
         const url = `${backend}/history-filter/`;
-        return axios.get<string[]>(url, { params })
+        return axios.get<BackendMessage[]>(url, { params })
             .then(response => response.data)
             .catch(error => {return this.handleError(error);});
     }

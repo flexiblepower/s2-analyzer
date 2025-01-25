@@ -74,24 +74,18 @@ class Parser {
      * @returns The processed message map
      */
     public getMessages() {
-        for (let i = 0; i < this.messageMap.length; i++) {
-            if ("subject_message_id" in this.messageMap[i]) {
-                const temp = this.messageMap[i] as ReceptionStatus;
-                for (let j = 0; j < this.messageMap.length; j++) {
-                    if (this.messageMap[j].message_id == temp.subject_message_id) {
-                        this.messageMap[j].status = temp;
-                    }
-                }
-            } else if ("object_id" in this.messageMap[i]) {
-                const temp = this.messageMap[i] as RevokeObject;
-                for (let j = 0; j < this.messageMap.length; j++) {
-                    if (this.messageMap[j].message_id == temp.object_id) {
-                        this.messageMap[j].status = "revoked by message_id: " + this.messageMap[i].message_id;
-                    }
-                }
+        this.messageMap.forEach((message) => {
+            if ('subject_message_id' in message) {
+                const temp = message as ReceptionStatus;
+                const targetMessage = this.messageMap.find(m => m.message_id === temp.subject_message_id);
+                if (targetMessage) targetMessage.status = temp;
+            } else if ('object_id' in message) {
+                const temp = message as RevokeObject;
+                const targetMessage = this.messageMap.find(m => m.message_id === temp.object_id);
+                if (targetMessage) targetMessage.status = `revoked by message_id: ${message.message_id}`;
             }
-        }
-        return this.messageMap.filter((m) => !("subject_message_id" in m)).reverse();
+        });
+        return this.messageMap.filter(m => !('subject_message_id' in m)).reverse();
     }
 
     /**
@@ -116,7 +110,7 @@ class Parser {
      * @param messageString - The message to be parsed
      */
     public parse(messageString: string) {
-        const header = this.extractHeader(messageString);
+        const header = this.extractHeaderSocketMessage(messageString);
         if (!header) return;
 
         if (this.isPaused) {
@@ -129,53 +123,62 @@ class Parser {
     }
 
     /**
-     * Creates an object of type MessageHeader from the received message
-     * @param messageStr - The message to extract the header from, passed as a JSON string
+     * Creates an object of type MessageHeader from the received socket message
+     * @param messageStr - The message to extract the header from
      * @returns The extracted header or null if extraction failed
      */
-    public extractHeader(messageStr: string): MessageHeader | null {
+    public extractHeaderSocketMessage(messageStr: string): MessageHeader | null {
         try {
-            const parsedBackendMessage: BackendMessage = JSON.parse(messageStr);
-
-            // Validate that required fields exist in the parsed object
-            if (!parsedBackendMessage.cem_id || !parsedBackendMessage.rm_id ||
-                !parsedBackendMessage.origin || !parsedBackendMessage.msg)
-            {
+            const parsedMessage: BackendMessage = JSON.parse(messageStr);
+            if (!parsedMessage.cem_id || !parsedMessage.rm_id || !parsedMessage.origin || !parsedMessage.msg) {
                 this.errors.push(`Invalid message structure: ${messageStr}`);
                 return null;
             }
 
-            const header: MessageHeader | null = this.castToMessageType(JSON.stringify(parsedBackendMessage.msg));
+            const header = this.castToMessageType(JSON.stringify(parsedMessage.msg));
+            if (!header) return null;
 
-            // Determine sender and receiver based on origin
-            const sender: string = parsedBackendMessage.origin;
-            const receiver: string = sender === "RM" ? "CEM" : "RM";
-
-            if (header) {
-                header.time = parsedBackendMessage.timestamp ? new Date(parsedBackendMessage.timestamp) : new Date();
-                header.sender = sender;
-                header.receiver = receiver;
-
-                // Set the status, including any validation error message if present
-                header.status = parsedBackendMessage.s2_validation_error
-                    ? `validation not successful: ${parsedBackendMessage.s2_validation_error.msg}`
-                    : "valid";
-            }
+            header.time = parsedMessage.timestamp ? new Date(parsedMessage.timestamp) : new Date();
+            header.sender = parsedMessage.origin;
+            header.receiver = parsedMessage.origin === "RM" ? "CEM" : "RM";
+            header.status = parsedMessage.s2_validation_error
+                ? `validation not successful: ${parsedMessage.s2_validation_error.msg}`
+                : "valid";
 
             return header;
         } catch (error) {
-            // If JSON parsing fails, log the error and return null
             this.errors.push(`Error parsing JSON: "${error}"\nLine: "${messageStr}"`);
             return null;
         }
     }
 
     /**
+     * Creates an object of type MessageHeader from the received database message
+     * @param message - The message to extract the header from
+     * @returns The extracted header or null if extraction failed
+     */
+    public extractHeaderDatabaseMessage(message: BackendMessage): MessageHeader | null {
+        const header = this.castToMessageType(JSON.stringify(message.s2_msg));
+        if (!header) return null;
+
+        const sender = message.origin;
+        header.time = message.timestamp ? new Date(message.timestamp) : new Date();
+        header.sender = sender;
+        header.receiver = sender === "RM" ? "CEM" : "RM";
+        header.status = message.validation_errors.length
+            ? `validation not successful: ${message.validation_errors}`
+            : "valid";
+
+        return header;
+    }
+
+
+    /**
      * Casts a JSON message string to a specific message type based on the message_type field
      * @param messageStr The JSON string representing the message
      * @returns The parsed message object of the corresponding message type, or null if no matching type is found
      */
-    private castToMessageType(messageStr: string) {
+    private castToMessageType(messageStr: string): MessageHeader | null {
         // Parse the JSON message string
         const message = JSON.parse(messageStr);
         // Cast it according to message type

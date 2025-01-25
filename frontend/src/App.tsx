@@ -23,8 +23,8 @@ function App() {
 
                     {/* Main Content */}
                     <main className="flex-1 bg-base-gray">
-                        <button className="w-full bg-tno-blue py-2" onClick={() => setToggled(!toggled)}
-                                style={{ color: 'white' }}
+                        <button className="w-full bg-tno-blue py-2 text-white hover:bg-tno-blue-light"
+                                onClick={() => setToggled(!toggled)}
                         >
                             Toggle Navigation Menu
                         </button>

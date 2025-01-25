@@ -18,9 +18,14 @@ export interface BackendMessage {
         message_type: string;
         [key: string]: unknown; // Allow extra fields
     };
-    s2_msg: string | null;
+    s2_msg: {
+        message_id: string;
+        message_type: string;
+        [key: string]: unknown;
+    } | null;
     s2_msg_type: string | null;
     s2_validation_error: MessageValidationDetails | null;
+    validation_errors: Array<string>;
     timestamp: string;
 }
 

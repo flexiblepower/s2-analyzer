@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { FilterQuery } from '../api/apiTypes.ts';
+import { BackendMessage, FilterQuery } from '../api/apiTypes.ts';
 import BackendContext from "../BackendContext.tsx";
 import { api } from "../api/api.ts";
 import { parser } from "../api/socket/Parser.ts";
@@ -19,16 +19,20 @@ const HistoricalDataPage = () => {
     const [data, setData] = useState<MessageHeader[] | undefined>(undefined);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    // State for controlling input type of date fields
+    const [startDateType, setStartDateType] = useState<'text' | 'date'>('text');
+    const [endDateType, setEndDateType] = useState<'text' | 'date'>('text');
+
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFilters(prevFilters => ({
+        setFilters((prevFilters) => ({
             ...prevFilters,
             [name]: value,
         }));
     };
 
     const fetchHistoricalData = async () => {
-        if (Object.values(filters).every(filter => filter === '')) {
+        if (Object.values(filters).every((filter) => filter === '')) {
             setErrorMessage('Please fill in at least one filter before fetching data.');
             return;
         }
@@ -43,18 +47,24 @@ const HistoricalDataPage = () => {
             if (result) {
                 if (result.length === 0) {
                     setErrorMessage("No matching data was found for the provided filters.");
+                    setData([]);
                     return;
                 }
             } else {
                 setErrorMessage("Request or server error. Please check your filters or try again later.");
+                setData([]);
                 return;
             }
 
-            const headers = result.map((messageStr: string) => {
-                return parser.extractHeader(messageStr); // Extracts the MessageHeader, or null if invalid
-            }).filter((header): header is MessageHeader => header !== null); // Filter out null headers
+            const headers = result
+                .map((message: BackendMessage) => {
+                    return parser.extractHeaderDatabaseMessage(message);
+                })
+                .filter((header): header is MessageHeader =>
+                    header !== null && header.message_type !== "ReceptionStatus"
+                );
 
-            setData(headers); // Store only valid headers
+            setData(headers);
             setErrorMessage(null); // Clear any error message when data is fetched successfully
         } catch (err) {
             console.error(err);
@@ -68,26 +78,37 @@ const HistoricalDataPage = () => {
         { name: 'rm_id', placeholder: 'RM ID', type: 'text' },
         { name: 'origin', placeholder: 'Origin', type: 'text' },
         { name: 's2_msg_type', placeholder: 'Message Type', type: 'text' },
-        { name: 'start_date', placeholder: 'Start Date', type: 'date' },
-        { name: 'end_date', placeholder: 'End Date', type: 'date' }
+        { name: 'start_date', placeholder: 'Start Date', type: startDateType },
+        { name: 'end_date', placeholder: 'End Date', type: endDateType },
     ];
 
     return (
         <div className="w-full h-screen m-auto bg-base-backgroung grid grid-cols-12 grid-rows-12">
             <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white py-4">
-                Historical Data
+                Historical Data Page
             </div>
             <div className="col-start-1 col-end-13 flex gap-4 p-4">
                 {/* Filter Inputs */}
                 <div className="flex-1 grid lg:grid-cols-2 gap-3">
-                    {filterFields.map(({name, placeholder, type}) => (
-                        <input key={name}
-                               type={type}
-                               name={name}
-                               value={filters[name as keyof FilterQuery]}
-                               onChange={handleFilterChange}
-                               placeholder={placeholder}
-                               className="w-full max-w-md p-2 rounded-lg"
+                    {filterFields.map(({ name, placeholder, type }) => (
+                        <input
+                            key={name}
+                            type={type}
+                            name={name}
+                            value={filters[name as keyof FilterQuery]}
+                            onChange={handleFilterChange}
+                            placeholder={placeholder}
+                            onFocus={() => {
+                                // Switch to 'date' type when focused
+                                if (name === 'start_date') setStartDateType('date');
+                                if (name === 'end_date') setEndDateType('date');
+                            }}
+                            onBlur={() => {
+                                // Switch back to 'text' type when focus is lost
+                                if (name === 'start_date') setStartDateType('text');
+                                if (name === 'end_date') setEndDateType('text');
+                            }}
+                            className="w-full max-w-md p-2 rounded-lg"
                         />
                     ))}
                     <button className="h-10 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
@@ -104,7 +125,7 @@ const HistoricalDataPage = () => {
 
                 {/* Results Display */}
                 <div>
-                    <MessageTable messages={data || []}/>
+                    <MessageTable messages={data || []} />
                 </div>
             </div>
         </div>
