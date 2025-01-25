@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from dataclasses import dataclass
 from dataclass_wizard import YAMLWizard
-from s2_analyzer_backend.origin_type import S2OriginType
+from s2_analyzer_backend.device_connection.origin_type import S2OriginType
 
 S2_ANALYZER_CONF = os.getenv("S2_ANALYZER_CONF", "config.yaml")
 

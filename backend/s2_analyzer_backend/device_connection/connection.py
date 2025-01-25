@@ -1,3 +1,4 @@
+from builtins import ExceptionGroup
 from datetime import datetime
 from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
@@ -7,6 +8,7 @@ import json
 import logging
 import threading
 from uuid import UUID
+
 from fastapi import WebSocketException, WebSocketDisconnect
 from websockets.exceptions import ConnectionClosedOK
 from s2_analyzer_backend.async_application import AsyncApplication
@@ -14,11 +16,11 @@ from s2_analyzer_backend.async_application import APPLICATIONS
 
 if TYPE_CHECKING:
     from fastapi import WebSocket
-    from s2_analyzer_backend.router import MessageRouter
-    from s2_analyzer_backend.envelope import Envelope
-    from s2_analyzer_backend.origin_type import S2OriginType
+    from s2_analyzer_backend.device_connection.router import MessageRouter
+    from s2_analyzer_backend.device_connection.envelope import Envelope
+    from s2_analyzer_backend.device_connection.origin_type import S2OriginType
     from s2_analyzer_backend.async_application import ApplicationName
-    from s2_analyzer_backend.message_processor import Message
+    from s2_analyzer_backend.message_processor.message_processor import Message
 
 
 LOGGER = logging.getLogger(__name__)

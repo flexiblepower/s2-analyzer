@@ -12,7 +12,7 @@ from .man_in_middle_api_router import (
     ManInTheMiddleAPI,
 )
 from .debugger_api import DebuggerAPI
-from s2_analyzer_backend.message_processor import (
+from s2_analyzer_backend.message_processor.message_processor import (
     DebuggerFrontendMessageProcessor,
 )
 
@@ -20,7 +20,7 @@ from s2_analyzer_backend.async_application import AsyncApplication
 import s2_analyzer_backend.app_logging
 
 if TYPE_CHECKING:
-    from s2_analyzer_backend.router import MessageRouter
+    from s2_analyzer_backend.device_connection.router import MessageRouter
     from s2_analyzer_backend.async_application import ApplicationName
 
 

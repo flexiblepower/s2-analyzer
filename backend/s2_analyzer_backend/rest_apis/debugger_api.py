@@ -10,21 +10,19 @@ from fastapi import (
     HTTPException,
 )
 from pydantic import BaseModel
-from s2_analyzer_backend.database import CommunicationWithValidationErrors
-from s2_analyzer_backend.message_processor import (
+from s2_analyzer_backend.message_processor.message_processor import (
     DebuggerFrontendMessageProcessor,
 )
-from s2_analyzer_backend.connection import (
+from s2_analyzer_backend.device_connection.connection import (
     DebuggerFrontendWebsocketConnection,
 )
 
-from s2_analyzer_backend.history_filter import HistoryFilter
+from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
 from datetime import datetime
 
 
 from s2_analyzer_backend.async_application import APPLICATIONS
-from s2_analyzer_backend.history_filter import HistoryFilter
-from s2python.s2_parser import S2Parser, S2Message
+from s2python.s2_parser import S2Parser
 from s2python.s2_validation_error import S2ValidationError
 
 LOGGER = logging.getLogger(__name__)

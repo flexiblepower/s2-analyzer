@@ -3,11 +3,14 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 import logging
 
-from s2_analyzer_backend.message_processor import Message, MessageProcessorHandler
-from s2_analyzer_backend.envelope import Envelope
+from s2python.s2_parser import S2Parser
+
+from s2_analyzer_backend.device_connection.origin_type import S2OriginType
+from s2_analyzer_backend.message_processor.message_processor import Message, MessageProcessorHandler
+from s2_analyzer_backend.device_connection.envelope import Envelope
 
 if TYPE_CHECKING:
-    from s2_analyzer_backend.connection import Connection
+    from s2_analyzer_backend.device_connection.connection import Connection
 
 
 LOGGER = logging.getLogger(__name__)

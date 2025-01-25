@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from uuid import uuid1
 
 if TYPE_CHECKING:
-    from s2_analyzer_backend.connection import Connection
+    from s2_analyzer_backend.device_connection.connection import Connection
 
 @dataclass
 class Envelope:

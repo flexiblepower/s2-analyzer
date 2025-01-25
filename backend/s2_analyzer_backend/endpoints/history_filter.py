@@ -3,7 +3,7 @@ from typing import Optional, List
 from datetime import datetime
 import logging
 from sqlmodel import Session, select
-from s2_analyzer_backend.database import (
+from s2_analyzer_backend.message_processor.database import (
     Communication,
     get_session,
     serialize_communication_with_validation_errors,
