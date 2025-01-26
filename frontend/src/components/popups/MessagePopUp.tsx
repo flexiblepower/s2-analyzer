@@ -5,6 +5,7 @@ import SpecialMessage from "./special/SpecialMessage.tsx";
 import NestedObjectVisualization from "./special/NestedObjectVisualization.tsx";
 import ActuatorDescription from "../../models/dataStructures/frbc/actuatorDescription.ts";
 import StorageDescription from "../../models/dataStructures/frbc/storageDescription.ts";
+import { v4 as uuidv4 } from "uuid";
 
 interface Props<T extends MessageHeader> {
     trigger: boolean;
@@ -120,8 +121,8 @@ function MessagePopUp<T extends MessageHeader>(props: Readonly<Props<T>>) {
                                 </tr>
                                 </thead>
                                 <tbody className="text-white">
-                                {keys.map((key, index) => (
-                                    <tr key={index} className="bg-metallic-gray">
+                                {keys.map((key) => (
+                                    <tr key={uuidv4()} className="bg-metallic-gray">
                                         <th className="border-2 border-tno-blue">
                                             {key.toString()}
                                         </th>

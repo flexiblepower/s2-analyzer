@@ -2,6 +2,7 @@ import cemBox from "../../assets/cemBox.png";
 import rmBox from "../../assets/rmBox.png";
 import MessageCard from "./MessageCard.tsx";
 import MessageHeader from "../../models/messages/messageHeader";
+import { v4 as uuidv4 } from "uuid";
 
 interface MessageWidgetProps<T extends MessageHeader> {
     messages: T[];
@@ -34,8 +35,8 @@ function MessageWidget<T extends MessageHeader>({ messages }: Readonly<MessageWi
             {/* Messages Section */}
             <div className="col-start-3 col-end-11 row-start-2 row-end-11 overflow-auto">
                 <ul>
-                    {messages.map((message, index) => (
-                        <li key={index} className="mt-4">
+                    {messages.map((message) => (
+                        <li key={uuidv4()} className="mt-4">
                             <MessageCard<T> message={message} />
                         </li>
                     ))}

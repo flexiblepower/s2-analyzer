@@ -1,4 +1,5 @@
 import {useState, useEffect, useRef} from "react";
+import { v4 as uuidv4 } from "uuid";
 
 interface ErrorSidebarProps {
     errors: string[];
@@ -46,8 +47,8 @@ function ErrorSidebar({ errors }: Readonly<ErrorSidebarProps>) {
             <div style={{ width: `${width}px`, height: '86vh' }} className="border-tno-blue border-r bg-base-gray">
                 <h1 className="text-lg text-white">All errors:</h1>
                 {errors.length ? (
-                    errors.map((s, index) => (
-                        <pre key={index}
+                    errors.map((s) => (
+                        <pre key={uuidv4()}
                              className="text-white overflow-auto bg-base-gray"
                              style={{ maxWidth: width, overflowX: "hidden" }}
                         >

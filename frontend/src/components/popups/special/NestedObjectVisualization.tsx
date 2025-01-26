@@ -1,4 +1,5 @@
 import {useState} from "react";
+import { v4 as uuidv4 } from "uuid";
 
 interface Props {
     obj: object;
@@ -48,8 +49,8 @@ const NestedObjectVisualization = ({obj}: Readonly<Props>) => {
                     </td>
                     <td>
                         {collapsed.get(property) ? (
-                            value?.map((item, index) => (
-                                <NestedObjectVisualization key={index} obj={item}/>
+                            value?.map((item) => (
+                                <NestedObjectVisualization key={uuidv4()} obj={item}/>
                             ))
                         ) : (
                             <span>Click to expand</span>
