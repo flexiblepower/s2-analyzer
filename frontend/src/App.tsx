@@ -23,7 +23,7 @@ function App() {
                     <NavSidebarComponent toggled={toggled} setToggled={setToggled} />
 
                     {/* Main Content */}
-                    <main className="flex-1 bg-base-gray">
+                    <main className="flex-auto bg-base-gray">
                         <button className="w-full bg-tno-blue py-2 text-white hover:bg-tno-blue-light"
                                 onClick={() => setToggled(!toggled)}
                         >

@@ -62,14 +62,14 @@ const ActionBar = ({
                 <div className={`${showAllOptions ? "flex" : "hidden"} w-full md:flex md:w-auto md:order-1 mt-2 md:mt-0`}>
                     <ul className="flex flex-col md:flex-row md:space-x-3.5">
                         {[
-                            { onClick: toggleSideBar, label: "Errors Sidebar" },
-                            { onClick: toggleView, label: "Toggle View" },
-                            { onClick: pauseMessages, label: isPaused ? "Continue Real-Time" : "Pause Real-Time" },
-                            { onClick: toggleFilterMenu, label: "Filters", isFilter: true },
-                            { onClick: changeAlignment, label: "Change Alignment" },
-                            { onClick: toggleSpecialKeys, label: "Special Keys", isSpecialKey: true },
-                        ].map((button, index) => (
-                            <li key={index}>
+                            { id: "1", onClick: toggleSideBar, label: "Errors Sidebar" },
+                            { id: "2", onClick: toggleView, label: "Toggle View" },
+                            { id: "3", onClick: pauseMessages, label: isPaused ? "Continue Real-Time" : "Pause Real-Time" },
+                            { id: "4", onClick: toggleFilterMenu, label: "Filters", isFilter: true },
+                            { id: "5", onClick: changeAlignment, label: "Change Alignment" },
+                            { id: "6", onClick: toggleSpecialKeys, label: "Special Keys", isSpecialKey: true },
+                        ].map((button) => (
+                            <li key={button.id}>
                                 <button className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0" onClick={button.onClick}>
                                     {button.label}
                                 </button>

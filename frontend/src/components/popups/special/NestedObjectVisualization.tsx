@@ -1,10 +1,10 @@
 import {useState} from "react";
 
-interface props {
+interface Props {
     obj: object;
 }
 
-const NestedObjectVisualization = ({obj}: props) => {
+const NestedObjectVisualization = ({obj}: Readonly<Props>) => {
     const [collapsed] = useState(new Map<string, boolean>());
 
     // Renders a single property

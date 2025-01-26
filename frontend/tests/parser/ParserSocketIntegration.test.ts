@@ -1,5 +1,5 @@
-import WebSocketClient from "../../src/api/socket/Socket";
-import { Parser } from "../../src/api/socket/Parser";
+import WebSocketClient from "../../src/api/socket/socket";
+import { Parser } from "../../src/api/socket/parser";
 
 /**
  * Mocking WebSocket for using in unit tests

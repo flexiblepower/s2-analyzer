@@ -8,7 +8,7 @@ interface TerminalProps {
  * The TerminalController component handles the display of a collapsible terminal section
  * @returns The TerminalController component
  */
-function TerminalController({ parserLines }: TerminalProps) {
+function TerminalController({ parserLines }: Readonly<TerminalProps>) {
     const [isOpen, setIsOpen] = useState(false); // State to manage the open/close state of the accordion
 
     /**

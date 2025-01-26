@@ -16,7 +16,7 @@ interface Props {
  * @param props - The properties for the ReceptionStatusIcon component, including a message header
  * @returns The ReceptionStatusIcon component
  */
-function ReceptionStatusIcon({ header }: Props) {
+function ReceptionStatusIcon({ header }: Readonly<Props>) {
     const [isPopUpVisible, setIsPopUpVisible] = useState(false);
 
     // Mapping status labels to image sources

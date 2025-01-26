@@ -20,22 +20,15 @@ import SessionRequest from "../../models/messages/sessionRequest.ts";
 import {BackendMessage} from "../apiTypes.ts";
 
 class Parser {
-    static #instance: Parser;
-    private messageMap: MessageHeader[] = [];
+    public static readonly instance: Parser = new Parser();
+    private readonly messageMap: MessageHeader[] = [];
     private bufferedMessages: MessageHeader[] = [];
     private lines: string = "";
     private bufferedLines: string = "";
-    private errors: string[] = [];
+    private readonly errors: string[] = [];
     private isPaused: boolean = false;
 
     private constructor() {};
-
-    public static get instance(): Parser {
-        if (!Parser.#instance) {
-            Parser.#instance = new Parser();
-        }
-        return Parser.#instance;
-    }
 
     /**
      * Returns the current lines to be displayed by the Terminal Component

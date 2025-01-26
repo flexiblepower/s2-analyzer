@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 import { BackendMessage, FilterQuery } from '../api/apiTypes.ts';
 import BackendContext from "../BackendContext.tsx";
 import { api } from "../api/api.ts";
-import { parser } from "../api/socket/Parser.ts";
+import { parser } from "../api/socket/parser.ts";
 import MessageHeader from "../models/messages/messageHeader.ts";
 import MessageTable from "../components/messages/MessageTable.tsx";
 

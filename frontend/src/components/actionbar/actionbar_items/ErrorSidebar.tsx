@@ -10,7 +10,7 @@ const [minWidth, maxWidth, defaultWidth] = [
     window.innerWidth / 4,
 ];
 
-function ErrorSidebar({ errors }: ErrorSidebarProps) {
+function ErrorSidebar({ errors }: Readonly<ErrorSidebarProps>) {
     const [width, setWidth] = useState(defaultWidth);
     const isResizing = useRef(false);
 

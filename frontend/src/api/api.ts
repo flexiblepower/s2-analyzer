@@ -2,16 +2,9 @@ import axios from 'axios';
 import {BackendMessage, FilterQuery} from "./apiTypes.ts";
 
 class Api {
-    static #instance: Api;
+    public static readonly instance: Api = new Api();
 
     private constructor() {};
-
-    public static get instance(): Api {
-        if (!Api.#instance) {
-            Api.#instance = new Api();
-        }
-        return Api.#instance;
-    }
 
     /**
      * Handle errors and log the details.

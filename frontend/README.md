@@ -169,7 +169,7 @@ These messages are rendered without a directed arrow and with a red font in orde
 
  ### Testing via  *"JEST"*
 
- You can run tests for *Parser.ts* and *Socket.ts* bb running the following commands:
+ You can run tests for *parser.ts* and *socket.ts* bb running the following commands:
  ```bash
  cd .\frontend\  # Go to the frontend folder
  npm test # Run tests

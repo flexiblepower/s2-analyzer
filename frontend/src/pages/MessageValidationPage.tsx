@@ -11,7 +11,7 @@ const MessageValidationPage = () => {
     const handleValidation = async () => {
         if (message && !('error' in message)) {
             const result = await api.validateMessage(backendUrl, message);
-            setValidationResult(result || "Validation failed.");
+            setValidationResult(result ?? "Validation failed.");
         } else if (message && 'error' in message) {
             setValidationResult("Cannot validate. The message contains parsing errors.");
         }
@@ -55,7 +55,7 @@ const MessageValidationPage = () => {
                 <div className="flex flex-col bg-white shadow-lg rounded p-4 w-full max-w-[600px] overflow-auto">
                     <h3 className="text-lg font-semibold">Validation Result:</h3>
                     <pre className="text-gray-800">
-                        {validationResult ? validationResult : "No validation performed."}
+                        {validationResult ?? "No validation performed."}
                     </pre>
                 </div>
             </div>

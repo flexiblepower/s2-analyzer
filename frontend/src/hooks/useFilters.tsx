@@ -39,47 +39,28 @@ function useFilters(data: MessageHeader[], selectedFilters: Filters) {
 
     // Determine which filter for the message type is applied
     function matchMessageType(m: MessageHeader, filters: Filters): boolean {
-        const {
-            Handshake,
-            HandshakeResponse,
-            InstructionStatusUpdate,
-            PowerForecast,
-            PowerMeasurement,
-            ResourceManagerDetails,
-            RevokeObject,
-            SelectControlType,
-            SessionRequest,
-            ConnectionLost,
-            ActuatorStatus,
-            FillLevelTargetProfile,
-            Instruction,
-            LeakageBehavior,
-            StorageStatus,
-            SystemDescription,
-            TimerStatus,
-            UsageForecast,
-        } = filters;
+        const messageTypes: { [key: string]: boolean } = {
+            "Handshake": filters.Handshake,
+            "HandshakeResponse": filters.HandshakeResponse,
+            "InstructionStatusUpdate": filters.InstructionStatusUpdate,
+            "PowerForecast": filters.PowerForecast,
+            "PowerMeasurement": filters.PowerMeasurement,
+            "ResourceManagerDetails": filters.ResourceManagerDetails,
+            "RevokeObject": filters.RevokeObject,
+            "SelectControlType": filters.SelectControlType,
+            "SessionRequest": filters.SessionRequest,
+            "Connection Lost": filters.ConnectionLost,
+            "FRBC.ActuatorStatus": filters.ActuatorStatus,
+            "FRBC.FillLevelTargetProfile": filters.FillLevelTargetProfile,
+            "FRBC.Instruction": filters.Instruction,
+            "FRBC.LeakageBehavior": filters.LeakageBehavior,
+            "FRBC.StorageStatus": filters.StorageStatus,
+            "FRBC.SystemDescription": filters.SystemDescription,
+            "FRBC.TimerStatus": filters.TimerStatus,
+            "FRBC.UsageForecast": filters.UsageForecast,
+        };
 
-        return (
-            (Handshake && m.message_type === "Handshake") ||
-            (HandshakeResponse && m.message_type === "HandshakeResponse") ||
-            (InstructionStatusUpdate && m.message_type === "InstructionStatusUpdate") ||
-            (PowerForecast && m.message_type === "PowerForecast") ||
-            (PowerMeasurement && m.message_type === "PowerMeasurement") ||
-            (ResourceManagerDetails && m.message_type === "ResourceManagerDetails") ||
-            (RevokeObject && m.message_type === "RevokeObject") ||
-            (SelectControlType && m.message_type === "SelectControlType") ||
-            (SessionRequest && m.message_type === "SessionRequest") ||
-            (ConnectionLost && m.message_type === "Connection Lost") ||
-            (ActuatorStatus && m.message_type === "FRBC.ActuatorStatus") ||
-            (FillLevelTargetProfile && m.message_type === "FRBC.FillLevelTargetProfile") ||
-            (Instruction && m.message_type === "FRBC.Instruction") ||
-            (LeakageBehavior && m.message_type === "FRBC.LeakageBehavior") ||
-            (StorageStatus && m.message_type === "FRBC.StorageStatus") ||
-            (SystemDescription && m.message_type === "FRBC.SystemDescription") ||
-            (TimerStatus && m.message_type === "FRBC.TimerStatus") ||
-            (UsageForecast && m.message_type === "FRBC.UsageForecast")
-        );
+        return messageTypes[m.message_type] || false;
     }
 
     return filters;

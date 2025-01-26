@@ -15,7 +15,7 @@ ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Legend, 
  * @param props - The props containing the usage forecast data and start date
  * @returns the UsageForecast's graph
  */
-function PowerForecastGraph(props: Props) {
+function PowerForecastGraph(props: Readonly<Props>) {
     /**
      * Collects the data for the graph including timestamps and usage rates
      * @returns The data object for the chart

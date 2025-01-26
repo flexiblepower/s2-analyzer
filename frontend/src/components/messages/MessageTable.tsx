@@ -13,7 +13,7 @@ interface MessageTableProps<T extends MessageHeader> {
     messages: T[];
 }
 
-function MessageTable<T extends MessageHeader>({ messages }: MessageTableProps<T>) {
+function MessageTable<T extends MessageHeader>({ messages }: Readonly<MessageTableProps<T>>) {
     const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
     const [selectedMessages, setSelectedMessages] = useState<T[]>([]);
 

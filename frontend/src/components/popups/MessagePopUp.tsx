@@ -6,7 +6,7 @@ import NestedObjectVisualization from "./special/NestedObjectVisualization.tsx";
 import ActuatorDescription from "../../models/dataStructures/frbc/actuatorDescription.ts";
 import StorageDescription from "../../models/dataStructures/frbc/storageDescription.ts";
 
-interface props<T extends MessageHeader> {
+interface Props<T extends MessageHeader> {
     trigger: boolean;
     setTrigger: (arg: boolean) => void;
     message: T;
@@ -17,7 +17,7 @@ interface props<T extends MessageHeader> {
  * @param props - The props containing the trigger, setTrigger function, and the message to be displayed
  * @returns The MessagePopUp component
  */
-function MessagePopUp<T extends MessageHeader>(props: props<T>) {
+function MessagePopUp<T extends MessageHeader>(props: Readonly<Props<T>>) {
     const keys = Object.keys(props.message) as (keyof T)[];
     const [isJSON, setIsJSON] = useState(false);
     const [isDraggable, setIsDraggable] = useState(false);

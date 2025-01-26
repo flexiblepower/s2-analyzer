@@ -14,7 +14,7 @@ interface SearchBarProps {
  * @param onSearchChange The function to keep track of changing the search ID
  * @returns The SearchBar component
  */
-function SearchBar({searchId, onSearchChange}: SearchBarProps) {
+function SearchBar({searchId, onSearchChange}: Readonly<SearchBarProps>) {
     // Determines the visibility of the delete icon in the search bar
     const deleteTextIcon = searchId !== "" ? "block" : "hidden";
 

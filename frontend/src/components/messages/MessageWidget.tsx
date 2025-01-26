@@ -12,7 +12,7 @@ interface MessageWidgetProps<T extends MessageHeader> {
  * @param props - The properties for the MessageWidget component, including an array of searched messages of type T
  * @returns The MessageWidget component
  */
-function MessageWidget<T extends MessageHeader>({ messages }: MessageWidgetProps<T>) {
+function MessageWidget<T extends MessageHeader>({ messages }: Readonly<MessageWidgetProps<T>>) {
     return (
         <div className="max-w-xl h-5/6 rounded-xl shadow-[0_1px_30px_1px_rgba(0,0,0,0.3)] grid grid-cols-12 grid-rows-12">
             {/* Left Box (CEM) */}
