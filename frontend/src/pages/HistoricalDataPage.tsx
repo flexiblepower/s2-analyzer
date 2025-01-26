@@ -41,35 +41,30 @@ const HistoricalDataPage = () => {
             Object.entries(filters).filter(([, value]) => value !== '')
         );
 
-        try {
-            const result = await api.getHistoryFilter(backendUrl, filteredParams);
+        const result = await api.getHistoryFilter(backendUrl, filteredParams);
 
-            if (result) {
-                if (result.length === 0) {
-                    setErrorMessage("No matching data was found for the provided filters.");
-                    setData([]);
-                    return;
-                }
-            } else {
-                setErrorMessage("Request or server error. Please check your filters or try again later.");
+        if (result) {
+            if (result.length === 0) {
+                setErrorMessage("No matching data was found for the provided filters.");
                 setData([]);
                 return;
             }
-
-            const headers = result
-                .map((message: BackendMessage) => {
-                    return parser.extractHeaderDatabaseMessage(message);
-                })
-                .filter((header): header is MessageHeader =>
-                    header !== null && header.message_type !== "ReceptionStatus"
-                );
-
-            setData(headers);
-            setErrorMessage(null); // Clear any error message when data is fetched successfully
-        } catch (err) {
-            console.error(err);
-            setErrorMessage('Failed to fetch data. Please try again.');
+        } else {
+            setErrorMessage("Request or server error. Please check your filters or try again later.");
+            setData([]);
+            return;
         }
+
+        const headers = result
+            .map((message: BackendMessage) => {
+                return parser.extractHeaderDatabaseMessage(message);
+            })
+            .filter((header): header is MessageHeader =>
+                    header !== null && header.message_type !== "ReceptionStatus"
+            );
+
+        setData(headers);
+        setErrorMessage(null); // Clear any error message when data is fetched successfully
     };
 
     // List of input fields and their placeholders
@@ -84,6 +79,7 @@ const HistoricalDataPage = () => {
 
     return (
         <div className="w-full h-screen m-auto bg-base-backgroung grid grid-cols-12 grid-rows-12">
+            {/* Header */}
             <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white py-4">
                 Historical Data Page
             </div>
@@ -91,24 +87,23 @@ const HistoricalDataPage = () => {
                 {/* Filter Inputs */}
                 <div className="flex-1 grid lg:grid-cols-2 gap-3">
                     {filterFields.map(({ name, placeholder, type }) => (
-                        <input
-                            key={name}
-                            type={type}
-                            name={name}
-                            value={filters[name as keyof FilterQuery]}
-                            onChange={handleFilterChange}
-                            placeholder={placeholder}
-                            onFocus={() => {
-                                // Switch to 'date' type when focused
-                                if (name === 'start_date') setStartDateType('date');
-                                if (name === 'end_date') setEndDateType('date');
-                            }}
-                            onBlur={() => {
-                                // Switch back to 'text' type when focus is lost
-                                if (name === 'start_date') setStartDateType('text');
-                                if (name === 'end_date') setEndDateType('text');
-                            }}
-                            className="w-full max-w-md p-2 rounded-lg"
+                        <input key={name}
+                               type={type}
+                               name={name}
+                               value={filters[name as keyof FilterQuery]}
+                               onChange={handleFilterChange}
+                               placeholder={placeholder}
+                               onFocus={() => {
+                                   // Switch to 'date' type when focused
+                                   if (name === 'start_date') setStartDateType('date');
+                                   if (name === 'end_date') setEndDateType('date');
+                               }}
+                               onBlur={() => {
+                                   // Switch back to 'text' type when focus is lost
+                                   if (name === 'start_date') setStartDateType('text');
+                                   if (name === 'end_date') setEndDateType('text');
+                               }}
+                               className="w-full max-w-md p-2 rounded-lg"
                         />
                     ))}
                     <button className="h-10 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"

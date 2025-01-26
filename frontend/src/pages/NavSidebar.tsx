@@ -44,6 +44,7 @@ const NavSidebarComponent = ({ toggled, setToggled }:NavSidebarProps) => {
                 <MenuItem component={<Link to="/real-time"/>}>Real-Time Data</MenuItem>
                 <MenuItem component={<Link to="/historical-data"/>}>Historical Data</MenuItem>
                 <MenuItem component={<Link to="/validate-message"/>}>Validate Message</MenuItem>
+                <MenuItem component={<Link to="/inject-message"/>}>Inject Message</MenuItem>
             </Menu>
         </Sidebar>
     );

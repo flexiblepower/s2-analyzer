@@ -5,6 +5,7 @@ import HistoricalDataPage from "./pages/HistoricalDataPage.tsx";
 import {useState} from "react";
 import NavSidebarComponent from "./pages/NavSidebar.tsx";
 import MessageValidationPage from "./pages/MessageValidationPage.tsx";
+import MessageInjectionPage from "./pages/MessageInjectionPage.tsx";
 
 /**
  * The Visual Application that contains the page(s) (or components)
@@ -33,6 +34,7 @@ function App() {
                             <Route path="/real-time" element={<RealtimeDataPage />} />
                             <Route path="/historical-data" element={<HistoricalDataPage />} />
                             <Route path="/validate-message" element={<MessageValidationPage />} />
+                            <Route path="/inject-message" element={<MessageInjectionPage />} />
                         </Routes>
                     </main>
                 </div>

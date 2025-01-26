@@ -67,10 +67,10 @@ class Api {
      * @param originId - The origin ID of the message.
      * @param destId - The destination ID of the message.
      * @param message - The message object to be injected.
-     * @returns {Promise<string | undefined>} - Resolves with the response string on success.
+     * @returns {Promise<null | undefined>} - Resolves with the response null on success.
      * If the request fails or encounters an error, `undefined` is returned.
      */
-    public async injectMessage(backend: string, originId: string, destId: string, message: object): Promise<string | undefined> {
+    public async injectMessage(backend: string, originId: string, destId: string, message: object): Promise<null | undefined> {
         const url = `${backend}/inject/`;
         return axios.post(url, {
             origin_id: originId,
