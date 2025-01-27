@@ -47,14 +47,15 @@ function ReceptionStatusIcon({ header }: Readonly<Props>) {
                 message={typeof header.status === "object"
                         ? header.status : createReceptionStatus(header.status.replace("invalid", "Invalid because:\n"))}
             />
-            <img className="cursor-pointer"
-                 onClick={() => setIsPopUpVisible((prev) => !prev)}
-                 onKeyDown={() => setIsPopUpVisible((prev) => !prev)}
-                 src={imgSrc}
-                 alt={statusLabel}
-                 title={statusLabel}
-                 style={{ width: "15px", height: "15px", marginLeft: "0.2em" }}
-            />
+            <button className="cursor-pointer bg-transparent border-none p-0"
+                    onClick={() => setIsPopUpVisible((prev) => !prev)}
+                    onKeyDown={() => setIsPopUpVisible((prev) => !prev)}
+                    aria-label={statusLabel}
+            >
+                <img src={imgSrc} alt={statusLabel} title={statusLabel}
+                     style={{ width: "15px", height: "15px", marginLeft: "0.2em" }}
+                />
+            </button>
         </>
     );
 }

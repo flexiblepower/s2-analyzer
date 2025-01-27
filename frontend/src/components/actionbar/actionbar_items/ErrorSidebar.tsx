@@ -1,5 +1,4 @@
 import {useState, useEffect, useRef} from "react";
-import { v4 as uuidv4 } from "uuid";
 
 interface ErrorSidebarProps {
     errors: string[];
@@ -8,7 +7,7 @@ interface ErrorSidebarProps {
 const [minWidth, maxWidth, defaultWidth] = [
     200,
     window.innerWidth / 2,
-    window.innerWidth / 4,
+    window.innerWidth / 5,
 ];
 
 function ErrorSidebar({ errors }: Readonly<ErrorSidebarProps>) {
@@ -47,8 +46,8 @@ function ErrorSidebar({ errors }: Readonly<ErrorSidebarProps>) {
             <div style={{ width: `${width}px`, height: '86vh' }} className="border-tno-blue border-r bg-base-gray">
                 <h1 className="text-lg text-white">All errors:</h1>
                 {errors.length ? (
-                    errors.map((s) => (
-                        <pre key={uuidv4()}
+                    errors.map((s, index) => (
+                        <pre key={`${s}-${index}`}
                              className="text-white overflow-auto bg-base-gray"
                              style={{ maxWidth: width, overflowX: "hidden" }}
                         >
@@ -59,7 +58,7 @@ function ErrorSidebar({ errors }: Readonly<ErrorSidebarProps>) {
                     <pre className="text-white">None.</pre>
                 )}
             </div>
-            <div className="w-2 cursor-col-resize" onMouseDown={startResizing}/>
+            <button className="w-2 cursor-col-resize" onMouseDown={startResizing}/>
         </div>
     );
 }

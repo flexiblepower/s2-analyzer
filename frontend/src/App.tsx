@@ -3,7 +3,7 @@ import BackendContext from './BackendContext';
 import RealtimeDataPage from './pages/RealtimeDataPage.tsx';
 import HistoricalDataPage from "./pages/HistoricalDataPage.tsx";
 import {useState} from "react";
-import NavSidebarComponent from "./pages/NavSidebar.tsx";
+import NavSidebarComponent from "./components/NavSidebar.tsx";
 import MessageValidationPage from "./pages/MessageValidationPage.tsx";
 import MessageInjectionPage from "./pages/MessageInjectionPage.tsx";
 

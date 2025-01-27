@@ -33,13 +33,13 @@ To run the frontend, you need to have *Node.js* and *npm*.
 
 ### Setting up the Backend
 
-To set up and run the S2 analyzer backend:
+To set up and run the S2 analyzer backend, run the following command in the root directory:
 
 ```bash
-docker compose up --build
+docker compose up backend --build
 ```
 
-This will build the backend to container images locally and run them. The backend is available on port `8001`.
+This will build the backend container images locally and run them. The backend is available on port `8001`.
 
 For more information to set up the backend, you can check the backend's README file.
 
@@ -70,6 +70,10 @@ docker compose up --build
 
 ## Frontend Features
 Here is an exhaustive list of the application's features:
+
+### Navigation Menu
+A menu that allows the user to access different pages of the frontend by changing the URL. The menu is accessible
+by clicking the button at the top of the page.
 
 ### ErrorSidebar Menu
 By clicking the sidebar icon on the navigation bar (the three horizontal lines) a resizable container will appear on the left side of the screen.
@@ -159,9 +163,22 @@ twice, the exact (property, value) pairs of that object will be displayed in the
 
 We suggest activating "dragging mode" in order to double-click on property headers without selecting the text and being able to drag and adjust the pop-up as it expands.
 
-#### ConnectionLost
-As mentioned earlier, the only backend warning that is being displayed alongside the logged messages, are connection loses.
-These messages are rendered without a directed arrow and with a red font in order to stand out. However, when you click on them, their pop-up will list exactly which device disconnected under its "sender" field.
+### Multipage Design
+The frontend of the application is designed with a multipage structure to improve the navigation and organization of its components.
+Each page handles either the interaction with one of the backend's endpoints or with the websocket. The app includes the following pages:
+1. Real-time data page:
+   Displays the live message exchange (in a table or a diagram) between the CEM and RM through the websocket and does not perform any standard API calls
+   to the other endpoints of the backend.
+2. Historical data page:
+   Allows the user to fetch filtered, historical messages from the backend, which is then represented in a table.
+3. Validation page:
+   Allows the user to validate a message, which must be provided in json format, and displays the result.
+   The validation is performed on the backend with the `s2python` package.
+4. Injection page:
+   Allows the user to inject a message in the communication between the CEM and RM and, inherently, in the database.
+   The message is provided similarly to the validation page (json file loading), but two more inputs are required, i.e.
+   the origin and destination IDs (for example, "cem1" and "battery1"). Displays a simple success/failure message depending
+   on the status of the made request.
 
 ## Testing the Application
  

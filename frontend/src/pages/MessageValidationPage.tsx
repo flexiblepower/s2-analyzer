@@ -14,6 +14,8 @@ const MessageValidationPage = () => {
             setValidationResult(result ?? "Validation failed.");
         } else if (message && 'error' in message) {
             setValidationResult("Cannot validate. The message contains parsing errors.");
+        } else {
+            setValidationResult(null);
         }
     };
 
@@ -38,7 +40,6 @@ const MessageValidationPage = () => {
                 </button>
                 <button className="py-2 px-6 mx-2 bg-green-500 text-white rounded hover:bg-green-600"
                         onClick={handleValidation}
-                        disabled={!message}
                 >
                     Validate Message
                 </button>

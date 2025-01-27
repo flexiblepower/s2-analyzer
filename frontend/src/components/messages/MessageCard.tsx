@@ -54,11 +54,11 @@ function MessageCard<T extends MessageHeader>({ message }: Readonly<Props<T>>) {
                         <tbody>
                         <tr>
                             <th>
-                                <h3 className="cursor-pointer"
-                                    onClick={() => togglePopUp(message)}
-                                    onKeyDown={() => togglePopUp(message)}>
+                                <button className="cursor-pointer"
+                                        onClick={() => togglePopUp(message)}
+                                        onKeyDown={() => togglePopUp(message)}>
                                     {message.message_type}
-                                </h3>
+                                </button>
                             </th>
                             {message.status && (<th><ReceptionStatusIcon header={message} /></th>)}
                         </tr>

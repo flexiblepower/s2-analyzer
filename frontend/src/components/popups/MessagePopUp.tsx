@@ -5,7 +5,6 @@ import SpecialMessage from "./special/SpecialMessage.tsx";
 import NestedObjectVisualization from "./special/NestedObjectVisualization.tsx";
 import ActuatorDescription from "../../models/dataStructures/frbc/actuatorDescription.ts";
 import StorageDescription from "../../models/dataStructures/frbc/storageDescription.ts";
-import { v4 as uuidv4 } from "uuid";
 
 interface Props<T extends MessageHeader> {
     trigger: boolean;
@@ -88,8 +87,8 @@ function MessagePopUp<T extends MessageHeader>(props: Readonly<Props<T>>) {
                  ${props.trigger ? "visible" : "invisible"}`}
                  style={{ position: "fixed", top: "50%", left: "50%" }}
             >
-                <div onClick={(e) => e.stopPropagation()}
-                     className={`bg-metallic-gray rounded-lg shadow p-6 transition-all 
+                <button onClick={(e) => e.stopPropagation()}
+                     className={`bg-metallic-gray rounded-lg shadow p-6 transition-all focus:outline-none cursor-[inherit]
                      ${props.trigger ? "scale-100 opacity-100" : "scale-50 opacity-0"}`}
                 >
                     <h2 className="handle cursor-all-scroll text-lg font-black text-white justify-center items-center flex">
@@ -121,8 +120,8 @@ function MessagePopUp<T extends MessageHeader>(props: Readonly<Props<T>>) {
                                 </tr>
                                 </thead>
                                 <tbody className="text-white">
-                                {keys.map((key) => (
-                                    <tr key={uuidv4()} className="bg-metallic-gray">
+                                {keys.map((key, index) => (
+                                    <tr key={`${key.toString()}-${index}`} className="bg-metallic-gray">
                                         <th className="border-2 border-tno-blue">
                                             {key.toString()}
                                         </th>
@@ -140,7 +139,7 @@ function MessagePopUp<T extends MessageHeader>(props: Readonly<Props<T>>) {
                             <SpecialMessage message={props.message} />
                         </div>
                     )}
-                </div>
+                </button>
             </div>
         </Draggable>
     );

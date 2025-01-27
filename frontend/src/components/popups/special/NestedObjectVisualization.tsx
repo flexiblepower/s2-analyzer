@@ -1,5 +1,4 @@
 import {useState} from "react";
-import { v4 as uuidv4 } from "uuid";
 
 interface Props {
     obj: object;
@@ -13,16 +12,15 @@ const NestedObjectVisualization = ({obj}: Readonly<Props>) => {
         if (typeof value === "object" && value !== null) {
             return (
                 <tr className="bg-metallic-gray">
-                    <td className="border-2 border-tno-blue"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            collapsed.set(
-                                property,
-                                collapsed.has(property) ? !collapsed.get(property) : false
-                            );
-                        }}
-                    >
-                        {property}
+                    <td className="border-2 border-tno-blue">
+                        <button onClick={(e) => {
+                                         e.stopPropagation();
+                                         collapsed.set(property, collapsed.has(property) ? !collapsed.get(property) : false);
+                                        }}
+                                className="w-full text-left"
+                        >
+                            {property}
+                        </button>
                     </td>
                     <td>
                         {collapsed.get(property) ? (
@@ -36,21 +34,20 @@ const NestedObjectVisualization = ({obj}: Readonly<Props>) => {
         } else if (Array.isArray(value)) {
             return (
                 <tr className="bg-metallic-gray">
-                    <td className="border-2 border-tno-blue"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            collapsed.set(
-                                property,
-                                collapsed.has(property) ? !collapsed.get(property) : false
-                            );
-                        }}
-                    >
-                        {property}
+                    <td className="border-2 border-tno-blue">
+                        <button onClick={(e) => {
+                                          e.stopPropagation();
+                                          collapsed.set(property, collapsed.has(property) ? !collapsed.get(property) : false);
+                                        }}
+                                className="w-full text-left"
+                        >
+                            {property}
+                        </button>
                     </td>
                     <td>
                         {collapsed.get(property) ? (
-                            value?.map((item) => (
-                                <NestedObjectVisualization key={uuidv4()} obj={item}/>
+                            value?.map((item, index) => (
+                                <NestedObjectVisualization key={`${JSON.stringify(item)}-${index}`} obj={item}/>
                             ))
                         ) : (
                             <span>Click to expand</span>
@@ -70,7 +67,7 @@ const NestedObjectVisualization = ({obj}: Readonly<Props>) => {
 
     return (
         <table className="rounded-lg font-[Calibri] border-2 border-separate border-tno-blue">
-            <tbody className={"text-white"}>
+            <tbody className="text-white">
             {Object.entries(obj).map(([property, value]) => renderProperty(property, value))}
             </tbody>
         </table>
