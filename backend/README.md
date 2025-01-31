@@ -75,7 +75,7 @@ You can inject messages into a channel between 2 CEM or RM devices by sending a 
 }
 ```
 
-This will inject the message into the channel to `rm1` and will look like it came from `cem1`. No validation is performed on this message.
+This will inject the message into the channel to `rm1` and will look like it came from `cem1`. By default the S2 message will be validated however if you wish to skip this, you can add the `validate` parameter to the request url as a query parameter: `http://localhost:8001/backend/inject?validate=false`. This disable message validation and allow you to send an invalid message. eg. you want to check how the RM will handle an invalid message.
 
 ## Design
 
