@@ -37,3 +37,9 @@ export interface FilterQuery {
     start_date?: string;
     end_date?: string;
 }
+
+export interface InjectedMessage {
+    message_id: string;
+    message_type: string;
+    [key: string]: unknown;
+}

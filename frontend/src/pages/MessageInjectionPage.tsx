@@ -1,7 +1,8 @@
 import { useState, useContext } from 'react';
 import BackendContext from "../BackendContext";
 import { api } from "../api/api.ts";
-import useFileSelection from "../hooks/useFileSelection"; // Import the custom hook
+import useFileSelection from "../hooks/useFileSelection";
+import {InjectedMessage} from "../api/apiTypes.ts";
 
 const MessageInjectionPage = () => {
     const backendUrl = useContext(BackendContext);
@@ -12,7 +13,7 @@ const MessageInjectionPage = () => {
 
     const handleInjectMessage = async () => {
         if (message && !('error' in message) && originId && destId) {
-            const result = await api.injectMessage(backendUrl, originId, destId, message);
+            const result = await api.injectMessage(backendUrl, originId, destId, message as InjectedMessage);
             if (result === null) {
                 setInjectionResult("Message successfully injected!");
             } else {
@@ -56,7 +57,7 @@ const MessageInjectionPage = () => {
 
             {/* Loaded Message Box & Input Boxes */}
             <div className="flex justify-center p-4">
-                <div className="bg-white shadow-lg rounded p-4 w-full max-w-[600px] h-80 overflow-auto">
+                <div className="bg-white shadow-lg rounded p-4 w-full max-w-[600px] h-[30rem] overflow-auto">
                     <h3 className="text-lg font-semibold">Read Message:</h3>
                     <pre className="text-gray-800">
                         {message ? JSON.stringify(message, null, 2) : "No message loaded (json required)."}

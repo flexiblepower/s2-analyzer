@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {BackendMessage, FilterQuery} from "./apiTypes.ts";
+import {BackendMessage, FilterQuery, InjectedMessage} from "./apiTypes.ts";
 
 class Api {
     public static readonly instance: Api = new Api();
@@ -63,15 +63,16 @@ class Api {
      * @returns {Promise<null | undefined>} - Resolves with the response null on success.
      * If the request fails or encounters an error, `undefined` is returned.
      */
-    public async injectMessage(backend: string, originId: string, destId: string, message: object): Promise<null | undefined> {
+    public async injectMessage(backend: string, originId: string, destId: string, message: InjectedMessage): Promise<null | undefined> {
         const url = `${backend}/inject/`;
-        return axios.post(url, {
+        const payload = {
             origin_id: originId,
             dest_id: destId,
-            message: message,
-        })
+            ...message
+        };
+        return axios.post(url, payload)
             .then(response => response.data)
-            .catch(error => {return this.handleError(error)});
+            .catch(error => { return this.handleError(error) });
     }
 }
 
