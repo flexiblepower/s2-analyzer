@@ -26,29 +26,45 @@ LOGGER = logging.getLogger(__name__)
 
 
 class InjectMessage(BaseModel):
+    """Pydantic model used to validate and receive
+    the message injection endpoint body."""
+
     origin_id: str
     dest_id: str
     message: dict
 
 
 class ConnectionDetails(BaseModel):
+    """Pydantic model used to serialize the connection information
+    for the connection list endpoint."""
+
     origin_id: str
     dest_id: str
     connection_type: S2OriginType
 
 
 class ManInTheMiddleAPI:
+    """
+    ManInTheMiddleAPI handles WebSocket connections and message injection for the S2 Analyzer backend.
+
+    Attributes:
+        router (APIRouter): The FastAPI router for handling API routes.
+        msg_router (MessageRouter): The message router instance used to route messages between the CEM and RM devices.
+    """
+
     router: APIRouter
+    msg_router: "MessageRouter"
 
     def __init__(
         self,
-        msg_router: "MessageRouter",
+        msg_router: "MessageRouter",  # Received by dependency injection
     ) -> None:
         super().__init__()
 
         self.router = APIRouter()
         self.msg_router = msg_router
 
+        # Adding the routes to the FastAPI router.
         self.router.add_api_websocket_route(
             "/backend/rm/{rm_id}/cem/{cem_id}/ws", self.receive_new_rm_connection
         )
@@ -75,6 +91,15 @@ class ManInTheMiddleAPI:
         origin_id,
         dest_id,
     ) -> None:
+        """Handles the creation of a new WebsocketConnection instance when a CEM or RM device initiates a connection.
+        WebSocketConnections are run as AsyncApplications so run on their own thread to receive messages.
+
+        Args:
+            websocket (WebSocket): received websocket connection.
+            connection_type (S2OriginType): The origin type of the websocket. Either CEM or RM
+            origin_id (_type_): The identifier of the sending device.
+            dest_id (_type_): Identifier of the receiving device.
+        """
         conn = WebSocketConnection(
             origin_id, dest_id, connection_type, self.msg_router, websocket
         )
@@ -90,6 +115,7 @@ class ManInTheMiddleAPI:
     async def receive_new_rm_connection(
         self, websocket: WebSocket, rm_id: str, cem_id: str
     ) -> None:
+        """Handles the new incoming RM connection"""
         try:
             await websocket.accept()
             LOGGER.info("Received connection from rm %s to cem %s.", rm_id, cem_id)
@@ -105,6 +131,7 @@ class ManInTheMiddleAPI:
     async def receive_new_cem_connection(
         self, websocket: WebSocket, cem_id: str, rm_id: str
     ) -> None:
+        """Handles the new incoming CEM connection."""
         try:
             await websocket.accept()
             LOGGER.info("Received connection from cem %s to rm %s.", cem_id, rm_id)
@@ -117,7 +144,17 @@ class ManInTheMiddleAPI:
 
         await self.handle_connection(websocket, S2OriginType.CEM, cem_id, rm_id)
 
-    async def inject_message(self, body: InjectMessage, validate : bool = True) -> None:
+    async def inject_message(self, body: InjectMessage, validate: bool = True) -> None:
+        """
+        Injects a message into the message router between a CEM and RM device.
+        Args:
+            body (InjectMessage): The message and routing information to be used to inject the message.
+            validate (bool, optional): Query parameter. Flag to indicate whether the message should be validated before injection. Defaults to True.
+        Responses:
+            200: If message injection successful.
+            400: If the message is validated and is found to be invalid or the message injection failed.
+        """
+
         LOGGER.info(validate)
         if validate:
             try:
@@ -135,11 +172,17 @@ class ManInTheMiddleAPI:
                 return Response(json.dumps(errors), status_code=400)
 
         try:
-            await self.msg_router.inject_message(body.origin_id, body.dest_id, body.message)
+            await self.msg_router.inject_message(
+                body.origin_id, body.dest_id, body.message
+            )
         except Exception:
-            return Response("Unable to inject message. Probably because there's no connection to inject into.", 400)
+            return Response(
+                "Unable to inject message. Probably because there's no connection to inject into.",
+                400,
+            )
 
     async def get_connections(self):
+        """Endpoint to view all open connections to the S2 Analyzer."""
         connections = []
         for conn in self.msg_router.connections.values():
             connections.append(

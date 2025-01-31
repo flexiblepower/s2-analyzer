@@ -232,6 +232,7 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
                 )
 
     def stop(self, loop: asyncio.AbstractEventLoop) -> None:
+        self.websocket.close()
         if (
             self._main_task
             and not self._main_task.done()

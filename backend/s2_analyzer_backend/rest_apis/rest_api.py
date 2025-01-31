@@ -30,6 +30,10 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
+"""
+This module defines the RestAPI class, which is responsible for setting up and running a FastAPI server with
+specific routes and middleware for the S2 Analyzer application.
+"""
 class RestAPI(AsyncApplication):
     uvicorn_server: Optional[uvicorn.Server]
     fastapi_router: APIRouter
@@ -47,25 +51,29 @@ class RestAPI(AsyncApplication):
         self.uvicorn_server = None
 
         self.fastapi_router = APIRouter()
+
+        # Receive the message router and debugger message processor via dependency injection.
         self.msg_router = msg_router
         self.debugger_frontend_msg_processor = debugger_frontend_msg_processor
 
-        # Could be moved to dependency injection or something. But for now, this is fine.
+        # Setup the sub-routers which handle specific tasks.
         debugger_api = DebuggerAPI(debugger_frontend_msg_processor)
         self.fastapi_router.include_router(debugger_api.router)
 
+        # Handles the CEM and RM man in the middle communication. Also has the message injection functionality.
         mitm_api = ManInTheMiddleAPI(msg_router)
         self.fastapi_router.include_router(mitm_api.router)
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         app = FastAPI(title="S2 Analyzer", description="", version="v0.0.1")
         
+        # Add CORS middleware
         app.add_middleware(
             CORSMiddleware,
-            allow_origins=["*"],  # Adjust to specific origins instead of "*" for security
+            allow_origins=["*"],  # Allow all origins
             allow_credentials=True,
-            allow_methods=["*"],  # Allows all HTTP methods (GET, POST, etc.)
-            allow_headers=["*"],  # Allows all headers
+            allow_methods=["*"],  # Allow all HTTP methods
+            allow_headers=["*"],  # Allow all HTTP headers
         )
 
         app.include_router(self.fastapi_router)

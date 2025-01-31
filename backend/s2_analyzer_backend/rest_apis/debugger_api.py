@@ -31,10 +31,21 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ValidateS2Message(BaseModel):
+    """Pydantic model for receiving the message validation request body."""
     message: dict
 
 
 class DebuggerAPI:
+    """
+    DebuggerAPI handles WebSocket connections from the debugger frontend and has endpoints
+    for querying the message history, and validating a message.
+
+    Attributes:
+        router (APIRouter): The FastAPI router for handling API routes.
+        debugger_frontend_msg_processor (DebuggerFrontendMessageProcessor): The message
+            processor instance which all of the frontend websocket connections must be added to.
+    """
+
     router: APIRouter
 
     def __init__(
@@ -74,6 +85,10 @@ class DebuggerAPI:
     async def receive_new_debugger_frontend_connection(
         self, websocket: WebSocket
     ) -> None:
+        """Accepts an incoming websocket connection from the debugger frontend.
+        Creates a new DebuggerFrontendWebsocketConnection instance which will handle the receiving and sending of messages on the new websocket.
+        The new websocket is added to the debugger frontend message processor so that the debug messages are sent over this websocket after being processed.
+        """
         LOGGER.info("Received connection from debugger frontend.")
         try:
             await websocket.accept()
@@ -102,6 +117,20 @@ class DebuggerAPI:
         end_date: Optional[datetime] = Query(None, description="End date filter"),
         history_filter: HistoryFilter = Depends(),  # Dependency injected history filter which queries database
     ):
+        """GET Endpoint that filters and returns the query of message history.
+        Args:
+            cem_id (Optional[str]): CEM ID filter.
+            rm_id (Optional[str]): RM ID filter.
+            origin (Optional[str]): Origin filter.
+            s2_msg_type (Optional[str]): S2 message type filter.
+            start_date (Optional[datetime]): Start date filter.
+            end_date (Optional[datetime]): End date filter.
+            history_filter (HistoryFilter): Dependency injected history filter which queries the database.
+        Returns:
+            List[Dict]: A list of filtered message history records.
+        Raises:
+            HTTPException: If an error occurs during the filtering process.
+        """
         LOGGER.info(
             f"Received history filter request: cem_id={cem_id}, rm_id={rm_id}, origin={origin}, s2_msg_type={s2_msg_type}, start_date={start_date}, end_date={end_date}"
         )

@@ -13,6 +13,8 @@ LOGGER = logging.getLogger(__name__)
 
 
 class HistoryFilter:
+    """Utility class used to perform queries on the Communication database table."""
+
     def __init__(self, session: Session = Depends(get_session)):
         self.session = session
 

@@ -21,24 +21,40 @@ from s2_analyzer_backend.config import CONFIG
 LOGGER = logging.getLogger(__name__)
 
 
+def build_message_processor_handler(debugger_frontend_msg_processor):
+    """
+    Builds the processor handler. Processor instances are added in the order in which they will be executed.
+    The result of the execution of the previous processor will be passed to the next.
+    """
+    processor = MessageProcessorHandler()
+
+    processor.add_message_processor(MessageLoggerProcessor())
+    processor.add_message_processor(MessageParserProcessor())
+    processor.add_message_processor(MessageStorageProcessor(engine))
+    processor.add_message_processor(debugger_frontend_msg_processor)
+
+    return processor
+
+
 def main():
     parser = argparse.ArgumentParser(prog="S2 analyzer backend")
     args = parser.parse_args()
 
     setup_logging(LogLevel.parse(os.getenv("LOG_LEVEL", "INFO")))
 
+    # Initialise and create the database tables in an SQLite db
     create_db_and_tables()
 
-    msg_processor_handler = MessageProcessorHandler()
-
-    msg_processor_handler.add_message_processor(MessageLoggerProcessor())
-    msg_processor_handler.add_message_processor(MessageParserProcessor())
-    msg_processor_handler.add_message_processor(MessageStorageProcessor(engine))
     debugger_frontend_msg_processor = DebuggerFrontendMessageProcessor()
-    msg_processor_handler.add_message_processor(debugger_frontend_msg_processor)
+    msg_processor_handler = build_message_processor_handler(
+        debugger_frontend_msg_processor
+    )
 
+    # Routes received from a CEM or RM device to the destination device.
     msg_router = MessageRouter(msg_processor_handler=msg_processor_handler)
 
+    # Start the RestAPI server. This will receive the websocket connections from the CEM and RM devices. 
+    # It also handles the debugger frontend connections and the RestAPI endpoints
     APPLICATIONS.add_and_start_application(
         RestAPI(
             CONFIG.http_listen_address,
@@ -47,8 +63,11 @@ def main():
             debugger_frontend_msg_processor,
         )
     )
+    
+    # MEssage Processor Handler Runs on it's own thread so that it doesn't block the routing of messages.
     APPLICATIONS.add_and_start_application(msg_processor_handler)
 
+    # Handle exit conditions.
     def handle_exit(sig, frame):
         LOGGER.info("Received stop from signal to stop.")
         threading.Thread(target=APPLICATIONS.stop).start()
