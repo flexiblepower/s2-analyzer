@@ -37,9 +37,6 @@ def build_message_processor_handler(debugger_frontend_msg_processor):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog="S2 analyzer backend")
-    args = parser.parse_args()
-
     setup_logging(LogLevel.parse(os.getenv("LOG_LEVEL", "INFO")))
 
     # Initialise and create the database tables in an SQLite db
