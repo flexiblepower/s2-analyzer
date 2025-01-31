@@ -1,7 +1,9 @@
+import json
 import logging
 from typing import List, Optional, TYPE_CHECKING
 
 from fastapi import (
+    Response,
     WebSocket,
     APIRouter,
     WebSocketException,
@@ -125,13 +127,16 @@ class DebuggerAPI:
         errors = []
 
         try:
+            LOGGER.info(body.message)
             s2_message = s2_parser.parse_as_any_message(body.message)
         except S2ValidationError as e:
             s2_message = body.message
-            errors = e.pydantic_validation_error.errors()
-            # validation_error = e
-            # raise ValueError(f"Error parsing message: {e}")
-            # LOGGER.exception(f"Error parsing message: {e}")
+            errors = []
+            if e.pydantic_validation_error:
+                errors = e.pydantic_validation_error.errors()
+            else:
+                errors = [e.__dict__]
+
             LOGGER.warning(f"Error parsing message: {e}")
 
         LOGGER.info(f"Validated S2 message: {s2_message}")

@@ -1,7 +1,9 @@
+import json
 import logging
 from typing import TYPE_CHECKING
 
 from fastapi import (
+    Response,
     WebSocket,
     APIRouter,
     WebSocketException,
@@ -13,6 +15,8 @@ from s2_analyzer_backend.device_connection.connection import (
 
 from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.device_connection.origin_type import S2OriginType
+from s2python.s2_parser import S2Parser
+from s2python.s2_validation_error import S2ValidationError
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.device_connection.router import MessageRouter
@@ -113,9 +117,27 @@ class ManInTheMiddleAPI:
 
         await self.handle_connection(websocket, S2OriginType.CEM, cem_id, rm_id)
 
-    async def inject_message(self, body: InjectMessage) -> None:
-        await self.msg_router.inject_message(body.origin_id, body.dest_id, body.message)
-        return
+    async def inject_message(self, body: InjectMessage, validate : bool = True) -> None:
+        LOGGER.info(validate)
+        if validate:
+            try:
+                LOGGER.info(body.message)
+
+                s2_parser = S2Parser()
+                s2_parser.parse_as_any_message(body.message)
+            except S2ValidationError as e:
+                errors = []
+                if e.pydantic_validation_error:
+                    errors = e.pydantic_validation_error.errors()
+                else:
+                    errors = [e.__dict__]
+
+                return Response(json.dumps(errors), status_code=400)
+
+        try:
+            await self.msg_router.inject_message(body.origin_id, body.dest_id, body.message)
+        except Exception:
+            return Response("Unable to inject message. Probably because there's no connection to inject into.", 400)
 
     async def get_connections(self):
         connections = []
