@@ -3,7 +3,7 @@ import BackendContext from './BackendContext';
 import RealtimeDataPage from './pages/RealtimeDataPage.tsx';
 import HistoricalDataPage from "./pages/HistoricalDataPage.tsx";
 import {useState} from "react";
-import NavSidebarComponent from "./components/NavSidebar.tsx";
+import NavSidebar from "./components/NavSidebar.tsx";
 import MessageValidationPage from "./pages/MessageValidationPage.tsx";
 import MessageInjectionPage from "./pages/MessageInjectionPage.tsx";
 
@@ -20,7 +20,7 @@ function App() {
             <BackendContext.Provider value={backend}>
                 <div className="flex">
                     {/* Navigation Sidebar */}
-                    <NavSidebarComponent toggled={toggled} setToggled={setToggled} />
+                    <NavSidebar toggled={toggled} setToggled={setToggled} />
 
                     {/* Main Content */}
                     <main className="flex-auto bg-base-gray">

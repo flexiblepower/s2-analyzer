@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { Filters } from "../../models/dataStructures/filters.ts";
 import FilterMenu from "./actionbar_items/FilterMenu.tsx";
 import SearchBar from "./actionbar_items/SearchBar.tsx";
-import useToggle from "../../hooks/useToggle";
 import useOutsideClick from "../../hooks/useOutsideClick.tsx";
 
 interface ActionBarProps {
@@ -18,19 +17,19 @@ interface ActionBarProps {
 }
 
 const ActionBar = ({
-                           filters,
-                           onFilterChange,
-                           search,
-                           onSearchChange,
-                           onAlignmentChange,
-                           toggleSideBar,
-                           toggleView,
-                           pauseMessages,
-                           isPaused,
-                       }: ActionBarProps) => {
-    const [isVisibleFilterMenu, toggleFilterMenu] = useToggle(false);
-    const [showAllOptions, toggleAllOptions] = useToggle(false);
-    const [showSpecialKeys, toggleSpecialKeys] = useToggle(false);
+                       filters,
+                       onFilterChange,
+                       search,
+                       onSearchChange,
+                       onAlignmentChange,
+                       toggleSideBar,
+                       toggleView,
+                       pauseMessages,
+                       isPaused,
+                   }: ActionBarProps) => {
+    const [isVisibleFilterMenu, setIsVisibleFilterMenu] = useState(false);
+    const [showAllOptions, setShowAllOptions] = useState(false);
+    const [showSpecialKeys, setShowSpecialKeys] = useState(false);
     const [index, setIndex] = useState(2);
     const alignments = ["justify-self-auto", "justify-center", "justify-end"];
     const filterMenuRef = useRef<HTMLDivElement>(null);
@@ -42,8 +41,8 @@ const ActionBar = ({
     };
 
     useOutsideClick([filterMenuRef, specialKeysRef], [
-        () => { if (isVisibleFilterMenu) { toggleFilterMenu(); } },
-        () => { if (showSpecialKeys) { toggleSpecialKeys(); } }
+        () => { if (isVisibleFilterMenu) { setIsVisibleFilterMenu(false); } },
+        () => { if (showSpecialKeys) { setShowSpecialKeys(false); } }
     ]);
 
     return (
@@ -51,7 +50,7 @@ const ActionBar = ({
             <div className="px-4 py-2 justify-items-center">
                 <button type="button"
                         className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-tno-blue"
-                        onClick={toggleAllOptions}
+                        onClick={() => setShowAllOptions(!showAllOptions)}
                 >
                     <span className="sr-only">Open main menu</span>
                     <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
@@ -65,9 +64,9 @@ const ActionBar = ({
                             { id: "1", onClick: toggleSideBar, label: "Errors Sidebar" },
                             { id: "2", onClick: toggleView, label: "Toggle View" },
                             { id: "3", onClick: pauseMessages, label: isPaused ? "Continue Real-Time" : "Pause Real-Time" },
-                            { id: "4", onClick: toggleFilterMenu, label: "Filters", isFilter: true },
+                            { id: "4", onClick: () => setIsVisibleFilterMenu(!isVisibleFilterMenu), label: "Filters", isFilter: true },
                             { id: "5", onClick: changeAlignment, label: "Change Alignment" },
-                            { id: "6", onClick: toggleSpecialKeys, label: "Special Keys", isSpecialKey: true },
+                            { id: "6", onClick: () => setShowSpecialKeys(!showSpecialKeys), label: "Special Keys", isSpecialKey: true },
                         ].map((button) => (
                             <li key={button.id}>
                                 <button className="block py-1 px-2 md:py-2 md:px-3 text-white rounded md:hover:text-tno-blue md:p-0" onClick={button.onClick}>

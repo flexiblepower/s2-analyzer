@@ -7,7 +7,7 @@ interface NavSidebarProps {
     setToggled: (arg0: boolean) => void;
 }
 
-const NavSidebarComponent = ({ toggled, setToggled }:NavSidebarProps) => {
+const NavSidebar = ({ toggled, setToggled }:NavSidebarProps) => {
     return (
         <Sidebar onBackdropClick={() => setToggled(false)}
                  toggled={toggled}
@@ -50,4 +50,4 @@ const NavSidebarComponent = ({ toggled, setToggled }:NavSidebarProps) => {
     );
 };
 
-export default NavSidebarComponent;
+export default NavSidebar;

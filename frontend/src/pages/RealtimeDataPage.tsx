@@ -6,8 +6,6 @@ import ErrorSidebar from "../components/actionbar/actionbar_items/ErrorSidebar.t
 import useFilters from "../hooks/useFilters";
 import useSearch from "../hooks/useSearch";
 import WebSocketClient from "../api/socket/socket.ts";
-import useToggle from "../hooks/useToggle";
-import {parser} from "../api/socket/parser.ts";
 import MessageWidget from "../components/messages/MessageWidget.tsx";
 import MessageTable from "../components/messages/MessageTable.tsx";
 import TerminalController from "../components/terminal/Terminal.tsx";
@@ -16,8 +14,9 @@ const RealtimeDataPage = () => {
     const [messages, setMessages] = useState<MessageHeader[]>([]); // State for storing message data
     const [alignment, setAlignment] = useState("justify-center"); // State for alignment of message widget
     const [searchedMessage, setSearchedMessage] = useState(""); // State for searched message id
-    const [isWidgetView, toggleWidgetView] = useToggle(false); // Using useToggle for widget view toggle
-    const [isSideBarVisible, toggleSideBar] = useToggle(false); // Using useToggle for sidebar visibility
+    const [isWidgetView, setIsWidgetView] = useState(false); // State for widget view mode
+    const [isSideBarVisible, setIsSideBarVisible] = useState(false); // State for error sidebar visibility
+    const [parser, setParser] = useState<WebSocketClient["parser"] | null>(null);
 
     // State for selected filters
     const [selectedFilters, setSelectedFilters] = useState<Filters>({
@@ -50,6 +49,8 @@ const RealtimeDataPage = () => {
         console.log("Creating WS");
         const websocket: WebSocketClient = new WebSocketClient("ws://localhost:8001/backend/debugger/");
 
+        setParser(websocket.parser); // Store parser from the WebSocketClient
+
         // Cleanup logic when component unmounts
         return () => {
             console.log("Cleaning up WebSocketClient");
@@ -59,6 +60,8 @@ const RealtimeDataPage = () => {
 
     // Fetch messages periodically
     useEffect(() => {
+        if (!parser) return; // Ensure parser is available before running
+
         const fetchMessages = async () => {
             try {
                 const newMessages = await parser.getMessages();
@@ -70,7 +73,7 @@ const RealtimeDataPage = () => {
 
         const interval = setInterval(fetchMessages, 1000);
         return () => clearInterval(interval);
-    }, [messages]);
+    }, [parser]);
 
     // Handle filter change
     const handleFilterChange = (newFilters: Filters) => {
@@ -82,7 +85,7 @@ const RealtimeDataPage = () => {
         setSearchedMessage(search);
     };
 
-    const pauseMessages = () => parser.setPause(!parser.getIsPaused());
+    const pauseMessages = () => parser?.setPause(!parser?.getIsPaused());
 
     const filteredMessages = useFilters(messages, selectedFilters);         // Get filtered messages based on selected filters
     const searchedMessages = useSearch(filteredMessages, searchedMessage); // Get searched messages based on search input
@@ -94,14 +97,14 @@ const RealtimeDataPage = () => {
                        search={searchedMessage}
                        onSearchChange={handleSearch}
                        onAlignmentChange={setAlignment}
-                       toggleSideBar={toggleSideBar}
-                       toggleView={toggleWidgetView}
+                       toggleSideBar={() => setIsSideBarVisible(!isSideBarVisible)}
+                       toggleView={() => setIsWidgetView(!isWidgetView)}
                        pauseMessages={pauseMessages}
-                       isPaused={parser.getIsPaused()}
+                       isPaused={parser?.getIsPaused() || false}
             />
             {isSideBarVisible && (
                 <div className={"col-start-1 col-end-5 row-start-1 row-end-12 z-10"}>
-                    <ErrorSidebar errors={parser.getErrors()}/>
+                    <ErrorSidebar errors={parser?.getErrors() || []}/>
                 </div>
             )}
             <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white py-4">
@@ -115,7 +118,7 @@ const RealtimeDataPage = () => {
                 )}
             </div>
             <div className="col-start-1 col-end-13 row-start-12 row-end-13 z-40">
-                <TerminalController parserLines={parser.getLines()} />
+                <TerminalController parserLines={parser?.getLines() || ""} />
             </div>
         </div>
     );

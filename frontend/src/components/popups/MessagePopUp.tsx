@@ -107,7 +107,7 @@ function MessagePopUp<T extends MessageHeader>(props: Readonly<Props<T>>) {
                         </button>
                     </div>
                     {isJSON ? (
-                        <pre className="text-white whitespace-pre-wrap overflow-auto" style={{ maxWidth: "700px", maxHeight: "700px" }}>
+                        <pre className="text-white text-left whitespace-pre-wrap overflow-auto" style={{ maxWidth: "700px", maxHeight: "700px" }}>
                             {"{\n" + keys.map((k) => '  "' + k.toString() + '": ' + '"' + handleSpecialValue(k) + '"').join(",\n") + "\n}"}
                         </pre>
                     ) : (

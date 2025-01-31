@@ -98,17 +98,16 @@ function MessageTable<T extends MessageHeader>({ messages }: Readonly<MessageTab
         <>
             <MaterialReactTable table={table} />
             {selectedMessages.map((message) => (
-                <MessagePopUp
-                    key={message.message_id}
-                    trigger
-                    setTrigger={() =>
-                        setRowSelection((prev) => {
-                            const newSelection = { ...prev };
-                            delete newSelection[message.message_id];
-                            return newSelection;
-                        })
-                    }
-                    message={message}
+                <MessagePopUp key={message.message_id}
+                              trigger
+                              setTrigger={() =>
+                                  setRowSelection((prev) => {
+                                      const newSelection = { ...prev };
+                                      delete newSelection[message.message_id];
+                                      return newSelection;
+                                  })
+                              }
+                              message={message}
                 />
             ))}
         </>

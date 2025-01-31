@@ -165,7 +165,6 @@ class Parser {
         return header;
     }
 
-
     /**
      * Casts a JSON message string to a specific message type based on the message_type field
      * @param messageStr The JSON string representing the message
