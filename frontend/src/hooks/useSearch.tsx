@@ -2,8 +2,8 @@ import {useEffect, useState} from "react";
 import MessageHeader from "../models/messages/messageHeader";
 
 /**
- * A custom hook that searches messages based on their id
- * @returns The array of messages that match the seach criteria
+ * A custom hook that searches messages based on their ID
+ * @returns The array of messages that match the search criteria
  */
 function useSearch(data: MessageHeader[], search: string) {
     const [searchedMessage, setSearchedMessage] = useState<MessageHeader[]>([]);

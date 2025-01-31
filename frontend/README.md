@@ -11,19 +11,17 @@ This project involves the development of a frontend to TNO’s S2-Analyzer.
     - [Setting Up the Frontend](#setting-up-the-frontend)
 - [Frontend Features](#frontend-features)
     - [Real Time Message Rendering](#real-time-message-rendering)
-    - [File Loading](#file-loading)
     - [Filters](#filters)
     - [Change Alignment](#change-alignment)
     - [Search Message By ID](#search-message-by-id)
     - [Terminal View](#terminal-view)
     - [Message Pop-ups](#message-pop-ups)
     - [Customized Message Renderings](#customized-message-renderings) 
--  [Testing the Application]()
-    - [Testing ]
+-  [Testing the Application](#testing-the-application)
 
 ## Project Description
 
-S2-Analyzer is a program that verifies and logs messages exchanged between two devices (namely a Resource Manager and a Client Energy Manager) as defined by the S2 Standard and its FRBC (Fill Rate Based Control) Control Type. In this project, we developed Single MainPage Application to visualize connection histories and adding additional features such as filtering capabilities.
+S2-Analyzer is a program that verifies and logs messages exchanged between two devices (namely a Resource Manager and a Client Energy Manager) as defined by the S2 Standard and its FRBC (Fill Rate Based Control) Control Type. In this project, we developed Single RealtimeDataPage Application to visualize connection histories and adding additional features such as filtering capabilities.
 
 ## Running the Application
 
@@ -35,13 +33,13 @@ To run the frontend, you need to have *Node.js* and *npm*.
 
 ### Setting up the Backend
 
-To set up and run the S2 analyzer backend:
+To set up and run the S2 analyzer backend, run the following command in the root directory:
 
 ```bash
-docker compose up --build
+docker compose up backend --build
 ```
 
-This will build the backend to container images locally and run them. The backend is available on port `8001`.
+This will build the backend container images locally and run them. The backend is available on port `8001`.
 
 For more information to set up the backend, you can check the backend's README file.
 
@@ -73,7 +71,11 @@ docker compose up --build
 ## Frontend Features
 Here is an exhaustive list of the application's features:
 
-### Sidebar Menu
+### Navigation Menu
+A menu that allows the user to access different pages of the frontend by changing the URL. The menu is accessible
+by clicking the button at the top of the page.
+
+### ErrorSidebar Menu
 By clicking the sidebar icon on the navigation bar (the three horizontal lines) a resizable container will appear on the left side of the screen.
 Here, all the parsing errors will be listed alongside the number of the line where they occurred. This number corresponds to their line number as seen in the Terminal View.
 To close this view, simply press the same button again.
@@ -99,15 +101,6 @@ Now, you should be able to some messages flooding in from the Frontend.
 In case this gets overwhelming, you can click the "Pause Real-Time" button to temporally stop real-time rendering.
 To resume, click the button again (it should go under the "Continue Real-Time" name now) and the next time a message is
 received, the message list and the terminal view will update with everything you might have missed.
-
-### File Loading
-By selecting the "Load File" button, the real-time connection of the Frontend to the Backend is temporally terminated.
-Then, a file selection window pops up, allowing you to select any ".txt" file to load logged messages from.
-Feel free to check out the ".txt" files provided in the "frontend/examples" folder.
-Please note, that the user is able to select multiple files at once and their contents will be merged when being displayed.
-
-When you want to return to the real-time message exchange, click on the "Continue Real-Time" button and watch as the incoming
-messages get rendered on top of the messages loaded from the selected file.
 
 ### Filters
 The filters menu contains a variety of stackable filters that allow users to limit which messages are visible on the screen at a time. To close this menu, simply click away.
@@ -170,9 +163,22 @@ twice, the exact (property, value) pairs of that object will be displayed in the
 
 We suggest activating "dragging mode" in order to double-click on property headers without selecting the text and being able to drag and adjust the pop-up as it expands.
 
-#### ConnectionLost
-As mentioned earlier, the only backend warning that is being displayed alongside the logged messages, are connection loses.
-These messages are rendered without a directed arrow and with a red font in order to stand out. However, when you click on them, their pop-up will list exactly which device disconnected under its "sender" field.
+### Multipage Design
+The frontend of the application is designed with a multipage structure to improve the navigation and organization of its components.
+Each page handles either the interaction with one of the backend's endpoints or with the websocket. The app includes the following pages:
+1. Real-time data page:
+   Displays the live message exchange (in a table or a diagram) between the CEM and RM through the websocket and does not perform any standard API calls
+   to the other endpoints of the backend.
+2. Historical data page:
+   Allows the user to fetch filtered, historical messages from the backend, which is then represented in a table.
+3. Validation page:
+   Allows the user to validate a message, which must be provided in json format, and displays the result.
+   The validation is performed on the backend with the `s2python` package.
+4. Injection page:
+   Allows the user to inject a message in the communication between the CEM and RM and, inherently, in the database.
+   The message is provided similarly to the validation page (json file loading), but two more inputs are required, i.e.
+   the origin and destination IDs (for example, "cem1" and "battery1"). Displays a simple success/failure message depending
+   on the status of the made request.
 
 ## Testing the Application
  
@@ -180,7 +186,7 @@ These messages are rendered without a directed arrow and with a red font in orde
 
  ### Testing via  *"JEST"*
 
- You can run tests for *Parser.ts* and *Socket.ts* bb running the following commands:
+ You can run tests for *parser.ts* and *socket.ts* bb running the following commands:
  ```bash
  cd .\frontend\  # Go to the frontend folder
  npm test # Run tests

@@ -16,7 +16,7 @@ ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Legend, 
  * @param props - The properties object, including data and start date
  * @returns The PowerForecast's power_value graph
  */
-function PowerForecastGraph(props: Props) {
+function PowerForecastGraph(props: Readonly<Props>) {
     const getIndex = (
         com: string,
         labels: CommodityQuantity[],
@@ -48,19 +48,15 @@ function PowerForecastGraph(props: Props) {
         const matrix = Array.from({length: maxElements}, () =>
             Array.from({length: length}, () => -1)
         );
-        for (let i = 0; i < length; i++) {
-            for (let j = 0; j < props.data[i].power_values.length; j++) {
-                const row = getIndex(
-                    props.data[i].power_values[j].commodity_quantity,
-                    labels,
-                    maxElements
-                );
-                if (row != -1) {
+        for (const dataItem of props.data) {
+            for (const powerValue of dataItem.power_values) {
+                const row = getIndex(powerValue.commodity_quantity, labels, maxElements);
+                if (row !== -1) {
                     let column = 0;
-                    while (matrix[row][column] != -1) {
-                        column = column + 1;
+                    while (matrix[row][column] !== -1) {
+                        column += 1;
                     }
-                    matrix[row][column] = props.data[i].power_values[j].value_expected;
+                    matrix[row][column] = powerValue.value_expected;
                 }
             }
         }
@@ -74,9 +70,9 @@ function PowerForecastGraph(props: Props) {
         const xData = getDurationTimestamps(props.data, props.start);
 
         xData.unshift(props.start.getMilliseconds());
-        for (let i = 0; i < matrix.length; i++) {
-            matrix[i].push(matrix[i][matrix[i].length - 1]);
-        }
+        matrix.forEach(row => {
+            row.push(row[row.length - 1]);
+        });
 
         const labs2 = labs.map((str) => {
             const w = str.split(".");

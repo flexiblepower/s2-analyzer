@@ -11,6 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import uvicorn
 import uvicorn.server
+from starlette.middleware.cors import CORSMiddleware
+
 from .man_in_middle_api_router import (
     ManInTheMiddleAPI,
 )
@@ -76,7 +78,17 @@ class RestAPI(AsyncApplication):
             allow_headers=["*"],  # Allow all HTTP headers
         )
 
+        # Add CORS middleware
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],  # Allow all origins
+            allow_credentials=True,
+            allow_methods=["*"],  # Allow all HTTP methods
+            allow_headers=["*"],  # Allow all HTTP headers
+        )
+
         app.include_router(self.fastapi_router)
+
         config = uvicorn.Config(
             app,
             host=self.listen_address,

@@ -4,7 +4,7 @@ import PowerForecastElement from "../../../models/dataStructures/powerForecastEl
 import UsageForecastGraph from "./UsageForecastGraph.tsx";
 import UsageForecastElement from "../../../models/dataStructures/frbc/usageForecastElement.ts";
 
-interface props<T extends MessageHeader> {
+interface Props<T extends MessageHeader> {
     message: T;
 }
 
@@ -14,7 +14,7 @@ interface props<T extends MessageHeader> {
  * @param props - The props containing a message of a type that extends MessageHeader
  * @returns The special rendering of a message
  */
-function SpecialMessage<T extends MessageHeader>(props: props<T>) {
+function SpecialMessage<T extends MessageHeader>(props: Readonly<Props<T>>) {
     /**
      * Handles the rendering of a special message based on its type
      * @returns The appropriate graph component for the message type

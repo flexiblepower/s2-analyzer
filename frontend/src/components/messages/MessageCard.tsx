@@ -15,7 +15,7 @@ interface Props<T extends MessageHeader> {
  * @param props - The properties for the MessageCard component, including a message of type T
  * @returns The MessageCard component
  */
-function MessageCard<T extends MessageHeader>({ message }: Props<T>) {
+function MessageCard<T extends MessageHeader>({ message }: Readonly<Props<T>>) {
     const [visiblePopups, setVisiblePopups] = useState<T[]>([]);
 
     const getArrowImage = () => {
@@ -31,35 +31,42 @@ function MessageCard<T extends MessageHeader>({ message }: Props<T>) {
         );
     };
 
-    return (
-        <>
-            {/* Pop-up components for displaying message details */}
-            {visiblePopups.map((msg) => (
-                <MessagePopUp<T>
-                    key={msg.message_id}
-                    trigger={true}
-                    setTrigger={() => setVisiblePopups((prev) => prev.filter((m) => m !== msg))}
-                    message={msg}
-                />
-            ))}
+    const handlePopupClose = (msg: T) => {
+        setVisiblePopups((prev) => prev.filter((m) => m !== msg));
+    };
+
+    const renderPopUps = () => {
+        return visiblePopups.map((msg) => (
+            <MessagePopUp<T>
+                key={msg.message_id}
+                trigger={true}
+                setTrigger={() => handlePopupClose(msg)}
+                message={msg}
+            />
+        ));
+    };
+
+    const renderMessageDetails = () => {
+        return (
             <div className="justify-center flex">
                 <div>
                     <table className={`items-center justify-center flex ${message.message_id ? "text-tno-blue" : "text-good-red"}`}>
                         <tbody>
                         <tr>
                             <th>
-                                <h3 className="cursor-pointer" onClick={() => togglePopUp(message)} onKeyDown={() => togglePopUp(message)}>
+                                <button className="cursor-pointer"
+                                        onClick={() => togglePopUp(message)}
+                                        onKeyDown={() => togglePopUp(message)}>
                                     {message.message_type}
-                                </h3>
+                                </button>
                             </th>
-                            {message.status && (<th><ReceptionStatusIcon header={message}/></th>)}
+                            {message.status && (<th><ReceptionStatusIcon header={message} /></th>)}
                         </tr>
                         </tbody>
                     </table>
-                    <img src={getArrowImage()} alt={message.sender?.toString()} title={message.sender?.toString()}/>
+                    <img src={getArrowImage()} alt={message.sender?.toString()} title={message.sender?.toString()} />
                     <p className={`${message.sender?.split(" ")[0] === "RM" ? "text-right" : "text-left"} text-xs font-semibold`}
-                       style={{ marginRight: "0.2em", marginLeft: "0.5em" }}
-                    >
+                       style={{ marginRight: "0.2em", marginLeft: "0.5em" }}>
                         {message.time.toLocaleDateString("en-NL", {
                             day: "2-digit",
                             month: "2-digit",
@@ -72,6 +79,13 @@ function MessageCard<T extends MessageHeader>({ message }: Props<T>) {
                     </p>
                 </div>
             </div>
+        );
+    };
+
+    return (
+        <>
+            {renderPopUps()}
+            {renderMessageDetails()}
         </>
     );
 }

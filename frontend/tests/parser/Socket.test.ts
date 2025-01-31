@@ -1,4 +1,4 @@
-import WebSocketClient from "../../src/api/socket/Socket";
+import WebSocketClient from "../../src/api/socket/socket";
 
 /**
  * Mocking WebSocket for using in unit tests

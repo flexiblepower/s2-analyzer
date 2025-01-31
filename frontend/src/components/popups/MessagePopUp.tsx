@@ -6,7 +6,7 @@ import NestedObjectVisualization from "./special/NestedObjectVisualization.tsx";
 import ActuatorDescription from "../../models/dataStructures/frbc/actuatorDescription.ts";
 import StorageDescription from "../../models/dataStructures/frbc/storageDescription.ts";
 
-interface props<T extends MessageHeader> {
+interface Props<T extends MessageHeader> {
     trigger: boolean;
     setTrigger: (arg: boolean) => void;
     message: T;
@@ -17,7 +17,7 @@ interface props<T extends MessageHeader> {
  * @param props - The props containing the trigger, setTrigger function, and the message to be displayed
  * @returns The MessagePopUp component
  */
-function MessagePopUp<T extends MessageHeader>(props: props<T>) {
+function MessagePopUp<T extends MessageHeader>(props: Readonly<Props<T>>) {
     const keys = Object.keys(props.message) as (keyof T)[];
     const [isJSON, setIsJSON] = useState(false);
     const [isDraggable, setIsDraggable] = useState(false);
@@ -52,8 +52,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                 return props.message.status.status;
             } else if (
                 (props.message.message_type === "FRBC.UsageForecast" || props.message.message_type === "PowerForecast") &&
-                key === "elements" &&
-                !isJSON
+                key === "elements" && !isJSON
             ) {
                 return "See graph";
             } else if (key === "time") {
@@ -88,8 +87,8 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                  ${props.trigger ? "visible" : "invisible"}`}
                  style={{ position: "fixed", top: "50%", left: "50%" }}
             >
-                <div onClick={(e) => e.stopPropagation()}
-                     className={`bg-metallic-gray rounded-lg shadow p-6 transition-all 
+                <button onClick={(e) => e.stopPropagation()}
+                     className={`bg-metallic-gray rounded-lg shadow p-6 transition-all focus:outline-none cursor-[inherit]
                      ${props.trigger ? "scale-100 opacity-100" : "scale-50 opacity-0"}`}
                 >
                     <h2 className="handle cursor-all-scroll text-lg font-black text-white justify-center items-center flex">
@@ -108,7 +107,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                         </button>
                     </div>
                     {isJSON ? (
-                        <pre className="text-white whitespace-pre-wrap overflow-auto" style={{ maxWidth: "700px", maxHeight: "700px" }}>
+                        <pre className="text-white text-left whitespace-pre-wrap overflow-auto" style={{ maxWidth: "700px", maxHeight: "700px" }}>
                             {"{\n" + keys.map((k) => '  "' + k.toString() + '": ' + '"' + handleSpecialValue(k) + '"').join(",\n") + "\n}"}
                         </pre>
                     ) : (
@@ -122,7 +121,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                                 </thead>
                                 <tbody className="text-white">
                                 {keys.map((key, index) => (
-                                    <tr key={index} className="bg-metallic-gray">
+                                    <tr key={`${key.toString()}-${index}`} className="bg-metallic-gray">
                                         <th className="border-2 border-tno-blue">
                                             {key.toString()}
                                         </th>
@@ -140,7 +139,7 @@ function MessagePopUp<T extends MessageHeader>(props: props<T>) {
                             <SpecialMessage message={props.message} />
                         </div>
                     )}
-                </div>
+                </button>
             </div>
         </Draggable>
     );

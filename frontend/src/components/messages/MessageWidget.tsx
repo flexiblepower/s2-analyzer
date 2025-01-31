@@ -4,7 +4,7 @@ import MessageCard from "./MessageCard.tsx";
 import MessageHeader from "../../models/messages/messageHeader";
 
 interface MessageWidgetProps<T extends MessageHeader> {
-    searchedMessages: T[];
+    messages: T[];
 }
 
 /**
@@ -12,7 +12,7 @@ interface MessageWidgetProps<T extends MessageHeader> {
  * @param props - The properties for the MessageWidget component, including an array of searched messages of type T
  * @returns The MessageWidget component
  */
-function MessageWidget<T extends MessageHeader>({ searchedMessages }: MessageWidgetProps<T>) {
+function MessageWidget<T extends MessageHeader>({ messages }: Readonly<MessageWidgetProps<T>>) {
     return (
         <div className="max-w-xl h-5/6 rounded-xl shadow-[0_1px_30px_1px_rgba(0,0,0,0.3)] grid grid-cols-12 grid-rows-12">
             {/* Left Box (CEM) */}
@@ -34,8 +34,8 @@ function MessageWidget<T extends MessageHeader>({ searchedMessages }: MessageWid
             {/* Messages Section */}
             <div className="col-start-3 col-end-11 row-start-2 row-end-11 overflow-auto">
                 <ul>
-                    {searchedMessages.map((message, index) => (
-                        <li key={index} className="mt-4">
+                    {messages.map((message) => (
+                        <li key={message.message_id} className="mt-4">
                             <MessageCard<T> message={message} />
                         </li>
                     ))}

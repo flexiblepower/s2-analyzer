@@ -1,21 +1,43 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import BackendContext from "./BackendContext";
-import MainPage from "./pages/MainPage.tsx";
+import {BrowserRouter as Router, Navigate, Route, Routes} from 'react-router-dom';
+import BackendContext from './BackendContext';
+import RealtimeDataPage from './pages/RealtimeDataPage.tsx';
+import HistoricalDataPage from "./pages/HistoricalDataPage.tsx";
+import {useState} from "react";
+import NavSidebar from "./components/NavSidebar.tsx";
+import MessageValidationPage from "./pages/MessageValidationPage.tsx";
+import MessageInjectionPage from "./pages/MessageInjectionPage.tsx";
 
 /**
  * The Visual Application that contains the page(s) (or components)
  * @returns The Visual Application component
  */
 function App() {
-    const backend = 'http://localhost:8001';
+    const backend = 'http://localhost:8001/backend';
+    const [toggled, setToggled] = useState(false);
 
     return (
         <Router>
-            {/* Wrap the Routes in BackendContext.Provider */}
             <BackendContext.Provider value={backend}>
-                <Routes>
-                    <Route path="/" element={<MainPage/>} />
-                </Routes>
+                <div className="flex">
+                    {/* Navigation Sidebar */}
+                    <NavSidebar toggled={toggled} setToggled={setToggled} />
+
+                    {/* Main Content */}
+                    <main className="flex-auto bg-base-gray">
+                        <button className="w-full bg-tno-blue py-2 text-white hover:bg-tno-blue-light"
+                                onClick={() => setToggled(!toggled)}
+                        >
+                            Toggle Navigation Menu
+                        </button>
+                        <Routes>
+                            <Route path="/" element={<Navigate to="/real-time" />} />
+                            <Route path="/real-time" element={<RealtimeDataPage />} />
+                            <Route path="/historical-data" element={<HistoricalDataPage />} />
+                            <Route path="/validate-message" element={<MessageValidationPage />} />
+                            <Route path="/inject-message" element={<MessageInjectionPage />} />
+                        </Routes>
+                    </main>
+                </div>
             </BackendContext.Provider>
         </Router>
     );

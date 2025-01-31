@@ -17,7 +17,7 @@ interface FilterMenuProps {
  * @param isVisible The visibility of the FilterMenu component
  * @returns The FilterMenu component
  */
-function FilterMenu({filters, onFilterChange, isVisible}: FilterMenuProps) {
+function FilterMenu({filters, onFilterChange, isVisible}: Readonly<FilterMenuProps>) {
     const [isVisibleTypeFilters, setIsVisibleTypeFilters] = useState(false);
     const [isVisibleFRBCFilters, setIsVisibleFRBCFilters] = useState(false);
 

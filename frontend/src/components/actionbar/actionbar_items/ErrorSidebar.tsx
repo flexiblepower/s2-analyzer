@@ -1,16 +1,21 @@
 import {useState, useEffect, useRef} from "react";
 
-interface SidebarProps {
+interface ErrorSidebarProps {
     errors: string[];
 }
 
 const [minWidth, maxWidth, defaultWidth] = [
     200,
     window.innerWidth / 2,
-    window.innerWidth / 4,
+    window.innerWidth / 5,
 ];
 
-function Sidebar({ errors }: SidebarProps) {
+/**
+ * The ErrorSidebar component displays a resizable sidebar containing a list of error messages from the parser.
+ * @param errors An array of error messages to display in the sidebar.
+ * @returns The ErrorSidebar component with a draggable resize handle.
+ */
+function ErrorSidebar({ errors }: Readonly<ErrorSidebarProps>) {
     const [width, setWidth] = useState(defaultWidth);
     const isResizing = useRef(false);
 
@@ -47,7 +52,7 @@ function Sidebar({ errors }: SidebarProps) {
                 <h1 className="text-lg text-white">All errors:</h1>
                 {errors.length ? (
                     errors.map((s, index) => (
-                        <pre key={index}
+                        <pre key={`${s}-${index}`}
                              className="text-white overflow-auto bg-base-gray"
                              style={{ maxWidth: width, overflowX: "hidden" }}
                         >
@@ -58,9 +63,9 @@ function Sidebar({ errors }: SidebarProps) {
                     <pre className="text-white">None.</pre>
                 )}
             </div>
-            <div className="w-2 cursor-col-resize" onMouseDown={startResizing}/>
+            <button className="w-2 cursor-col-resize" onMouseDown={startResizing}/>
         </div>
     );
 }
 
-export default Sidebar;
+export default ErrorSidebar;
