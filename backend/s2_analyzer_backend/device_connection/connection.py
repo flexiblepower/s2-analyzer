@@ -200,10 +200,9 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
                     await self.websocket.send_text("pong")
                     continue
                 else:
-                    LOGGER.debug("Received message across websocket: %s", message_str)
-                    message = json.loads(message_str)
+                    LOGGER.debug("Received message across websocket. Ignoring it.: %s", message_str)
 
-                # TODO: Do something with message? Or just block.
+                # Do something with message? Or just block.
 
             except WebSocketException:
                 LOGGER.exception(

@@ -1,6 +1,5 @@
 import abc
 import asyncio
-from dataclasses import dataclass
 from datetime import datetime
 import json
 
@@ -49,7 +48,7 @@ class MessageProcessor(abc.ABC):
     @abc.abstractmethod
     async def process_message(self, message, loop: asyncio.AbstractEventLoop) -> str:
         pass
-    
+
     def close(self):
         """Method called when the message processor handler is stopped. Used for cleanup."""
         pass
@@ -88,9 +87,6 @@ class MessageParserProcessor(MessageProcessor):
             raise ValueError("Message cannot be None")
 
         s2_message_type = self.s2_parser.parse_message_type(message.msg)
-
-        # if s2_message_type is None:
-        #     raise ValueError("Unknown message type")
 
         s2_message = None
         validation_error = None
@@ -213,7 +209,7 @@ class DebuggerFrontendMessageProcessor(MessageProcessor):
         for i in closed_connections:
             self.connections.pop(i)
             LOGGER.info(f"Removed closed connection at index {i}")
-    
+
     def close(self):
         """Stop all of the websocket connections. Closes the websockets."""
         for connection in self.connections:
@@ -224,6 +220,7 @@ class MessageProcessorHandler(AsyncApplication):
     """An async application instance which processes messages by passing them through each of the MessageProcessor instances that has been added to it.
     Uses a blocking queue to buffer messages.
     """
+
     message_processors: list[MessageProcessor]
     _queue: "asyncio.Queue[Message]"
 
@@ -240,7 +237,7 @@ class MessageProcessorHandler(AsyncApplication):
         self.message_processors.append(message_processor)
 
     def add_message_to_process(self, message: Message):
-        """Added a new message to the queue to be processed when the previous messages are done. 
+        """Added a new message to the queue to be processed when the previous messages are done.
         Should be called by other async applications which need to have a message processed."""
         self._queue.put_nowait(message)
 
@@ -268,7 +265,7 @@ class MessageProcessorHandler(AsyncApplication):
         # Cleanup the message processors.
         for processor in self.message_processors:
             processor.close()
-            
+
         if (
             self._main_task
             and not self._main_task.done()

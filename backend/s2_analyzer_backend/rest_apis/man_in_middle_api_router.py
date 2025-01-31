@@ -144,7 +144,7 @@ class ManInTheMiddleAPI:
 
         await self.handle_connection(websocket, S2OriginType.CEM, cem_id, rm_id)
 
-    async def inject_message(self, body: InjectMessage, validate: bool = True) -> None:
+    async def inject_message(self, body: InjectMessage, validate: bool = True):
         """
         Injects a message into the message router between a CEM and RM device.
         Args:
