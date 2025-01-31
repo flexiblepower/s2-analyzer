@@ -19,6 +19,9 @@ import UsageForecast from "../../models/messages/frbc/usageForecast.ts";
 import SessionRequest from "../../models/messages/sessionRequest.ts";
 import {BackendMessage} from "../apiTypes.ts";
 
+/**
+ * Parser class that converts received messages to required type by the UI, i.e. the MessageHeader type.
+ */
 class Parser {
     public static readonly instance: Parser = new Parser();
     private readonly messageMap: MessageHeader[] = [];

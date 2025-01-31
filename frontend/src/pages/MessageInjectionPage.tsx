@@ -4,6 +4,14 @@ import { api } from "../api/api.ts";
 import useFileSelection from "../hooks/useFileSelection";
 import {InjectedMessage} from "../api/apiTypes.ts";
 
+/**
+ * MessageInjectionPage is a React component that allows users to load and inject messages into the backend system.
+ * The page includes a file input for loading a JSON message, fields for specifying the origin and destination IDs,
+ * and a button to trigger the injection of the message. The injection result is displayed to the user, providing feedback
+ * on the success or failure of the injection. The loaded message is shown in a readable format.
+ *
+ * @returns The rendered component for message injection, including loading and validation features.
+ */
 const MessageInjectionPage = () => {
     const backendUrl = useContext(BackendContext);
     const { message, handleFileChange } = useFileSelection();

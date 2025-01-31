@@ -3,6 +3,14 @@ import BackendContext from "../BackendContext";
 import { api } from "../api/api.ts";
 import useFileSelection from "../hooks/useFileSelection.tsx";
 
+/**
+ * MessageValidationPage is a React component that enables users to load a message, validate its format, and view the result.
+ * The page includes a file input for loading a JSON message and a button to trigger message validation.
+ * The validation result, indicating whether the message is valid or not, is displayed to the user.
+ * If the message contains parsing errors, the validation process cannot be performed.
+ *
+ * @returns The rendered component for message validation with feedback on message status.
+ */
 const MessageValidationPage = () => {
     const backendUrl = useContext(BackendContext);
     const { message, handleFileChange } = useFileSelection();

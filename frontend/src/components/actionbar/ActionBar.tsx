@@ -16,6 +16,19 @@ interface ActionBarProps {
     isPaused: boolean;
 }
 
+/**
+ * The ActionBar component provides various controls for managing the RealTimeDataPage's UI state.
+ * @param filters The current set of filters applied to messages.
+ * @param search The search term used for searching messages after ID.
+ * @param onFilterChange Function to update the active filters.
+ * @param onSearchChange Function to update the search query.
+ * @param onAlignmentChange Function to change the message alignment.
+ * @param toggleSideBar Function to toggle the visibility of the error sidebar.
+ * @param toggleView Function to toggle between different views (table/widget).
+ * @param pauseMessages Function to pause or resume real-time message updates.
+ * @param isPaused Boolean indicating whether real-time updates are paused.
+ * @returns The ActionBar component containing filtering, search, and UI control options.
+ */
 const ActionBar = ({
                        filters,
                        onFilterChange,

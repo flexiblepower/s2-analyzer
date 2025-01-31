@@ -1,7 +1,7 @@
 import {parser as parserSingleton} from "./parser.ts";
 
 /**
- * Websocket class to connect to the python intermediary websocket server
+ * Websocket class to connect to the websocket server.
  */
 class WebSocketClient {
     public receivedMessages: Set<string>;

@@ -7,6 +7,16 @@ interface NavSidebarProps {
     setToggled: (arg0: boolean) => void;
 }
 
+/**
+ * The NavSidebar component renders a collapsible sidebar for navigation with links to different sections.
+ * It includes a logo and provides a menu for navigating between real-time data, historical data, message validation,
+ * and message injection.
+ *
+ * @param {NavSidebarProps} props - The component props.
+ * @param {boolean} props.toggled - A flag indicating whether the sidebar is toggled (visible).
+ * @param {function} props.setToggled - A function to set the toggled state of the sidebar.
+ * @returns The rendered sidebar component with navigation links.
+ */
 const NavSidebar = ({ toggled, setToggled }:NavSidebarProps) => {
     return (
         <Sidebar onBackdropClick={() => setToggled(false)}

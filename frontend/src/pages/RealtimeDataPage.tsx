@@ -10,6 +10,13 @@ import MessageWidget from "../components/messages/MessageWidget.tsx";
 import MessageTable from "../components/messages/MessageTable.tsx";
 import TerminalController from "../components/terminal/Terminal.tsx";
 
+/**
+ * RealtimeDataPage is a React component that provides a real-time interface for viewing and managing system messages.
+ * It allows users to filter, search, and toggle between widget and table views for displaying messages.
+ * The page also integrates WebSocket communication to fetch live message data, which is updated periodically.
+ *
+ * @returns The rendered component for displaying real-time data and message interactions.
+ */
 const RealtimeDataPage = () => {
     const [messages, setMessages] = useState<MessageHeader[]>([]); // State for storing message data
     const [alignment, setAlignment] = useState("justify-center"); // State for alignment of message widget
@@ -64,7 +71,7 @@ const RealtimeDataPage = () => {
 
         const fetchMessages = async () => {
             try {
-                const newMessages = await parser.getMessages();
+                const newMessages = parser.getMessages();
                 setMessages(newMessages);
             } catch (error) {
                 console.error("Error fetching messages:", error);
@@ -104,7 +111,7 @@ const RealtimeDataPage = () => {
             />
             {isSideBarVisible && (
                 <div className={"col-start-1 col-end-5 row-start-1 row-end-12 z-10"}>
-                    <ErrorSidebar errors={parser?.getErrors() || []}/>
+                    <ErrorSidebar errors={parser?.getErrors() ?? []}/>
                 </div>
             )}
             <div className="col-start-1 col-end-13 row-start-1 row-end-2 text-center text-white py-4">
@@ -118,7 +125,7 @@ const RealtimeDataPage = () => {
                 )}
             </div>
             <div className="col-start-1 col-end-13 row-start-12 row-end-13 z-40">
-                <TerminalController parserLines={parser?.getLines() || ""} />
+                <TerminalController parserLines={parser?.getLines() ?? ""} />
             </div>
         </div>
     );

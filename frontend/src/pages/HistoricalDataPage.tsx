@@ -6,6 +6,15 @@ import { parser } from "../api/socket/parser.ts";
 import MessageHeader from "../models/messages/messageHeader.ts";
 import MessageTable from "../components/messages/MessageTable.tsx";
 
+/**
+ * HistoricalDataPage is a React component that allows users to filter and view historical data messages.
+ * The page includes input fields for various filters (CEM ID, RM ID, Origin, Message Type, Start Date, and End Date),
+ * and fetches the filtered data from the backend using the provided filter values.
+ * If no data matches the filter, an error message is displayed. The component also handles the input field
+ * changes, switches input types for date fields on focus, and displays the filtered historical data in a table.
+ *
+ * @returns The rendered component for displaying historical data with filters and results.
+ */
 const HistoricalDataPage = () => {
     const backendUrl = useContext(BackendContext);
     const [filters, setFilters] = useState<FilterQuery>({

@@ -4,6 +4,14 @@ interface Props {
     obj: object;
 }
 
+/**
+ * The NestedObjectVisualization component renders a nested object in a collapsible table format.
+ * It supports dynamic expansion and collapse of nested objects and arrays for easy visualization.
+ *
+ * @param {Props} props - The component props.
+ * @param {object} props.obj - The object to visualize, which can contain nested objects and arrays.
+ * @returns The rendered table displaying the object with expandable properties.
+ */
 const NestedObjectVisualization = ({obj}: Readonly<Props>) => {
     const [collapsed] = useState(new Map<string, boolean>());
 

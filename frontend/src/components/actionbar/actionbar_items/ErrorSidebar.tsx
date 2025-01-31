@@ -10,6 +10,11 @@ const [minWidth, maxWidth, defaultWidth] = [
     window.innerWidth / 5,
 ];
 
+/**
+ * The ErrorSidebar component displays a resizable sidebar containing a list of error messages from the parser.
+ * @param errors An array of error messages to display in the sidebar.
+ * @returns The ErrorSidebar component with a draggable resize handle.
+ */
 function ErrorSidebar({ errors }: Readonly<ErrorSidebarProps>) {
     const [width, setWidth] = useState(defaultWidth);
     const isResizing = useRef(false);

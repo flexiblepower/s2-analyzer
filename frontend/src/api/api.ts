@@ -1,6 +1,9 @@
 import axios from 'axios';
 import {BackendMessage, FilterQuery, InjectedMessage} from "./apiTypes.ts";
 
+/**
+ * Api class that handles backend requests and response, as well as catching any errors.
+ */
 class Api {
     public static readonly instance: Api = new Api();
 

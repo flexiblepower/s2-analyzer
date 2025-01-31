@@ -13,6 +13,15 @@ interface MessageTableProps<T extends MessageHeader> {
     messages: T[];
 }
 
+/**
+ * The MessageTable component displays a table of messages using Material React Table.
+ * It supports features like row selection, sorting, virtualization, and column resizing.
+ *
+ * @template T Extends MessageHeader to ensure type safety for messages.
+ * @param {MessageTableProps<T>} props - The component props.
+ * @param {T[]} props.messages - An array of messages to display in the table.
+ * @returns The rendered MessageTable component.
+ */
 function MessageTable<T extends MessageHeader>({ messages }: Readonly<MessageTableProps<T>>) {
     const [rowSelection, setRowSelection] = useState<MRT_RowSelectionState>({});
     const [selectedMessages, setSelectedMessages] = useState<T[]>([]);
