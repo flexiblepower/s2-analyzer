@@ -42,7 +42,6 @@ class Communication(CommunicationBase, table=True):
 
 class CommunicationWithValidationErrors(CommunicationBase):
     validation_errors: List["ValidationError"]
-    pass
 
 
 class BaseValidationError(SQLModel):
@@ -103,7 +102,8 @@ engine = create_engine(DATABASE_URL)
 
 
 def create_db_and_tables():
-    """SQLModel creates the SQLite DB and creates the tables."""
+    """SQLModel creates the SQLite DB and creates the tables.
+    """
     SQLModel.metadata.create_all(engine)
 
 
