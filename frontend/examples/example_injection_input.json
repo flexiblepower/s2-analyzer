@@ -1,7 +1,0 @@
-{
-  "message": {
-    "message_id": "550e8400-e29b-41d4-a716-446655440000",
-    "message_type": "FRBC.StorageStatus",
-    "present_fill_level": 0.6
-  }
-}
