@@ -12,13 +12,10 @@ export default function App() {
         ws.onmessage = ev => {
             let data = JSON.parse(ev.data);
             if (data.s2_msg_type === "ReceptionStatus") {
-                console.info("Reception status: ", data);
                 set_messages(messages => {
                     for (let msg of messages) { 
-                        console.info("Checking message: ", msg);
                         if (msg.msg.message_id === data.msg.subject_message_id) {
                             msg.reception_status = data.msg.status;
-                            console.info("Found message: ", msg);
                         }
                     }
 
@@ -58,7 +55,7 @@ type Message = {
     s2_msg_type: string | null;
     s2_validation_error: string | null;
     timestamp: string;
-    reception_status: "OK" | "ERROR" | null;
+    reception_status: "OK" | "INVALID_CONTENT" | "INVALID_DATA" | "INVALID_MESSAGE" | "PERMANENT_ERROR" | "TEMPORARY_ERROR" | null;
 };
 
 function message_name(message: Message): string {
@@ -80,15 +77,14 @@ function MessageList(props: {messages: Message[], on_click_message: (message_idx
             {props.messages.length === 0 ? <CoolFrame offset={1} color="blue">
                 <div className="px-8 bg-white sheared p-2 text-xl">Connect your RM and/or CEM to see their messages here</div>
             </CoolFrame> : <></>}
-            {props.messages.map((message, idx) => <CoolFrame offset={1} color={message.origin === "RM" ? "blue" : "pink"}>
-                <div className="flex flex-row gap-4 text-lg items-center w-full h-full pr-2" key={idx}>
-                    <div className={`px-2 text-center py-1 font-bold text-white ${message.origin === "RM" ? "bg-blue-600" : "bg-pink-600"}`}>
+            {props.messages.map((message, idx) => <CoolFrame offset={1} color={message.origin === "RM" ? "blue" : "teal"} key={idx}>
+                <div className="flex flex-row gap-4 text-lg items-center w-full h-full pr-2 cursor-pointer" onClick={() => props.on_click_message(idx)}>
+                    <div className={`px-2 text-center py-1 font-bold text-white ${message.origin === "RM" ? "bg-blue-600" : "bg-teal-600"}`}>
                         {message.origin}{" -> "}{origin_inverse(message.origin)}
                     </div>
                     <div className="font-bold w-64">{message_name(message)}</div>
-                    <div className="">{message.reception_status === "OK" ? "✓" : message.reception_status === "ERROR" ? "✕" : <span className="text-gray-400">...</span>}</div>
+                    <div className="">{message.reception_status === "OK" ? "✓" : message.reception_status === null ? <span className="text-gray-400">...</span> : "✕" }</div>
                     <div>{new Date(message.timestamp).toLocaleString("en-GB")}</div>
-                    <button onClick={() => props.on_click_message(idx)} className="">Details ➞</button>
                 </div>
             </CoolFrame>)}
         </div>
@@ -96,21 +92,30 @@ function MessageList(props: {messages: Message[], on_click_message: (message_idx
 }
 
 function MessageDetails(props: {message: Message | null}) {
+    let highlight = {
+        RM: "text-blue-600",
+        CEM: "text-teal-600",
+    }[props.message?.origin ?? "RM"];
+    let border = {
+        RM: "border-blue-600",
+        CEM: "border-teal-600",
+    }[props.message?.origin ?? "RM"];
+
     return <div className={`w-[30rem] max-w-[30rem] h-fit transition-opacity ${props.message ? "opacity-100" : "opacity-0"}`}>
-        <div className={`font-bold text-5xl transition-colors text-blue-600 mb-4`}>Message Details</div>
-        <CoolFrame offset={2} color={"blue"}>
+        <div className={`font-bold text-5xl transition-colors ${highlight} mb-4`}>Message Details</div>
+        <CoolFrame offset={2} color={props.message?.origin === "CEM" ? "teal" : "blue"}>
             <div className="text-lg">
-                <div className="px-8 py-4 flex flex-col gap-2 border-b border-blue-600">
-                    <div>Sent by: <span className={`font-bold ${props.message?.origin === "RM" ? "text-blue-600" : "text-pink-600"}`}>{props.message?.origin}</span></div>
+                <div className={`px-8 py-4 flex flex-col gap-2 border-b ${border}`}>
+                    <div>Sent by: <span className={`font-bold ${highlight}`}>{props.message?.origin}</span></div>
                     <div>Timestamp: {props.message?.timestamp} </div>
-                    <div>Reception status: <span className="text-blue-600 font-bold">{props.message?.reception_status ?? "not yet returned"}</span> </div>
+                    <div>Reception status: {props.message?.reception_status === "OK" ? <span className={`font-bold ${highlight}`}>OK</span> : props.message?.reception_status === null ? <span className="text-gray-400">not yet received</span> : <span className="font-bold text-red-600">{props.message?.reception_status}</span>}</div>
                 </div>
-                <div className="px-8 py-4 border-b border-blue-600">
-                    This message <span className="font-bold text-blue-600">{props.message?.s2_validation_error === null ? "passed" : "failed"}</span> validation.
+                <div className={`px-8 py-4 border-b ${border}`}>
+                    This message {props.message?.s2_validation_error === null ? <span className={`font-bold ${highlight}`}>passed</span> : <span className={`font-bold text-red-600`}>"failed"</span>} validation.
                     {props.message?.s2_validation_error !== null ? <div className="text-base">Reason: {props.message?.s2_validation_error}</div> : <></>}
                 </div>
                 <div className="px-8 py-4">
-                    <div className="font-bold text-blue-600 text-2xl mb-2">Message contents</div>
+                    <div className={`font-bold ${highlight} text-2xl mb-2`}>Message contents</div>
                     <div className="font-mono whitespace-pre-wrap text-base">
                         {JSON.stringify(props.message?.msg, null, 2)}
                     </div>
@@ -120,10 +125,16 @@ function MessageDetails(props: {message: Message | null}) {
     </div>
 }
 
-function CoolFrame(props: { children: React.ReactNode, offset: 1 | 2, color: "blue" | "pink" }) {
-    let color = {
+function CoolFrame(props: { children: React.ReactNode, offset: 1 | 2, color: "blue" | "pink" | "teal" }) {
+    let color_fg = {
         blue: "bg-blue-600 border-blue-600",
-        pink: "bg-pink-600 border-pink-600"
+        pink: "bg-pink-600 border-pink-600",
+        teal: "bg-teal-600 border-teal-600",
+    }[props.color];
+    let color_bg = {
+        blue: "bg-blue-700 border-blue-700",
+        pink: "bg-pink-700 border-pink-700",
+        teal: "bg-teal-700 border-teal-700",
     }[props.color];
     let offset = {
         1: "top-1 left-1",
@@ -135,9 +146,9 @@ function CoolFrame(props: { children: React.ReactNode, offset: 1 | 2, color: "bl
     }[props.offset];
 
     return <div className={`relative ${margin}`}>
-        <div className={`bg-white border ${color} transition-colors`}>
+        <div className={`bg-white border ${color_fg} transition-colors`}>
             {props.children}
         </div>
-        <div className={`absolute ${offset} ${color} w-full h-full transition-colors -z-10`}></div>
+        <div className={`absolute ${offset} ${color_bg} w-full h-full transition-colors -z-10`}></div>
     </div>
 }
