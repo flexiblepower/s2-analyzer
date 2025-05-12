@@ -11,9 +11,29 @@ export default function App() {
         ws.onclose = () => set_connected(false);
         ws.onmessage = ev => {
             let data = JSON.parse(ev.data);
-            set_messages([...messages, data]);
+            if (data.s2_msg_type === "ReceptionStatus") {
+                console.info("Reception status: ", data);
+                set_messages(messages => {
+                    for (let msg of messages) { 
+                        console.info("Checking message: ", msg);
+                        if (msg.msg.message_id === data.msg.subject_message_id) {
+                            msg.reception_status = data.msg.status;
+                            console.info("Found message: ", msg);
+                        }
+                    }
+
+                    return [...messages];
+                });
+                
+            } else {
+                set_messages(messages => [...messages, { reception_status: null, ...data }]);
+            }
         };
     }, []);
+
+    useEffect(() => {
+        console.info("Messages: ", messages);
+    }, [messages]);
     
     return <div className="w-full h-full px-8 py-4 relative">
         <div className="flex flex-row justify-between items-start\">
@@ -38,10 +58,10 @@ type Message = {
     s2_msg_type: string | null;
     s2_validation_error: string | null;
     timestamp: string;
+    reception_status: "OK" | "ERROR" | null;
 };
 
 function message_name(message: Message): string {
-    console.info(message);
     return message.s2_msg_type ?? "Unknown Message";
 }
 
@@ -65,7 +85,8 @@ function MessageList(props: {messages: Message[], on_click_message: (message_idx
                     <div className={`px-2 text-center py-1 font-bold text-white ${message.origin === "RM" ? "bg-blue-600" : "bg-pink-600"}`}>
                         {message.origin}{" -> "}{origin_inverse(message.origin)}
                     </div>
-                    <div className="font-bold">{message_name(message)}</div>
+                    <div className="font-bold w-64">{message_name(message)}</div>
+                    <div className="">{message.reception_status === "OK" ? "✓" : message.reception_status === "ERROR" ? "✕" : <span className="text-gray-400">...</span>}</div>
                     <div>{new Date(message.timestamp).toLocaleString("en-GB")}</div>
                     <button onClick={() => props.on_click_message(idx)} className="">Details ➞</button>
                 </div>
@@ -82,7 +103,7 @@ function MessageDetails(props: {message: Message | null}) {
                 <div className="px-8 py-4 flex flex-col gap-2 border-b border-blue-600">
                     <div>Sent by: <span className={`font-bold ${props.message?.origin === "RM" ? "text-blue-600" : "text-pink-600"}`}>{props.message?.origin}</span></div>
                     <div>Timestamp: {props.message?.timestamp} </div>
-
+                    <div>Reception status: <span className="text-blue-600 font-bold">{props.message?.reception_status ?? "not yet returned"}</span> </div>
                 </div>
                 <div className="px-8 py-4 border-b border-blue-600">
                     This message <span className="font-bold text-blue-600">{props.message?.s2_validation_error === null ? "passed" : "failed"}</span> validation.
