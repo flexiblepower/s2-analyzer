@@ -2,7 +2,7 @@ import asyncio
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import AsyncMock, Mock
 
-from s2_analyzer_backend.reception_status_awaiter import ReceptionStatusAwaiter
+from backend.device_simulation.reception_status_awaiter import ReceptionStatusAwaiter
 from s2_analyzer_backend.router import MessageRouter
 
 

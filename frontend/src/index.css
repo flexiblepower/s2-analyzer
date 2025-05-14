@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+button:not(:disabled) {
+  @apply cursor-pointer;
+}
+
+img:not([src]) {
+  @apply hidden;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.sheared {
+  clip-path: polygon(
+    20px 0, 
+    100% 0,
+    calc(100% - 20px) 100%,
+    0 100%
+  );
+}
+
+
+@theme {
+  --font-sans: "Hanken Grotesk", sans-serif;
+  --font-mono: "Cascadia Code", monospace;
+}
+
+@font-face {
+  font-family: "Cascadia Code";
+  src: url("../static/font/CascadiaCode-Regular.ttf") format("truetype");
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Cascadia Code";
+  src: url("../static/font/CascadiaCode-Bold.ttf") format("truetype");
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "Cascadia Code";
+  src: url("../static/font/CascadiaCode-SemiBold.ttf") format("truetype");
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "Cascadia Code";
+  src: url("../static/font/CascadiaCode-Light.ttf") format("truetype");
+  font-weight: 300;
+}
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("../static/font/HankenGrotesk-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("../static/font/HankenGrotesk-Italic.ttf") format("truetype");
+  font-weight: normal;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("../static/font/HankenGrotesk-SemiBold.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("../static/font/HankenGrotesk-SemiBoldItalic.ttf") format("truetype");
+  font-weight: 500;
+  font-style: italic;
+}
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("../static/font/HankenGrotesk-Bold.ttf") format("truetype");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Hanken Grotesk";
+  src: url("../static/font/HankenGrotesk-BoldItalic.ttf") format("truetype");
+  font-weight: bold;
+  font-style: italic;
+}

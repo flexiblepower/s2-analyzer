@@ -2,7 +2,17 @@ services:
   backend:
     image: s2-analyzer-backend
     build: ./backend
+    volumes:
+      - ./data:/app/data
     ports:
       - "8001:8001"
     environment:
-      LOG_LEVEL: debug
+      LOG_LEVEL: info
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8000:80"
+    depends_on:
+      - backend
