@@ -1,6 +1,20 @@
 # S2 analyzer backend
 
-![Analyzer Structure](./diagrams/s2-project_basic.png)
+<div align="center">
+    <a href="https://s2standard.org"><img src="./diagrams/Logo-S2.svg" width="200" height="200" /></a>
+</div>
+<br />
+
+This repository hosts the S2 Analyzer, a tool to visualise and check what's happening on an S2 connection. It sits between the RM and CEM: the RM and CEM connect to the S2 Analyzer, and it'll forward the messages to the other side while validating the messages and sending them to the frontend to visualise.
+
+## Quickstart using docker and docker-compose
+
+To quickly set up & run the S2 analyzer:
+```bash
+docker compose up
+```
+
+You can reach the frontend at `localhost:8000`. Connect your Resource Manager to `"ws://localhost:8001/backend/rm/battery1/cem/cem1/ws"` and connect your CEM to `ws://localhost:8001/backend/cem/cem1/rm/battery1/ws`, and you'll see the messages flowing between them in the frontend. If you don't have an RM, you can use one of the [example RM implementations](https://github.com/flexiblepower/s2-example-implementations) to test your CEM.
 
 ## Goal
 
@@ -21,21 +35,11 @@ After the connections have been set up, the S2 analyzer provides a number of fun
 - Provide a REST API for the frontend to query the message history database.
 - Provides a REST API endpoint for injecting messages into a connection between a CEM and RM device.
 
+![Analyzer Structure](./diagrams/s2-project_basic.png)
+
 ## Features of backend and frontend
 
 Please consult the README files in the backend and frontend directories for more information on the features of the backend and frontend.
-
-## Quickstart using docker and docker-compose
-
-To quickly set up & run the S2 analyzer:
-```bash
-docker-compose up --build
-```
-
-This will build the backend and also the frontend to container images locally and run them.
-
-The backend is available on port `8001`.
-The frontend is available on port `4173`.
 
 ## Quickstart without containers
 Python 3.10 is required. Steps to set up & run the S2 analyzer backend locally:
