@@ -1,6 +1,6 @@
 from builtins import ExceptionGroup
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from abc import ABC, abstractmethod
 from enum import Enum
 import asyncio
@@ -10,6 +10,7 @@ import threading
 from uuid import UUID
 
 from fastapi import WebSocketException, WebSocketDisconnect
+from pydantic import BaseModel
 from websockets.exceptions import ConnectionClosedOK
 from s2_analyzer_backend.device_connection.connection_adapter.adapter import (
     ConnectionAdapter,
@@ -170,12 +171,23 @@ class S2Connection(AsyncApplication, ABC):
                 return
 
 
+class DebuggerMessageFilter(BaseModel):
+    rm_id: Optional[str] = None
+    cem_id: Optional[str] = None
+
+
 class DebuggerFrontendWebsocketConnection(AsyncApplication):
     _queue: "asyncio.Queue[Message]"
 
-    def __init__(self, websocket: "WebSocket"):
+    filters: Optional[DebuggerMessageFilter]
+
+    def __init__(
+        self, websocket: "WebSocket", filters: Optional[DebuggerMessageFilter] = None
+    ):
         self.websocket = websocket
         self._queue = asyncio.Queue()
+
+        self.filters = filters
 
     def get_name(self) -> "ApplicationName":
         return str(self)
@@ -197,8 +209,20 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
                 else:
                     raise exc from exc_group
 
+    async def include_message(self, message: "Message") -> bool:
+
+        # If no filters send all messages.
+        if self.filters is None:
+            return True
+
+        if message.cem_id == self.filters.cem_id or message.rm_id == self.filters.rm_id:
+            return True
+
+        return False
+
     async def enqueue_message(self, message: "Message") -> None:
-        await self._queue.put(message)
+        if self.include_message(message):
+            await self._queue.put(message)
 
     async def receiver(self) -> None:
         while self._running:

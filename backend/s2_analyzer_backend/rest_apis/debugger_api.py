@@ -17,6 +17,7 @@ from s2_analyzer_backend.message_processor.message_processor import (
 )
 from s2_analyzer_backend.device_connection.connection import (
     DebuggerFrontendWebsocketConnection,
+    DebuggerMessageFilter,
 )
 
 from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
@@ -32,6 +33,7 @@ LOGGER = logging.getLogger(__name__)
 
 class ValidateS2Message(BaseModel):
     """Pydantic model for receiving the message validation request body."""
+
     message: dict
 
 
@@ -83,7 +85,10 @@ class DebuggerAPI:
         return {"status": "healthy"}
 
     async def receive_new_debugger_frontend_connection(
-        self, websocket: WebSocket
+        self,
+        websocket: WebSocket,
+        cem_id: Optional[str] = Query(None, description="ID of CEM."),
+        rm_id: Optional[str] = Query(None, description="ID of RM."),
     ) -> None:
         """Accepts an incoming websocket connection from the debugger frontend.
         Creates a new DebuggerFrontendWebsocketConnection instance which will handle the receiving and sending of messages on the new websocket.
@@ -98,7 +103,11 @@ class DebuggerAPI:
                 "Debugger frontend WS connection had an exception while accepting."
             )
 
-        conn = DebuggerFrontendWebsocketConnection(websocket)
+        filters = None
+        if cem_id or rm_id:
+            filters = DebuggerMessageFilter(rm_id=rm_id, cem_id=cem_id)
+
+        conn = DebuggerFrontendWebsocketConnection(websocket, filters)
 
         APPLICATIONS.add_and_start_application(conn)
         self.debugger_frontend_msg_processor.add_connection(conn)

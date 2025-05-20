@@ -118,7 +118,7 @@ class ManInTheMiddleAPI:
         connection_type: S2OriginType,
         origin_id,
         dest_id,
-    ) -> None:
+    ) -> S2Connection:
         """Handles the creation of a new S2Connection instance when a CEM or RM device initiates a connection.
         WebSocketConnections are run as AsyncApplications so run on their own thread to receive messages.
 
@@ -139,6 +139,8 @@ class ManInTheMiddleAPI:
         # await conn.wait_till_done_async(
         #     timeout=None, kill_after_timeout=False, raise_on_timeout=False
         # )
+
+        return conn
 
     async def receive_new_rm_connection(
         self, websocket: WebSocket, rm_id: str, cem_id: str
@@ -182,7 +184,7 @@ class ManInTheMiddleAPI:
 
     async def create_outgoing_connection(
         self, uri, connection_type: S2OriginType, source_id, dest_id
-    ):
+    ) -> S2Connection:
         try:
             websocket = await connect(uri)
         except:
@@ -190,18 +192,20 @@ class ManInTheMiddleAPI:
                 status_code=400, detail=f"Failed to connect to {connection_type.name}."
             )
         cem_conn_adapter = WebSocketConnectionAdapter(websocket)
-        await self.handle_incoming_connection(
+
+        connection = await self.handle_incoming_connection(
             cem_conn_adapter,
             connection_type,
             origin_id=source_id,
             dest_id=dest_id,
         )
+        return connection
 
     async def create_new_connections(self, body: CreateConnection):
         LOGGER.info("Creating connections: %s", body)
 
         if body.cem_uri is not None:
-            await self.create_outgoing_connection(
+            cem_connection = await self.create_outgoing_connection(
                 body.cem_uri, S2OriginType.CEM, body.cem_id, body.rm_id
             )
             LOGGER.info("CEM connected")
@@ -209,9 +213,16 @@ class ManInTheMiddleAPI:
             LOGGER.info("No CEM uri provided. Will wait for an incoming connection.")
 
         if body.cem_uri is not None:
-            await self.create_outgoing_connection(
-                body.rm_uri, S2OriginType.RM, body.rm_id, body.cem_id
-            )
+            try:
+                await self.create_outgoing_connection(
+                    body.rm_uri, S2OriginType.RM, body.rm_id, body.cem_id
+                )
+            except HTTPException:
+                # If connection to RM fails but we already connected to CEM then stop the CEM connection.
+                if cem_connection._running:
+                    cem_connection.stop()
+                raise
+
             LOGGER.info("RM connected")
         else:
             LOGGER.info("No RM uri provided. Will wait for an incoming connection.")
