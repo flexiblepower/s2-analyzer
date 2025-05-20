@@ -1,9 +1,10 @@
 import json
 import logging
-from typing import TYPE_CHECKING, Optional, Self
+from typing import TYPE_CHECKING, Literal, Optional, Self
 import uuid
 
 from fastapi import (
+    Depends,
     HTTPException,
     Response,
     WebSocket,
@@ -11,6 +12,7 @@ from fastapi import (
     WebSocketException,
 )
 from pydantic import BaseModel, model_validator
+from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
 from s2_analyzer_backend.device_connection.connection_adapter import (
     FastAPIWebSocketAdapter,
     ConnectionAdapter,
@@ -46,8 +48,10 @@ class ConnectionDetails(BaseModel):
     for the connection list endpoint."""
 
     session_id: uuid.UUID
-    cem_id: str
-    rm_id: str
+    cem_id: str | None = None
+    rm_id: str | None = None
+
+    state: Literal["closed", "open"]
 
 
 class CreateConnection(BaseModel):
@@ -264,7 +268,10 @@ class ManInTheMiddleAPI:
                 400,
             )
 
-    async def get_connections(self):
+    async def get_connections(
+        self,
+        history_filter: HistoryFilter = Depends(),  # Dependency injected history filter which queries database
+    ):
         """Endpoint to view all open connections to the S2 Analyzer."""
         connections = []
         sessions = set()
@@ -276,9 +283,19 @@ class ManInTheMiddleAPI:
             rm_id = conn.origin_id if conn.s2_origin_type.is_rm() else conn.dest_id
             connections.append(
                 ConnectionDetails(
-                    session_id=session_id,
-                    cem_id=cem_id,
-                    rm_id=rm_id,
+                    session_id=session_id, cem_id=cem_id, rm_id=rm_id, state="open"
                 )
             )
+        
+        history_sessions = history_filter.get_unique_sessions()
+
+        for session in history_sessions:
+            if session not in sessions:
+                connections.append(
+                    ConnectionDetails(
+                        session_id=session,
+                        state="closed"
+                    )
+                )
+
         return connections

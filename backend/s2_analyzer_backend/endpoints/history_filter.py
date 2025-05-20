@@ -70,3 +70,8 @@ class HistoryFilter:
         for comm in self.session.exec(query).all():
             data = serialize_communication_with_validation_errors(comm)
             yield data
+
+    def get_unique_sessions(self):
+        statement = select(Communication.session_id).distinct()
+        unique_session_ids: List[uuid.UUID] = self.session.exec(statement).all()
+        return unique_session_ids

@@ -1,51 +1,108 @@
 import { useEffect, useState } from "react";
 
+const HOST = "localhost:8001"
+
 export default function App() {
     let [connected, set_connected] = useState(false);
     let [messages, set_messages] = useState([] as Message[]);
     let [detail_message, set_detail_message] = useState(null as Message | null);
+    let [sessions, set_sessions] = useState([] as any[])
+
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
     useEffect(() => {
-        const queryString = window.location.search;
+        // Parse the initial session ID from the URL on mount
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialSessionId = urlParams.get("session-id");
+        setCurrentSessionId(initialSessionId);
+    }, []); // Run once on mount
 
-        let url = "ws://localhost:8001/backend/debugger/"
 
-        if (queryString) {
-            // url += `?session_id=${sessionId}`
-            url += `${queryString}`
-        }
+    useEffect(() => {
+        let ws: WebSocket;
 
-        let ws = new WebSocket(url);
+        const connectWebSocket = () => {
+            let url = `ws://${HOST}/backend/debugger/`;
 
-        ws.onopen = () => set_connected(true);
-        ws.onclose = () => set_connected(false);
-        ws.onmessage = ev => {
-            let data = JSON.parse(ev.data);
-            if (data.s2_msg_type === "ReceptionStatus") {
-                set_messages(messages => {
-                    for (let msg of messages) {
-                        if (msg.msg.message_id === data.msg.subject_message_id) {
-                            msg.reception_status = data.msg.status;
+            if (currentSessionId) {
+                url += `?session_id=${currentSessionId}`;
+            }
+
+            ws = new WebSocket(url);
+
+            ws.onopen = () => set_connected(true);
+            ws.onclose = () => set_connected(false);
+            ws.onmessage = (ev) => {
+                let data = JSON.parse(ev.data);
+                if (data.s2_msg_type === "ReceptionStatus") {
+                    set_messages((messages) => {
+                        for (let msg of messages) {
+                            if (msg.msg.message_id === data.msg.subject_message_id) {
+                                msg.reception_status = data.msg.status;
+                            }
                         }
-                    }
 
-                    return [...messages];
-                });
+                        return [...messages];
+                    });
+                } else {
+                    set_messages((messages) => [
+                        ...messages,
+                        { reception_status: null, ...data },
+                    ]);
+                }
+            };
+        };
 
-            } else {
-                set_messages(messages => [...messages, { reception_status: null, ...data }]);
+        connectWebSocket();
+
+        // Cleanup function to close the websocket when currentSessionId changes or component unmounts
+        return () => {
+            if (ws && ws.readyState !== WebSocket.CLOSED) {
+                ws.close();
             }
         };
-    }, []);
+    }, [currentSessionId]);
 
     useEffect(() => {
         console.info("Messages: ", messages);
     }, [messages]);
 
+
+    const fetchSessions = async () => {
+        try {
+            const response = await fetch(`http://${HOST}/backend/connections/`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const result = await response.json();
+            console.log(result)
+            set_sessions(result);
+        } catch (err) {
+            console.error("Failed to get sessions", err)
+        }
+    };
+
+    useEffect(() => {
+        fetchSessions();
+    }, [])
+
+    function selectSession(session_id: string) {
+        // Clear message history as it will be filled on re-connection of the WebSocket
+        set_messages([])
+        setCurrentSessionId(session_id)
+    }
+
     return <div className="w-full h-full px-8 py-4 relative">
         <div className="flex flex-row justify-between items-start\">
             <MessageList messages={messages} on_click_message={idx => set_detail_message(messages[idx])} />
-            <MessageDetails message={detail_message ?? null} />
+            <div>
+                <SessionSelector
+                    sessions={sessions ?? null}
+                    on_session_click={selectSession} // Pass the handler
+                    on_refresh_click={fetchSessions}
+                ></SessionSelector>
+                <MessageDetails message={detail_message ?? null} />
+            </div>
         </div>
 
         <div className="absolute bottom-4 right-4">
@@ -54,6 +111,13 @@ export default function App() {
             </CoolFrame>
         </div>
     </div>
+}
+
+type Session = {
+    session_id: string;
+    cem_id: string | null;
+    rm_id: string | null;
+    state: "open" | "closed";
 }
 
 type Message = {
@@ -130,6 +194,61 @@ function MessageDetails(props: { message: Message | null }) {
                         {JSON.stringify(props.message?.msg, null, 2)}
                     </div>
                 </div>
+            </div>
+        </CoolFrame>
+    </div>
+}
+
+function SessionSelector(props: { sessions: Session[], on_session_click: (sessionId: string) => void, on_refresh_click: () => void }) {
+    return <div className={`w-[35rem] max-w-[35rem] h-fit transition-opacity opacity-100`}>
+        <div className="flex justify-between">
+            <div className={`font-bold text-5xl transition-colors text-blue-600 mb-4`}>Sessions</div>
+            <div>
+                <CoolFrame offset={2} color="blue">
+                    <div className="px-3 py-2">
+                        Create Session
+                    </div>
+                </CoolFrame>
+            </div>
+        </div>
+        <CoolFrame offset={2} color="blue">
+            <div className="text-lg">
+                <div className={`px-8 py-4 flex flex-col gap-2 border-b border-blue-600`}>
+                    <ul>
+                        {props.sessions.map((session, idx) =>
+                            <li key={idx}>
+                                <a href={`/?session-id=${session.session_id}`}
+                                    onClick={(e) => {
+                                        e.preventDefault(); // Prevent default anchor behavior
+                                        props.on_session_click(session.session_id);
+                                    }} className="text-blue-600 hover:underline"
+                                >
+                                    {session.session_id}
+
+                                    {session.state == "open" ? <span className="font-bold bg-blue-600 text-teal-600"> (Connected)</span> : <span className="font-bold text-pink-600"> (Closed)</span>}
+
+                                </a>
+                            </li>
+                        )}
+                    </ul>
+                    <hr className="border-b" />
+                    <a href="" onClick={
+                        (e) => {
+                            e.preventDefault();
+                            props.on_refresh_click()
+                        }
+                    }>Refresh Sessions</a>
+                </div>
+                {/* <div className={`px-8 py-4 border-b ${border}`}>
+                    This message {props.message?.s2_validation_error === null ? <span className={`font-bold ${highlight}`}>passed</span> : <span className={`font-bold text-red-600`}>"failed"</span>} validation.
+                    {props.message?.s2_validation_error !== null ? <div className="text-base">Reason: {props.message?.s2_validation_error}</div> : <></>}
+                </div> */}
+                {/* <div className="px-8 py-4">
+                    <div className={`font-bold ${highlight} text-2xl mb-2`}>Message contents</div>
+                    <div className="font-mono whitespace-pre-wrap text-base">
+                        {JSON.stringify(props.message?.msg, null, 2)}
+                    </div>
+                </div> */}
             </div>
         </CoolFrame>
     </div>
