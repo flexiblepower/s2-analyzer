@@ -78,15 +78,6 @@ class RestAPI(AsyncApplication):
             allow_headers=["*"],  # Allow all HTTP headers
         )
 
-        # Add CORS middleware
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],  # Allow all origins
-            allow_credentials=True,
-            allow_methods=["*"],  # Allow all HTTP methods
-            allow_headers=["*"],  # Allow all HTTP headers
-        )
-
         app.include_router(self.fastapi_router)
 
         config = uvicorn.Config(
@@ -104,7 +95,7 @@ class RestAPI(AsyncApplication):
     def get_name(self) -> "ApplicationName":
         return "S2 REST API Server"
 
-    def stop(self, loop: asyncio.AbstractEventLoop) -> None:
+    def stop(self) -> None:
         if self.uvicorn_server is None:
             raise RuntimeError("Stopping uvicorn failed: there is no uvicorn running!")
         self.uvicorn_server.should_exit = True

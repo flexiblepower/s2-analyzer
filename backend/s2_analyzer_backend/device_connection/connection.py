@@ -14,6 +14,7 @@ from websockets.exceptions import ConnectionClosedOK
 from s2_analyzer_backend.device_connection.connection_adapter.adapter import (
     ConnectionAdapter,
     ConnectionClosed,
+    ConnectionProtocolError,
 )
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.async_application import APPLICATIONS
@@ -127,6 +128,9 @@ class S2Connection(AsyncApplication, ABC):
                 # self.msg_history.receive_line(f"[Message received][Sender: {self.s2_origin_type.value} {self.origin_id}][Receiver: {self.destination_type.value} {self.dest_id}] Message: {message_str}")
                 message = json.loads(message_str)
                 await self.msg_router.route_s2_message(self, message)
+            except ConnectionProtocolError:
+                self.stop()
+                return
             except ConnectionClosed:
                 LOGGER.warning(
                     "Connection to %s %s had an exception while receiving.",
@@ -152,12 +156,15 @@ class S2Connection(AsyncApplication, ABC):
                 )
                 await self.conn_adapter.send(json.dumps(envelope.msg))
                 self._queue.task_done()
+            except ConnectionProtocolError:
+                self.stop()
+                return
             except ConnectionClosed:
-                LOGGER.warning(
-                    "Could not send envelope to %s %s as connection was already closed.",
-                    self.s2_origin_type.name,
-                    self.origin_id,
-                )
+                # LOGGER.warning(
+                #     "Could not send envelope to %s %s as connection was already closed.",
+                #     self.s2_origin_type.name,
+                #     self.origin_id,
+                # )
                 # Stop the connection once the connection adapter closes.
                 self.stop()
                 return

@@ -1,6 +1,7 @@
 from datetime import datetime
 import json
 import logging
+import os
 from sqlmodel import Field, Relationship, SQLModel, create_engine, Session
 from typing import Any, List, Optional, Dict
 
@@ -97,7 +98,8 @@ def serialize_communication_with_validation_errors(
 
 
 # Database setup
-DATABASE_URL = "sqlite:///data/database.sqlite3"  # Replace with your database URL
+file_path = os.path.abspath(os.getcwd())+"\database.db"
+DATABASE_URL = f"sqlite:///{file_path}"  # Replace with your database URL
 engine = create_engine(DATABASE_URL)
 
 

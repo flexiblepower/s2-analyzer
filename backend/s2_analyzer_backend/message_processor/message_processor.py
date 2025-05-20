@@ -260,9 +260,9 @@ class MessageProcessorHandler(AsyncApplication):
             message = await self._queue.get()
             await self.process_message(message, loop)
 
-    def stop(self, loop: asyncio.AbstractEventLoop):
+    def stop(self):
         self._running = False
-        self._loop.call_soon_threadsafe(self.stop, loop)
+        # self._loop.call_soon_threadsafe(self.stop, loop)
 
         # Cleanup the message processors.
         for processor in self.message_processors:
