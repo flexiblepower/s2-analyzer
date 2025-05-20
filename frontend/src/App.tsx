@@ -6,14 +6,24 @@ export default function App() {
     let [detail_message, set_detail_message] = useState(null as Message | null);
 
     useEffect(() => {
-        let ws = new WebSocket("ws://localhost:8001/backend/debugger/");
+        const queryString = window.location.search;
+
+        let url = "ws://localhost:8001/backend/debugger/"
+
+        if (queryString) {
+            // url += `?session_id=${sessionId}`
+            url += `${queryString}`
+        }
+
+        let ws = new WebSocket(url);
+
         ws.onopen = () => set_connected(true);
         ws.onclose = () => set_connected(false);
         ws.onmessage = ev => {
             let data = JSON.parse(ev.data);
             if (data.s2_msg_type === "ReceptionStatus") {
                 set_messages(messages => {
-                    for (let msg of messages) { 
+                    for (let msg of messages) {
                         if (msg.msg.message_id === data.msg.subject_message_id) {
                             msg.reception_status = data.msg.status;
                         }
@@ -21,7 +31,7 @@ export default function App() {
 
                     return [...messages];
                 });
-                
+
             } else {
                 set_messages(messages => [...messages, { reception_status: null, ...data }]);
             }
@@ -31,10 +41,10 @@ export default function App() {
     useEffect(() => {
         console.info("Messages: ", messages);
     }, [messages]);
-    
+
     return <div className="w-full h-full px-8 py-4 relative">
         <div className="flex flex-row justify-between items-start\">
-            <MessageList messages={messages} on_click_message={idx => set_detail_message(messages[idx])}/>
+            <MessageList messages={messages} on_click_message={idx => set_detail_message(messages[idx])} />
             <MessageDetails message={detail_message ?? null} />
         </div>
 
@@ -47,7 +57,7 @@ export default function App() {
 }
 
 type Message = {
-    msg: {[key: string]: any};
+    msg: { [key: string]: any };
 
     cem_id: string;
     rm_id: string;
@@ -70,7 +80,7 @@ function origin_inverse(origin: "RM" | "CEM"): string {
     }
 }
 
-function MessageList(props: {messages: Message[], on_click_message: (message_idx: number) => void}) {
+function MessageList(props: { messages: Message[], on_click_message: (message_idx: number) => void }) {
     return <div className="w-fit h-fit">
         <div className="font-bold text-5xl text-blue-600 -ml-[2px] mb-4">Messages</div>
         <div className="flex flex-col gap-2 items-start max-h-[80vh] no-scrollbar overflow-y-scroll">
@@ -83,7 +93,7 @@ function MessageList(props: {messages: Message[], on_click_message: (message_idx
                         {message.origin}{" -> "}{origin_inverse(message.origin)}
                     </div>
                     <div className="font-bold w-64">{message_name(message)}</div>
-                    <div className="">{message.reception_status === "OK" ? "✓" : message.reception_status === null ? <span className="text-gray-400">...</span> : "✕" }</div>
+                    <div className="">{message.reception_status === "OK" ? "✓" : message.reception_status === null ? <span className="text-gray-400">...</span> : "✕"}</div>
                     <div>{new Date(message.timestamp).toLocaleString("en-GB")}</div>
                 </div>
             </CoolFrame>)}
@@ -91,7 +101,7 @@ function MessageList(props: {messages: Message[], on_click_message: (message_idx
     </div>
 }
 
-function MessageDetails(props: {message: Message | null}) {
+function MessageDetails(props: { message: Message | null }) {
     let highlight = {
         RM: "text-blue-600",
         CEM: "text-teal-600",

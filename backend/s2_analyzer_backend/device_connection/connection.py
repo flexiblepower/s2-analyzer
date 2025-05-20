@@ -22,13 +22,14 @@ from s2_analyzer_backend.device_connection.connection_adapter.adapter import (
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.async_application import APPLICATIONS
 
+from s2_analyzer_backend.message_processor.message import Message
+from s2_analyzer_backend.device_connection.origin_type import S2OriginType
+
 if TYPE_CHECKING:
     from fastapi import WebSocket
     from s2_analyzer_backend.device_connection.router import MessageRouter
     from s2_analyzer_backend.device_connection.envelope import Envelope
-    from s2_analyzer_backend.device_connection.origin_type import S2OriginType
     from s2_analyzer_backend.async_application import ApplicationName
-    from s2_analyzer_backend.message_processor.message_processor import Message
 
 
 LOGGER = logging.getLogger(__name__)
@@ -207,9 +208,20 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
             and self.filters.session_id is not None
             and self.filters.include_session_history
         ):
-            for message in self.history_filter.get_s2_session_history(
+            for communication in self.history_filter.get_s2_session_history(
                 uuid.UUID(self.filters.session_id)
             ):
+                message = Message(
+                    session_id=communication.session_id,
+                    cem_id=communication.cem_id,
+                    rm_id=communication.rm_id,
+                    origin=S2OriginType(communication.origin),
+                    msg=communication.s2_msg,
+                    s2_msg=None,
+                    s2_msg_type=communication.s2_msg_type,
+                    timestamp=communication.timestamp,
+                    s2_validation_error=None,
+                )
                 await self._queue.put(message)
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:

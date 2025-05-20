@@ -8,8 +8,8 @@ from pydantic import BaseModel
 from s2python.s2_parser import S2Parser
 
 from s2_analyzer_backend.device_connection.origin_type import S2OriginType
+from s2_analyzer_backend.message_processor.message import Message
 from s2_analyzer_backend.message_processor.message_processor import (
-    Message,
     MessageProcessorHandler,
 )
 from s2_analyzer_backend.device_connection.envelope import Envelope

@@ -19,23 +19,10 @@ from s2_analyzer_backend.async_application import LOGGER, AsyncApplication
 
 from s2python.s2_parser import S2Parser, S2Message
 from s2python.s2_validation_error import S2ValidationError
-
-
-class MessageValidationDetails(BaseModel):
-    msg: str
-    errors: list[dict] | None
-
-
-class Message(BaseModel):
-    session_id: uuid.UUID
-    cem_id: str
-    rm_id: str
-    origin: S2OriginType
-    msg: dict
-    s2_msg: S2Message | None
-    s2_msg_type: str | None
-    s2_validation_error: MessageValidationDetails | None
-    timestamp: datetime | None
+from s2_analyzer_backend.message_processor.message import (
+    Message,
+    MessageValidationDetails,
+)
 
 
 class MessageProcessor(abc.ABC):
@@ -140,7 +127,7 @@ class MessageStorageProcessor(MessageProcessor):
                 session_id=message.session_id,
                 cem_id=message.cem_id,
                 rm_id=message.rm_id,
-                origin=message.origin.__str__(),
+                origin=message.origin.name,
                 s2_msg=json.dumps(message.msg),
                 s2_msg_type=message.s2_msg_type,
                 timestamp=message.timestamp,
