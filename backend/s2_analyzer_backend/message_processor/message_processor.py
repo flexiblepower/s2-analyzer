@@ -239,7 +239,8 @@ class MessageProcessorHandler(AsyncApplication):
 
     def add_message_to_process(self, message: Message):
         """Added a new message to the queue to be processed when the previous messages are done.
-        Should be called by other async applications which need to have a message processed."""
+        Should be called by other async applications which need to have a message processed.
+        """
         self._queue.put_nowait(message)
 
     async def process_message(self, message: Message, loop: asyncio.AbstractEventLoop):

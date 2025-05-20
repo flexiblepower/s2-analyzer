@@ -9,9 +9,10 @@ from fastapi import (
     WebSocketException,
 )
 from pydantic import BaseModel
-from s2_analyzer_backend.device_connection.connection import (
-    WebSocketConnection,
+from s2_analyzer_backend.device_connection.connection_adapter.fastapi_websocket_adapter import (
+    FastAPIWebSocketAdapter,
 )
+from s2_analyzer_backend.device_connection.connection import S2Connection
 
 from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.device_connection.origin_type import S2OriginType
@@ -84,14 +85,14 @@ class ManInTheMiddleAPI:
             tags=["connections"],
         )
 
-    async def handle_connection(
+    async def handle_incoming_connection(
         self,
         websocket,
         connection_type: S2OriginType,
         origin_id,
         dest_id,
     ) -> None:
-        """Handles the creation of a new WebsocketConnection instance when a CEM or RM device initiates a connection.
+        """Handles the creation of a new S2Connection instance when a CEM or RM device initiates a connection.
         WebSocketConnections are run as AsyncApplications so run on their own thread to receive messages.
 
         Args:
@@ -100,8 +101,9 @@ class ManInTheMiddleAPI:
             origin_id (_type_): The identifier of the sending device.
             dest_id (_type_): Identifier of the receiving device.
         """
-        conn = WebSocketConnection(
-            origin_id, dest_id, connection_type, self.msg_router, websocket
+        conn_adapter = FastAPIWebSocketAdapter(websocket=websocket)
+        conn = S2Connection(
+            conn_adapter, origin_id, dest_id, connection_type, self.msg_router
         )
 
         APPLICATIONS.add_and_start_application(conn)
@@ -126,7 +128,7 @@ class ManInTheMiddleAPI:
                 cem_id,
             )
 
-        await self.handle_connection(websocket, S2OriginType.RM, rm_id, cem_id)
+        await self.handle_incoming_connection(websocket, S2OriginType.RM, rm_id, cem_id)
 
     async def receive_new_cem_connection(
         self, websocket: WebSocket, cem_id: str, rm_id: str
@@ -142,7 +144,9 @@ class ManInTheMiddleAPI:
                 rm_id,
             )
 
-        await self.handle_connection(websocket, S2OriginType.CEM, cem_id, rm_id)
+        await self.handle_incoming_connection(
+            websocket, S2OriginType.CEM, cem_id, rm_id
+        )
 
     async def inject_message(self, body: InjectMessage, validate: bool = True):
         """

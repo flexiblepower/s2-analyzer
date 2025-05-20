@@ -13,7 +13,7 @@ from s2_analyzer_backend.message_processor.message_processor import (
 from s2_analyzer_backend.device_connection.envelope import Envelope
 
 if TYPE_CHECKING:
-    from s2_analyzer_backend.device_connection.connection import Connection
+    from s2_analyzer_backend.device_connection.connection import S2Connection
 
 
 LOGGER = logging.getLogger(__name__)
@@ -23,13 +23,13 @@ class MessageRouter:
     """Routes messages received from a CEM or RM device to the destination
     device based on the connection information."""
 
-    connections: dict[tuple[str, str], "Connection"]
+    connections: dict[tuple[str, str], "S2Connection"]
     _buffer_queue_by_origin_dest_id: dict[tuple[str, str], asyncio.Queue]
 
     def __init__(self, msg_processor_handler: MessageProcessorHandler) -> None:
         self.connections = {}
         self._buffer_queue_by_origin_dest_id = {}
-        
+
         # Dependency injection of message processor handler
         self._msg_processor_handler = msg_processor_handler
 
@@ -51,12 +51,13 @@ class MessageRouter:
 
     def get_reverse_connection(
         self, origin_id: str, dest_id: str
-    ) -> "Connection | None":
+    ) -> "S2Connection | None":
         return self.connections.get((dest_id, origin_id))
 
-    async def route_s2_message(self, origin: "Connection", s2_json_msg: dict) -> None:
+    async def route_s2_message(self, origin: "S2Connection", s2_json_msg: dict) -> None:
         """Performs the routing of the message. Also passes the received message to the
-        MessageProcessorHandler so that the processing pipeline can be executed on the message."""
+        MessageProcessorHandler so that the processing pipeline can be executed on the message.
+        """
 
         # Find destination
         dest_id = origin.dest_id
@@ -95,7 +96,7 @@ class MessageRouter:
             await self.route_envelope(envelope)
 
     async def _forward_envelope_to_connect(
-        self, envelope: Envelope, conn: "Connection"
+        self, envelope: Envelope, conn: "S2Connection"
     ) -> None:
         LOGGER.debug("Envelope is forwarded to %s: %s", conn, envelope)
         await conn.receive_envelope(envelope)
@@ -110,7 +111,7 @@ class MessageRouter:
 
         await self._forward_envelope_to_connect(envelope, conn)
 
-    async def receive_new_connection(self, conn: "Connection") -> None:
+    async def receive_new_connection(self, conn: "S2Connection") -> None:
         """Stores a new connection in the lookup table to be used for routing messages."""
         self.connections[(conn.origin_id, conn.dest_id)] = conn
 
@@ -126,8 +127,31 @@ class MessageRouter:
         for message in buffered_messages:
             await self._forward_envelope_to_connect(message, conn)
 
-    def connection_has_closed(self, conn: "Connection") -> None:
-        del self.connections[(conn.origin_id, conn.dest_id)]
+    def connection_has_closed(self, conn: "S2Connection") -> None:
+        LOGGER.info("Closing connection. Closing incoming conn.")
+        conn_key = (conn.origin_id, conn.dest_id)
+        reverse_conn_key = (conn.dest_id, conn.origin_id)
+
+        # Cleanup the connection
+        if conn_key in self.connections:
+            connection = self.connections.get(conn_key)
+            if connection._running:
+                connection.stop()
+            del self.connections[conn_key]
+
+        # Cleanup the connection going in the reverse dir
+        if reverse_conn_key in self.connections:
+            reverse_connection = self.connections.get(reverse_conn_key)
+            if reverse_connection._running:
+                reverse_connection.stop()
+            del self.connections[reverse_conn_key]
+
+        # Remove the buffers
+        if conn_key in self._buffer_queue_by_origin_dest_id:
+            del self._buffer_queue_by_origin_dest_id[conn_key]
+
+        if reverse_conn_key in self._buffer_queue_by_origin_dest_id:
+            del self._buffer_queue_by_origin_dest_id[reverse_conn_key]
 
     async def inject_message(self, origin_id, dest_id, message: dict):
         """Injects a message into the communication between two devices. At least one of the devices must be connected for this to work."""
