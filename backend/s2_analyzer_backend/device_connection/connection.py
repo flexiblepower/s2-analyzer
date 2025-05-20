@@ -8,10 +8,12 @@ import json
 import logging
 import threading
 from uuid import UUID
+import uuid
 
 from fastapi import WebSocketException, WebSocketDisconnect
 from pydantic import BaseModel
 from websockets.exceptions import ConnectionClosedOK
+from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
 from s2_analyzer_backend.device_connection.connection_adapter.adapter import (
     ConnectionAdapter,
     ConnectionClosed,
@@ -172,6 +174,9 @@ class S2Connection(AsyncApplication, ABC):
 
 
 class DebuggerMessageFilter(BaseModel):
+    session_id: Optional[str] = None
+    include_session_history: bool = False
+
     rm_id: Optional[str] = None
     cem_id: Optional[str] = None
 
@@ -182,19 +187,36 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
     filters: Optional[DebuggerMessageFilter]
 
     def __init__(
-        self, websocket: "WebSocket", filters: Optional[DebuggerMessageFilter] = None
+        self,
+        websocket: "WebSocket",
+        history_filter: HistoryFilter,
+        filters: DebuggerMessageFilter,
     ):
         self.websocket = websocket
         self._queue = asyncio.Queue()
 
+        self.history_filter = history_filter
         self.filters = filters
 
     def get_name(self) -> "ApplicationName":
         return str(self)
 
+    async def send_session_history(self):
+        if (
+            self.filters is not None
+            and self.filters.session_id is not None
+            and self.filters.include_session_history
+        ):
+            for message in self.history_filter.get_s2_session_history(
+                uuid.UUID(self.filters.session_id)
+            ):
+                await self._queue.put(message)
+
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         try:
             async with asyncio.TaskGroup() as task_group:
+                if self.filters is not None and self.filters.include_session_history:
+                    task_group.create_task(self.send_session_history())
                 task_group.create_task(self.receiver())
                 task_group.create_task(self.sender())
         except ExceptionGroup as exc_group:
@@ -215,7 +237,11 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
         if self.filters is None:
             return True
 
-        if message.cem_id == self.filters.cem_id or message.rm_id == self.filters.rm_id:
+        if (
+            message.session_id == self.filters.session_id
+            or message.cem_id == self.filters.cem_id
+            or message.rm_id == self.filters.rm_id
+        ):
             return True
 
         return False

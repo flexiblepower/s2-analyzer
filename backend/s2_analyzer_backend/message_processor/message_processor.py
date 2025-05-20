@@ -2,6 +2,7 @@ import abc
 import asyncio
 from datetime import datetime
 import json
+import uuid
 
 from pydantic import BaseModel
 from sqlalchemy import Engine
@@ -26,6 +27,7 @@ class MessageValidationDetails(BaseModel):
 
 
 class Message(BaseModel):
+    session_id: uuid.UUID
     cem_id: str
     rm_id: str
     origin: S2OriginType
@@ -135,6 +137,7 @@ class MessageStorageProcessor(MessageProcessor):
             validation_error = None
 
             db_message = Communication(
+                session_id=message.session_id,
                 cem_id=message.cem_id,
                 rm_id=message.rm_id,
                 origin=message.origin.__str__(),

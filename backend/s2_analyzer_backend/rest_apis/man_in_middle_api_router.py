@@ -1,6 +1,7 @@
 import json
 import logging
 from typing import TYPE_CHECKING, Optional, Self
+import uuid
 
 from fastapi import (
     HTTPException,
@@ -44,9 +45,9 @@ class ConnectionDetails(BaseModel):
     """Pydantic model used to serialize the connection information
     for the connection list endpoint."""
 
-    origin_id: str
-    dest_id: str
-    connection_type: S2OriginType
+    session_id: uuid.UUID
+    cem_id: str
+    rm_id: str
 
 
 class CreateConnection(BaseModel):
@@ -112,13 +113,13 @@ class ManInTheMiddleAPI:
             tags=["connections"],
         )
 
-    async def handle_incoming_connection(
+    async def create_connection(
         self,
         conn_adapter: ConnectionAdapter,
         connection_type: S2OriginType,
         origin_id,
         dest_id,
-    ) -> S2Connection:
+    ) -> tuple[S2Connection, uuid.UUID]:
         """Handles the creation of a new S2Connection instance when a CEM or RM device initiates a connection.
         WebSocketConnections are run as AsyncApplications so run on their own thread to receive messages.
 
@@ -134,13 +135,13 @@ class ManInTheMiddleAPI:
 
         APPLICATIONS.add_and_start_application(conn)
 
-        await self.msg_router.receive_new_connection(conn)
+        session_id = await self.msg_router.receive_new_connection(conn)
 
         # await conn.wait_till_done_async(
         #     timeout=None, kill_after_timeout=False, raise_on_timeout=False
         # )
 
-        return conn
+        return conn, session_id
 
     async def receive_new_rm_connection(
         self, websocket: WebSocket, rm_id: str, cem_id: str
@@ -158,9 +159,7 @@ class ManInTheMiddleAPI:
 
         conn_adapter = FastAPIWebSocketAdapter(websocket)
 
-        await self.handle_incoming_connection(
-            conn_adapter, S2OriginType.RM, rm_id, cem_id
-        )
+        await self.create_connection(conn_adapter, S2OriginType.RM, rm_id, cem_id)
 
     async def receive_new_cem_connection(
         self, websocket: WebSocket, cem_id: str, rm_id: str
@@ -178,13 +177,11 @@ class ManInTheMiddleAPI:
 
         conn_adapter = FastAPIWebSocketAdapter(websocket)
 
-        await self.handle_incoming_connection(
-            conn_adapter, S2OriginType.CEM, cem_id, rm_id
-        )
+        await self.create_connection(conn_adapter, S2OriginType.CEM, cem_id, rm_id)
 
     async def create_outgoing_connection(
         self, uri, connection_type: S2OriginType, source_id, dest_id
-    ) -> S2Connection:
+    ) -> tuple[S2Connection, uuid.UUID]:
         try:
             websocket = await connect(uri)
         except:
@@ -193,30 +190,31 @@ class ManInTheMiddleAPI:
             )
         cem_conn_adapter = WebSocketConnectionAdapter(websocket)
 
-        connection = await self.handle_incoming_connection(
+        connection, session_id = await self.create_connection(
             cem_conn_adapter,
             connection_type,
             origin_id=source_id,
             dest_id=dest_id,
         )
-        return connection
+        return connection, session_id
 
     async def create_new_connections(self, body: CreateConnection):
         LOGGER.info("Creating connections: %s", body)
 
         if body.cem_uri is not None:
-            cem_connection = await self.create_outgoing_connection(
+            cem_connection, session_id = await self.create_outgoing_connection(
                 body.cem_uri, S2OriginType.CEM, body.cem_id, body.rm_id
             )
             LOGGER.info("CEM connected")
         else:
             LOGGER.info("No CEM uri provided. Will wait for an incoming connection.")
 
-        if body.cem_uri is not None:
+        if body.rm_uri is not None:
             try:
-                await self.create_outgoing_connection(
+                rm_connection, session_id = await self.create_outgoing_connection(
                     body.rm_uri, S2OriginType.RM, body.rm_id, body.cem_id
                 )
+                LOGGER.info(session_id)
             except HTTPException:
                 # If connection to RM fails but we already connected to CEM then stop the CEM connection.
                 if cem_connection._running:
@@ -227,7 +225,7 @@ class ManInTheMiddleAPI:
         else:
             LOGGER.info("No RM uri provided. Will wait for an incoming connection.")
 
-        return Response(status_code=201)
+        return {"session_id": session_id}
 
     async def inject_message(self, body: InjectMessage, validate: bool = True):
         """
@@ -269,12 +267,18 @@ class ManInTheMiddleAPI:
     async def get_connections(self):
         """Endpoint to view all open connections to the S2 Analyzer."""
         connections = []
-        for conn in self.msg_router.connections.values():
+        sessions = set()
+        for conn, session_id in self.msg_router.connections.values():
+            if session_id in sessions:
+                continue
+            sessions.add(session_id)
+            cem_id = conn.origin_id if conn.s2_origin_type.is_cem() else conn.dest_id
+            rm_id = conn.origin_id if conn.s2_origin_type.is_rm() else conn.dest_id
             connections.append(
                 ConnectionDetails(
-                    origin_id=conn.origin_id,
-                    dest_id=conn.dest_id,
-                    connection_type=conn.s2_origin_type,
+                    session_id=session_id,
+                    cem_id=cem_id,
+                    rm_id=rm_id,
                 )
             )
         return connections

@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 import logging
 import os
+import uuid
 from sqlmodel import Field, Relationship, SQLModel, create_engine, Session
 from typing import Any, List, Optional, Dict
 
@@ -9,6 +10,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class CommunicationBase(SQLModel):
+    session_id: uuid.UUID
     cem_id: str
     rm_id: str
     origin: str  # Adjust to match the data type of S2OriginType
@@ -76,14 +78,9 @@ ValidationError.communication_id = Relationship(back_populates="validation_error
 def serialize_communication_with_validation_errors(
     comm: Communication,
 ) -> CommunicationWithValidationErrors:
-    comm_with_errors = CommunicationWithValidationErrors(
-        rm_id=comm.rm_id,
-        cem_id=comm.cem_id,
-        origin=comm.origin,
-        s2_msg=json.loads(comm.s2_msg),
-        s2_msg_type=comm.s2_msg_type,
-        timestamp=comm.timestamp,
-        validation_errors=[
+    validation_errors = []
+    try:
+        validation_errors = [
             PublicValidationError(
                 id=ve.id,
                 error_details=ve.error_details,
@@ -92,20 +89,31 @@ def serialize_communication_with_validation_errors(
                 msg=ve.msg,
             )
             for ve in comm.validation_errors
-        ],
+        ]
+    except:
+        pass
+
+    comm_with_errors = CommunicationWithValidationErrors(
+        session_id=comm.session_id,
+        rm_id=comm.rm_id,
+        cem_id=comm.cem_id,
+        origin=comm.origin,
+        s2_msg=json.loads(comm.s2_msg),
+        s2_msg_type=comm.s2_msg_type,
+        timestamp=comm.timestamp,
+        validation_errors=validation_errors,
     )
     return comm_with_errors
 
 
 # Database setup
-file_path = os.path.abspath(os.getcwd())+"\database.db"
+file_path = os.path.abspath(os.getcwd()) + "/database.db"
 DATABASE_URL = f"sqlite:///{file_path}"  # Replace with your database URL
 engine = create_engine(DATABASE_URL)
 
 
 def create_db_and_tables():
-    """SQLModel creates the SQLite DB and creates the tables.
-    """
+    """SQLModel creates the SQLite DB and creates the tables."""
     SQLModel.metadata.create_all(engine)
 
 

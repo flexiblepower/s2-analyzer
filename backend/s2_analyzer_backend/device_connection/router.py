@@ -2,7 +2,9 @@ import asyncio
 from datetime import datetime
 from typing import TYPE_CHECKING
 import logging
+import uuid
 
+from pydantic import BaseModel
 from s2python.s2_parser import S2Parser
 
 from s2_analyzer_backend.device_connection.origin_type import S2OriginType
@@ -23,7 +25,7 @@ class MessageRouter:
     """Routes messages received from a CEM or RM device to the destination
     device based on the connection information."""
 
-    connections: dict[tuple[str, str], "S2Connection"]
+    connections: dict[tuple[str, str], tuple["S2Connection", uuid.UUID]]
     _buffer_queue_by_origin_dest_id: dict[tuple[str, str], asyncio.Queue]
 
     def __init__(self, msg_processor_handler: MessageProcessorHandler) -> None:
@@ -51,8 +53,14 @@ class MessageRouter:
 
     def get_reverse_connection(
         self, origin_id: str, dest_id: str
-    ) -> "S2Connection | None":
-        return self.connections.get((dest_id, origin_id))
+    ) -> "tuple[S2Connection | None, uuid.UUID | None]":
+        return self.connections.get((dest_id, origin_id), (None, None))
+
+    def get_session_id(self, connection: "S2Connection") -> uuid.UUID:
+        _, session_id = self.connections.get(
+            (connection.origin_id, connection.dest_id), (None, None)
+        )
+        return session_id
 
     async def route_s2_message(self, origin: "S2Connection", s2_json_msg: dict) -> None:
         """Performs the routing of the message. Also passes the received message to the
@@ -61,10 +69,12 @@ class MessageRouter:
 
         # Find destination
         dest_id = origin.dest_id
-        dest = self.get_reverse_connection(origin.origin_id, origin.dest_id)
+        session_id = self.get_session_id(origin)
+        dest, _ = self.get_reverse_connection(origin.origin_id, origin.dest_id)
 
         # Prepare the message to be processed
         message = Message(
+            session_id=session_id,
             cem_id=origin.origin_id if origin.s2_origin_type.is_cem() else dest_id,
             rm_id=origin.origin_id if origin.s2_origin_type.is_rm() else dest_id,
             origin=origin.s2_origin_type,
@@ -111,9 +121,16 @@ class MessageRouter:
 
         await self._forward_envelope_to_connect(envelope, conn)
 
-    async def receive_new_connection(self, conn: "S2Connection") -> None:
+    async def receive_new_connection(self, conn: "S2Connection") -> uuid.UUID:
         """Stores a new connection in the lookup table to be used for routing messages."""
-        self.connections[(conn.origin_id, conn.dest_id)] = conn
+
+        # Check if the reverse connection exists to get the session id
+        if (conn.dest_id, conn.origin_id) in self.connections:
+            _, session_id = self.connections.get((conn.dest_id, conn.origin_id))
+        else:
+            session_id = uuid.uuid4()
+
+        self.connections[(conn.origin_id, conn.dest_id)] = (conn, session_id)
 
         buffered_messages = self._consume_buffer_queue(conn.origin_id, conn.dest_id)
 
@@ -127,6 +144,8 @@ class MessageRouter:
         for message in buffered_messages:
             await self._forward_envelope_to_connect(message, conn)
 
+        return session_id
+
     def connection_has_closed(self, conn: "S2Connection") -> None:
         LOGGER.info("Closing connection. Closing incoming conn.")
         conn_key = (conn.origin_id, conn.dest_id)
@@ -134,14 +153,14 @@ class MessageRouter:
 
         # Cleanup the connection
         if conn_key in self.connections:
-            connection = self.connections.get(conn_key)
+            connection, _ = self.connections.get(conn_key)
             if connection._running:
                 connection.stop()
             del self.connections[conn_key]
 
         # Cleanup the connection going in the reverse dir
         if reverse_conn_key in self.connections:
-            reverse_connection = self.connections.get(reverse_conn_key)
+            reverse_connection, _ = self.connections.get(reverse_conn_key)
             if reverse_connection._running:
                 reverse_connection.stop()
             del self.connections[reverse_conn_key]
@@ -155,6 +174,6 @@ class MessageRouter:
 
     async def inject_message(self, origin_id, dest_id, message: dict):
         """Injects a message into the communication between two devices. At least one of the devices must be connected for this to work."""
-        origin = self.connections.get((origin_id, dest_id))
+        origin, session_id = self.connections.get((origin_id, dest_id))
 
         await self.route_s2_message(origin, message)

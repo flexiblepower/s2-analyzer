@@ -87,8 +87,13 @@ class DebuggerAPI:
     async def receive_new_debugger_frontend_connection(
         self,
         websocket: WebSocket,
+        session_id: Optional[str] = Query(None, description="UUID of Session"),
         cem_id: Optional[str] = Query(None, description="ID of CEM."),
         rm_id: Optional[str] = Query(None, description="ID of RM."),
+        include_session_history: Optional[bool] = Query(
+            True, description="Send past messages on connection."
+        ),
+        history_filter: HistoryFilter = Depends(),  # Dependency injected history filter which queries database
     ) -> None:
         """Accepts an incoming websocket connection from the debugger frontend.
         Creates a new DebuggerFrontendWebsocketConnection instance which will handle the receiving and sending of messages on the new websocket.
@@ -103,11 +108,11 @@ class DebuggerAPI:
                 "Debugger frontend WS connection had an exception while accepting."
             )
 
-        filters = None
-        if cem_id or rm_id:
-            filters = DebuggerMessageFilter(rm_id=rm_id, cem_id=cem_id)
+        filters = DebuggerMessageFilter(
+            rm_id=rm_id, cem_id=cem_id, session_id=session_id, include_session_history=include_session_history
+        )
 
-        conn = DebuggerFrontendWebsocketConnection(websocket, filters)
+        conn = DebuggerFrontendWebsocketConnection(websocket, history_filter, filters)
 
         APPLICATIONS.add_and_start_application(conn)
         self.debugger_frontend_msg_processor.add_connection(conn)

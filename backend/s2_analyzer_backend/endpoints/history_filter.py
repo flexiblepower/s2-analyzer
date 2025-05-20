@@ -1,3 +1,4 @@
+import uuid
 from fastapi import HTTPException, Depends
 from typing import Optional, List
 from datetime import datetime
@@ -20,6 +21,7 @@ class HistoryFilter:
 
     def get_filtered_records(
         self,
+        session_id: Optional[uuid.UUID] = None,
         cem_id: Optional[str] = None,
         rm_id: Optional[str] = None,
         origin: Optional[str] = None,
@@ -32,6 +34,7 @@ class HistoryFilter:
 
             # Define a dictionary for dynamic filters
             filters = {
+                "session_id": session_id,
                 "cem_id": cem_id,
                 "rm_id": rm_id,
                 "origin": origin,
@@ -60,3 +63,10 @@ class HistoryFilter:
         except Exception as e:
             LOGGER.error(f"Error in get_filtered_records: {str(e)}")
             raise HTTPException(status_code=500, detail="Internal Server Error")
+
+    def get_s2_session_history(self, session_id: uuid.UUID):
+        query = select(Communication).where(Communication.session_id == session_id)
+
+        for comm in self.session.exec(query).all():
+            data = serialize_communication_with_validation_errors(comm)
+            yield data
