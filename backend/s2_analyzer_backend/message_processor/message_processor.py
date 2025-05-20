@@ -93,9 +93,10 @@ class MessageParserProcessor(MessageProcessor):
         try:
             s2_message = self.s2_parser.parse_as_any_message(message.msg)
         except S2ValidationError as e:
-            validation_error = MessageValidationDetails(
-                msg=e.msg, errors=e.pydantic_validation_error.errors()
-            )
+            errors = None
+            if e.pydantic_validation_error is not None:
+                errors = e.pydantic_validation_error.errors()
+            validation_error = MessageValidationDetails(msg=e.msg, errors=errors)
             LOGGER.warning(f"Error parsing message: {e}")
 
         message.s2_msg = s2_message
@@ -144,7 +145,7 @@ class MessageStorageProcessor(MessageProcessor):
             )
             session.add(db_message)
 
-            if message.s2_validation_error:
+            if message.s2_validation_error and message.s2_validation_error.errors:
                 for error in message.s2_validation_error.errors:
                     validation_error = ValidationError(
                         type=error["type"],
