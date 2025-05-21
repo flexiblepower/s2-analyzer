@@ -11,7 +11,9 @@ type CreateS2Connection = {
 const HOST = "localhost:8001";
 const LOCAL_STORAGE_KEY = "createConnectionFormData";
 
-export function CreateConnectionForm() {
+export function CreateConnectionForm(props: {
+    set_show_create_form: (show_create_form: boolean) => void;
+}) {
     const [formData, setFormData] = useState<CreateS2Connection>(() => {
         // Initialize from local storage
         const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -26,6 +28,7 @@ export function CreateConnectionForm() {
     });
 
     const [message, setMessage] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false); // New loading state
 
     useEffect(() => {
         // Save to local storage whenever formData changes
@@ -42,6 +45,7 @@ export function CreateConnectionForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setMessage(null); // Clear previous message
+        setIsLoading(true); // Start loading
 
         try {
             const response = await fetch(`http://${HOST}/backend/connections/`, {
@@ -66,14 +70,19 @@ export function CreateConnectionForm() {
             console.log("Connection created:", result);
             setMessage("Connection created successfully!"); // Set success message
 
+            props.set_show_create_form(false);
         } catch (error: any) {
             setMessage(error.message || "An unexpected error occurred");
+        } finally {
+            setIsLoading(false); // Stop loading
         }
     };
 
     return (
         <div className="mt-5">
-            <div className={`font-bold text-4xl transition-colors text-blue-600 mb-4`}>
+            <div
+                className={`font-bold text-4xl transition-colors text-blue-600 mb-4`}
+            >
                 Create Outgoing Session
             </div>
             <div>
@@ -83,8 +92,8 @@ export function CreateConnectionForm() {
                             {message && (
                                 <div
                                     className={`text-sm italic ${message.startsWith("Connection created")
-                                        ? "text-green-500"
-                                        : "text-red-500"
+                                            ? "text-green-500"
+                                            : "text-red-500"
                                         }`}
                                 >
                                     {message}
@@ -157,9 +166,31 @@ export function CreateConnectionForm() {
                             <div>
                                 <button
                                     type="submit"
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+                                    disabled={isLoading}
                                 >
-                                    Create Connection
+                                    {isLoading ? (
+                                        <svg
+                                            className="animate-spin h-5 w-5 mr-3"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                            />
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                            />
+                                        </svg>
+                                    ) : (
+                                        "Create Connection"
+                                    )}
                                 </button>
                             </div>
                         </form>

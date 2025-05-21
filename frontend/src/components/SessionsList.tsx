@@ -6,7 +6,7 @@ import { CoolFrame } from "./CoolFrame";
 const HOST = "localhost:8001"
 
 
-export function SessionSelector(props: { on_session_click: (sessionId: string) => void, set_show_create_form: (show_create_from: boolean) => void }) {
+export function SessionSelector(props: { on_session_click: (sessionId: string) => void, set_show_create_form: (show_create_form: boolean) => void }) {
     let [sessions, setSessions] = useState([] as Session[])
     let [connected, setConnected] = useState(false);
 

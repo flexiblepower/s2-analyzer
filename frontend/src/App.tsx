@@ -89,7 +89,7 @@ export default function App() {
                     on_session_click={selectSession} // Pass the handler
                     set_show_create_form={set_show_session_form}
                 ></SessionSelector>
-                {show_session_form ? <CreateConnectionForm
+                {show_session_form ? <CreateConnectionForm set_show_create_form={set_show_session_form}
                 ></CreateConnectionForm> : ""}
                 <MessageDetails message={detail_message ?? null} />
             </div>
