@@ -1,6 +1,7 @@
+import abc
 from builtins import ExceptionGroup
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 from abc import ABC, abstractmethod
 from enum import Enum
 import asyncio
@@ -13,6 +14,7 @@ import uuid
 from fastapi import WebSocketException, WebSocketDisconnect
 from pydantic import BaseModel
 from websockets.exceptions import ConnectionClosedOK
+from s2_analyzer_backend.device_connection.session_details import SessionDetails
 from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
 from s2_analyzer_backend.device_connection.connection_adapter.adapter import (
     ConnectionAdapter,
@@ -182,55 +184,30 @@ class DebuggerMessageFilter(BaseModel):
     cem_id: Optional[str] = None
 
 
-class DebuggerFrontendWebsocketConnection(AsyncApplication):
-    _queue: "asyncio.Queue[Message]"
+T = TypeVar("T")
 
-    filters: Optional[DebuggerMessageFilter]
+
+class WebsocketConnection(Generic[T], AsyncApplication):
+    _queue: "asyncio.Queue[T]"
 
     def __init__(
         self,
         websocket: "WebSocket",
-        history_filter: HistoryFilter,
-        filters: DebuggerMessageFilter,
     ):
         self.websocket = websocket
         self._queue = asyncio.Queue()
 
-        self.history_filter = history_filter
-        self.filters = filters
-
     def get_name(self) -> "ApplicationName":
         return str(self)
 
-    async def send_session_history(self):
-        if (
-            self.filters is not None
-            and self.filters.session_id is not None
-            and self.filters.include_session_history
-        ):
-            for communication in self.history_filter.get_s2_session_history(
-                uuid.UUID(self.filters.session_id)
-            ):
-                message = Message(
-                    session_id=communication.session_id,
-                    cem_id=communication.cem_id,
-                    rm_id=communication.rm_id,
-                    origin=S2OriginType(communication.origin),
-                    msg=communication.s2_msg,
-                    s2_msg=None,
-                    s2_msg_type=communication.s2_msg_type,
-                    timestamp=communication.timestamp,
-                    s2_validation_error=None,
-                )
-                await self._queue.put(message)
+    def create_tasks(self, task_group: asyncio.TaskGroup):
+        task_group.create_task(self.receiver())
+        task_group.create_task(self.sender())
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         try:
             async with asyncio.TaskGroup() as task_group:
-                if self.filters is not None and self.filters.include_session_history:
-                    task_group.create_task(self.send_session_history())
-                task_group.create_task(self.receiver())
-                task_group.create_task(self.sender())
+                self.create_tasks(task_group)
         except ExceptionGroup as exc_group:
             for exc in exc_group.exceptions:
                 if isinstance(exc, WebSocketDisconnect):
@@ -243,24 +220,24 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
                 else:
                     raise exc from exc_group
 
-    async def include_message(self, message: "Message") -> bool:
+    async def include_message(self, message: T) -> bool:
+        return True
 
-        # If no filters send all messages.
-        if self.filters is None:
-            return True
-
-        if (
-            message.session_id == self.filters.session_id
-            or message.cem_id == self.filters.cem_id
-            or message.rm_id == self.filters.rm_id
-        ):
-            return True
-
-        return False
-
-    async def enqueue_message(self, message: "Message") -> None:
+    async def enqueue_message(self, message: T) -> None:
         if self.include_message(message):
             await self._queue.put(message)
+
+    async def handle_incoming(self, message_str: str):
+        if message_str == "ping":
+            LOGGER.debug("Received ping message from frontend.")
+            await self.websocket.send_text("pong")
+        else:
+            LOGGER.debug(
+                "Received message across websocket. Ignoring it.: %s",
+                message_str,
+            )
+
+        # Do something with message? Or just block.
 
     async def receiver(self) -> None:
         while self._running:
@@ -268,18 +245,7 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
             try:
                 message_str = await self.websocket.receive_text()
 
-                if message_str == "ping":
-                    LOGGER.debug("Received ping message from frontend.")
-                    await self.websocket.send_text("pong")
-                    continue
-                else:
-                    LOGGER.debug(
-                        "Received message across websocket. Ignoring it.: %s",
-                        message_str,
-                    )
-
-                # Do something with message? Or just block.
-
+                self.handle_incoming(message_str)
             except WebSocketException:
                 LOGGER.exception(
                     "Connection to debugger frontend had an exception while receiving."
@@ -287,12 +253,18 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
             except json.JSONDecodeError:
                 LOGGER.exception("Error decoding message: %s", message_str)
 
+    @abc.abstractmethod
+    async def serialize_message(self, message: T) -> str:
+        return message
+
     async def sender(self) -> None:
         while self._running:
-            message: Message = await self._queue.get()
+            message: T = await self._queue.get()
 
             try:
-                await self.websocket.send_text(message.model_dump_json())
+                serialized_message = await self.serialize_message(message)
+
+                await self.websocket.send_text(serialized_message)
                 LOGGER.debug(
                     "Sent message across websocket to frontend",
                 )
@@ -317,3 +289,81 @@ class DebuggerFrontendWebsocketConnection(AsyncApplication):
             self._main_task.cancel("Request to stop")
         else:
             LOGGER.warning("Connection %s was already stopped!", self)
+
+
+class DebuggerFrontendWebsocketConnection(WebsocketConnection[Message]):
+    filters: Optional[DebuggerMessageFilter]
+
+    def __init__(
+        self,
+        websocket: "WebSocket",
+        history_filter: HistoryFilter,
+        filters: DebuggerMessageFilter,
+    ):
+        super().__init__(websocket)
+
+        self.history_filter = history_filter
+        self.filters = filters
+
+    async def send_session_history(self):
+        if (
+            self.filters is not None
+            and self.filters.session_id is not None
+            and self.filters.include_session_history
+        ):
+            for communication in self.history_filter.get_s2_session_history(
+                uuid.UUID(self.filters.session_id)
+            ):
+                message = Message(
+                    session_id=communication.session_id,
+                    cem_id=communication.cem_id,
+                    rm_id=communication.rm_id,
+                    origin=S2OriginType(communication.origin),
+                    msg=communication.s2_msg,
+                    s2_msg=None,
+                    s2_msg_type=communication.s2_msg_type,
+                    timestamp=communication.timestamp,
+                    s2_validation_error=None,
+                )
+                await self._queue.put(message)
+
+    def create_tasks(self, task_group):
+        if self.filters is not None and self.filters.include_session_history:
+            task_group.create_task(self.send_session_history())
+        return super().create_tasks(task_group)
+
+    async def include_message(self, message: "Message") -> bool:
+
+        # If no filters send all messages.
+        if self.filters is None:
+            return True
+
+        if (
+            message.session_id == self.filters.session_id
+            or message.cem_id == self.filters.cem_id
+            or message.rm_id == self.filters.rm_id
+        ):
+            return True
+
+        return False
+
+    async def serialize_message(self, message):
+        return message.model_dump_json()
+
+
+class SessionUpdatesWebsocketConnection(WebsocketConnection[SessionDetails]):
+    sent_sessions: set[uuid.UUID]
+
+    def __init__(
+        self,
+        websocket: "WebSocket",
+    ):
+        super().__init__(websocket)
+        self.websocket = websocket
+
+    async def serialize_message(self, message) -> str:
+        return message.model_dump_json()
+
+    async def add_session(self, id: uuid.UUID):
+        if id not in self.sent_sessions:
+            await self.enqueue_message(SessionDetails(session_id=id))

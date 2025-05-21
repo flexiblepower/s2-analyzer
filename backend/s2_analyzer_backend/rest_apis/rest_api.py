@@ -19,6 +19,7 @@ from .man_in_middle_api_router import (
 from .debugger_api import DebuggerAPI
 from s2_analyzer_backend.message_processor.message_processor import (
     DebuggerFrontendMessageProcessor,
+    SessionUpdateMessageProcessor,
 )
 
 from s2_analyzer_backend.async_application import AsyncApplication
@@ -36,6 +37,8 @@ LOGGER = logging.getLogger(__name__)
 This module defines the RestAPI class, which is responsible for setting up and running a FastAPI server with
 specific routes and middleware for the S2 Analyzer application.
 """
+
+
 class RestAPI(AsyncApplication):
     uvicorn_server: Optional[uvicorn.Server]
     fastapi_router: APIRouter
@@ -46,6 +49,7 @@ class RestAPI(AsyncApplication):
         listen_port: int,
         msg_router: "MessageRouter",
         debugger_frontend_msg_processor: "DebuggerFrontendMessageProcessor",
+        session_update_msg_processor: "SessionUpdateMessageProcessor",
     ) -> None:
         super().__init__()
         self.listen_address = listen_address
@@ -57,9 +61,10 @@ class RestAPI(AsyncApplication):
         # Receive the message router and debugger message processor via dependency injection.
         self.msg_router = msg_router
         self.debugger_frontend_msg_processor = debugger_frontend_msg_processor
+        self.session_update_msg_processor = session_update_msg_processor
 
         # Setup the sub-routers which handle specific tasks.
-        debugger_api = DebuggerAPI(debugger_frontend_msg_processor)
+        debugger_api = DebuggerAPI(debugger_frontend_msg_processor, session_update_msg_processor)
         self.fastapi_router.include_router(debugger_api.router)
 
         # Handles the CEM and RM man in the middle communication. Also has the message injection functionality.
@@ -68,7 +73,7 @@ class RestAPI(AsyncApplication):
 
     async def main_task(self, loop: asyncio.AbstractEventLoop) -> None:
         app = FastAPI(title="S2 Analyzer", description="", version="v0.0.1")
-        
+
         # Add CORS middleware
         app.add_middleware(
             CORSMiddleware,

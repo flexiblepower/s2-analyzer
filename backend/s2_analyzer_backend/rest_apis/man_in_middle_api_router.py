@@ -12,6 +12,7 @@ from fastapi import (
     WebSocketException,
 )
 from pydantic import BaseModel, model_validator
+from s2_analyzer_backend.device_connection.session_details import SessionDetails
 from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
 from s2_analyzer_backend.device_connection.connection_adapter import (
     FastAPIWebSocketAdapter,
@@ -41,17 +42,6 @@ class InjectMessage(BaseModel):
     origin_id: str
     dest_id: str
     message: dict
-
-
-class ConnectionDetails(BaseModel):
-    """Pydantic model used to serialize the connection information
-    for the connection list endpoint."""
-
-    session_id: uuid.UUID
-    cem_id: str | None = None
-    rm_id: str | None = None
-
-    state: Literal["closed", "open"]
 
 
 class CreateConnection(BaseModel):
@@ -282,20 +272,15 @@ class ManInTheMiddleAPI:
             cem_id = conn.origin_id if conn.s2_origin_type.is_cem() else conn.dest_id
             rm_id = conn.origin_id if conn.s2_origin_type.is_rm() else conn.dest_id
             connections.append(
-                ConnectionDetails(
+                SessionDetails(
                     session_id=session_id, cem_id=cem_id, rm_id=rm_id, state="open"
                 )
             )
-        
+
         history_sessions = history_filter.get_unique_sessions()
 
         for session in history_sessions:
             if session not in sessions:
-                connections.append(
-                    ConnectionDetails(
-                        session_id=session,
-                        state="closed"
-                    )
-                )
+                connections.append(SessionDetails(session_id=session, state="closed"))
 
         return connections

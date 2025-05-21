@@ -14,10 +14,12 @@ from fastapi import (
 from pydantic import BaseModel
 from s2_analyzer_backend.message_processor.message_processor import (
     DebuggerFrontendMessageProcessor,
+    SessionUpdateMessageProcessor,
 )
 from s2_analyzer_backend.device_connection.connection import (
     DebuggerFrontendWebsocketConnection,
     DebuggerMessageFilter,
+    SessionUpdatesWebsocketConnection,
 )
 
 from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
@@ -53,16 +55,22 @@ class DebuggerAPI:
     def __init__(
         self,
         debugger_frontend_msg_processor: "DebuggerFrontendMessageProcessor",
+        session_update_msg_processor: "SessionUpdateMessageProcessor",
     ) -> None:
         super().__init__()
         self.uvicorn_server = None
 
         self.router = APIRouter()
         self.debugger_frontend_msg_processor = debugger_frontend_msg_processor
+        self.session_update_msg_processor = session_update_msg_processor
 
         self.router.add_api_route("/", self.get_root)
         self.router.add_api_websocket_route(
             "/backend/debugger/", self.receive_new_debugger_frontend_connection
+        )
+        self.router.add_api_websocket_route(
+            "/backend/session-updates/",
+            self.receive_new_session_update_frontend_connection,
         )
         self.router.add_api_route(
             "/backend/history-filter/",
@@ -109,13 +117,38 @@ class DebuggerAPI:
             )
 
         filters = DebuggerMessageFilter(
-            rm_id=rm_id, cem_id=cem_id, session_id=session_id, include_session_history=include_session_history
+            rm_id=rm_id,
+            cem_id=cem_id,
+            session_id=session_id,
+            include_session_history=include_session_history,
         )
 
         conn = DebuggerFrontendWebsocketConnection(websocket, history_filter, filters)
 
         APPLICATIONS.add_and_start_application(conn)
-        self.debugger_frontend_msg_processor.add_connection(conn)
+        await self.debugger_frontend_msg_processor.add_connection(conn)
+
+        await conn.wait_till_done_async(
+            timeout=None, kill_after_timeout=False, raise_on_timeout=False
+        )
+
+    async def receive_new_session_update_frontend_connection(
+        self,
+        websocket: WebSocket,
+    ):
+        LOGGER.info("Received new session update connection from debugger frontend.")
+
+        try:
+            await websocket.accept()
+        except WebSocketException:
+            LOGGER.exception(
+                "Debugger frontend session update WS connection had an exception while accepting."
+            )
+
+        conn = SessionUpdatesWebsocketConnection(websocket)
+
+        APPLICATIONS.add_and_start_application(conn)
+        await self.session_update_msg_processor.add_connection(conn)
 
         await conn.wait_till_done_async(
             timeout=None, kill_after_timeout=False, raise_on_timeout=False

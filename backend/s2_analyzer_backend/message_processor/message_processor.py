@@ -9,6 +9,8 @@ from sqlalchemy import Engine
 from sqlmodel import Session
 from s2_analyzer_backend.device_connection.connection import (
     DebuggerFrontendWebsocketConnection,
+    SessionUpdatesWebsocketConnection,
+    WebsocketConnection,
 )
 from s2_analyzer_backend.message_processor.database import (
     Communication,
@@ -17,6 +19,7 @@ from s2_analyzer_backend.message_processor.database import (
 from s2_analyzer_backend.device_connection.origin_type import S2OriginType
 from s2_analyzer_backend.async_application import LOGGER, AsyncApplication
 
+from s2_analyzer_backend.device_connection.session_details import SessionDetails
 from s2python.s2_parser import S2Parser, S2Message
 from s2python.s2_validation_error import S2ValidationError
 from s2_analyzer_backend.message_processor.message import (
@@ -149,30 +152,14 @@ class MessageStorageProcessor(MessageProcessor):
             return message
 
 
-class DebuggerFrontendMessageProcessor(MessageProcessor):
-    """
-    A MessageProcessor instance which sends any messages it receives to all connected debugger frontends.
+class WebSocketMessageProcessor(MessageProcessor):
 
-    Attributes:
-        connections (list[DebuggerFrontendWebsocketConnection]): A list of active debugger frontend websocket connections.
-
-    Methods:
-        __init__():
-            Initializes the DebuggerFrontendMessageProcessor with an empty list of connections.
-        add_connection(connection: DebuggerFrontendWebsocketConnection):
-            Adds a new debugger frontend websocket connection to the list of connections.
-        async process_message(message: Message, loop: asyncio.AbstractEventLoop) -> Message:
-            Processes and sends a message to all active debugger frontend connections.
-        cleanup_closed_connections(closed_connections: list[int]):
-            Cleans up and removes closed connections from the list of connections.
-    """
-
-    connections: list[DebuggerFrontendWebsocketConnection]
+    connections: list[WebsocketConnection]
 
     def __init__(self):
         self.connections = []
 
-    def add_connection(self, connection: DebuggerFrontendWebsocketConnection):
+    async def add_connection(self, connection: WebsocketConnection):
         """Adds a new websocket connection instance to the list of connections. Will receive any new messages."""
         LOGGER.info(f"Adding connection: {connection}")
         self.connections.append(connection)
@@ -205,6 +192,77 @@ class DebuggerFrontendMessageProcessor(MessageProcessor):
         """Stop all of the websocket connections. Closes the websockets."""
         for connection in self.connections:
             connection.stop()
+
+
+class DebuggerFrontendMessageProcessor(WebSocketMessageProcessor):
+    """
+    A MessageProcessor instance which sends any messages it receives to all connected debugger frontends.
+
+    Attributes:
+        connections (list[DebuggerFrontendWebsocketConnection]): A list of active debugger frontend websocket connections.
+
+    Methods:
+        __init__():
+            Initializes the DebuggerFrontendMessageProcessor with an empty list of connections.
+        add_connection(connection: DebuggerFrontendWebsocketConnection):
+            Adds a new debugger frontend websocket connection to the list of connections.
+        async process_message(message: Message, loop: asyncio.AbstractEventLoop) -> Message:
+            Processes and sends a message to all active debugger frontend connections.
+        cleanup_closed_connections(closed_connections: list[int]):
+            Cleans up and removes closed connections from the list of connections.
+    """
+
+    connections: list[DebuggerFrontendWebsocketConnection]
+
+
+class SessionUpdateMessageProcessor(WebSocketMessageProcessor):
+
+    connections: list[SessionUpdatesWebsocketConnection]
+
+    sessions: dict[uuid.UUID, SessionDetails]
+
+    def __init__(self):
+        super().__init__()
+
+        self.sessions = {}
+
+    async def add_connection(self, connection):
+        await super().add_connection(connection)
+        LOGGER.debug("Session Update Processor Receiving connection.")
+
+        for session in self.sessions.values():
+            if session.state == "open":
+                await connection.enqueue_message(session)
+
+    async def process_message(
+        self, message: Message, loop: asyncio.AbstractEventLoop
+    ) -> Message:
+        LOGGER.info("Message Received by Session Update Processor: %s", message)
+        LOGGER.info(self.sessions)
+        if message.session_id not in self.sessions:
+            session_details = SessionDetails(
+                session_id=message.session_id,
+                cem_id=message.cem_id,
+                rm_id=message.rm_id,
+                # TODO: There's currently no easy way to get session close updates...
+                state="open",
+            )
+            self.sessions[message.session_id] = session_details
+        else:
+            # Skip if the session already exists.
+            return message
+
+        LOGGER.info(f"Sending message to debugger frontends. {len(self.connections)}")
+        closed_connections = []
+        for i, connection in enumerate(self.connections):
+            if connection._running:
+                await connection.enqueue_message(session_details)
+            else:
+                closed_connections.append(i)
+
+        self.cleanup_closed_connections(closed_connections)
+
+        return message
 
 
 class MessageProcessorHandler(AsyncApplication):
@@ -266,3 +324,17 @@ class MessageProcessorHandler(AsyncApplication):
             self._main_task.cancel("Request to stop")
         else:
             LOGGER.debug("Message Processor Handler was already stopped!")
+
+
+class MessageProcessorHandlerBuilder:
+    def __init__(
+        self,
+    ):
+        self.processor_handler = MessageProcessorHandler()
+
+    def with_message_processor(self, message_processor: MessageProcessor):
+        self.processor_handler.add_message_processor(message_processor)
+        return self
+
+    def build(self):
+        return self.processor_handler
