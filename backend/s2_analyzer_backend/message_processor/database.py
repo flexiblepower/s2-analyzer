@@ -106,9 +106,11 @@ def serialize_communication_with_validation_errors(
     return comm_with_errors
 
 
+DATABASE_URL = os.environ.get("DATABASE_URL", None)
 # Database setup
-file_path = os.path.abspath(os.getcwd()) + "/database.db"
-DATABASE_URL = f"sqlite:///{file_path}"  # Replace with your database URL
+if DATABASE_URL is None:
+    file_path = os.path.abspath(os.getcwd()) + "/database.db"
+    DATABASE_URL = f"sqlite:///{file_path}"  # Replace with your database URL
 engine = create_engine(DATABASE_URL)
 
 
