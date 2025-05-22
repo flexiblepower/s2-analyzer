@@ -82,9 +82,9 @@ export default function App() {
     }
 
     return <div className="w-full h-full px-8 py-4 relative">
-        <div className="flex flex-row justify-between items-start\">
+        <div className="flex flex-row justify-between items-start">
             <MessageList messages={messages} current_session_id={currentSessionId} on_click_message={idx => set_detail_message(messages[idx])} />
-            <div>
+            <div className="ms-2">
                 <SessionSelector
                     on_session_click={selectSession} // Pass the handler
                     set_show_create_form={set_show_session_form}

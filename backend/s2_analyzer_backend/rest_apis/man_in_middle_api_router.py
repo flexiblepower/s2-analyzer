@@ -131,10 +131,6 @@ class ManInTheMiddleAPI:
 
         session_id = await self.msg_router.receive_new_connection(conn)
 
-        # await conn.wait_till_done_async(
-        #     timeout=None, kill_after_timeout=False, raise_on_timeout=False
-        # )
-
         return conn, session_id
 
     async def receive_new_rm_connection(
@@ -153,7 +149,14 @@ class ManInTheMiddleAPI:
 
         conn_adapter = FastAPIWebSocketAdapter(websocket)
 
-        await self.create_connection(conn_adapter, S2OriginType.RM, rm_id, cem_id)
+        connection, _ = await self.create_connection(
+            conn_adapter, S2OriginType.RM, rm_id, cem_id
+        )
+
+        # Need to wait for everything to be done. If we exit this function prematurely the websocket will be closed automatically
+        await connection.wait_till_done_async(
+            timeout=None, kill_after_timeout=False, raise_on_timeout=False
+        )
 
     async def receive_new_cem_connection(
         self, websocket: WebSocket, cem_id: str, rm_id: str
@@ -171,7 +174,14 @@ class ManInTheMiddleAPI:
 
         conn_adapter = FastAPIWebSocketAdapter(websocket)
 
-        await self.create_connection(conn_adapter, S2OriginType.CEM, cem_id, rm_id)
+        connection, _ = await self.create_connection(
+            conn_adapter, S2OriginType.CEM, cem_id, rm_id
+        )
+
+        # Need to wait for everything to be done. If we exit this function prematurely the websocket will be closed automatically
+        await connection.wait_till_done_async(
+            timeout=None, kill_after_timeout=False, raise_on_timeout=False
+        )
 
     async def create_outgoing_connection(
         self, uri, connection_type: S2OriginType, source_id, dest_id

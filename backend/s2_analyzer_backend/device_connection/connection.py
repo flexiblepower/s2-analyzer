@@ -137,11 +137,12 @@ class S2Connection(AsyncApplication, ABC):
             except ConnectionProtocolError:
                 self.stop()
                 return
-            except ConnectionClosed:
-                LOGGER.warning(
-                    "Connection to %s %s had an exception while receiving.",
+            except ConnectionClosed as e:
+                LOGGER.exception(
+                    "Connection to %s %s had an exception while receiving: %s",
                     self.s2_origin_type.name,
                     self.origin_id,
+                    e,
                 )
                 # Stop the connection once the connection adapter closes.
                 self.stop()
@@ -194,6 +195,7 @@ class WebsocketConnection(Generic[T], AsyncApplication):
         self,
         websocket: "WebSocket",
     ):
+        super().__init__()
         self.websocket = websocket
         self._queue = asyncio.Queue()
 

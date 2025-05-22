@@ -19,9 +19,9 @@ class FastAPIWebSocketAdapter(ConnectionAdapter[str]):
         try:
             data = await self.websocket.receive_text()
             return data
-        except WebSocketDisconnect:
+        except WebSocketDisconnect as e:
             self.connected = False
-            raise ConnectionClosed("Websocket is closed.")
+            raise ConnectionClosed(f"Websocket is closed: {e}")
         except RuntimeError as e:
             # Starlette raises RuntimeError if the connection is closed
             self.connected = False

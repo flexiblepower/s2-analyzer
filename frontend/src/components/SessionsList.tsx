@@ -1,14 +1,16 @@
-
 import { useEffect, useState } from "react";
 import type { Session } from "../types/Session";
 import { CoolFrame } from "./CoolFrame";
 
-const HOST = "localhost:8001"
+const HOST = "localhost:8001";
 
-
-export function SessionSelector(props: { on_session_click: (sessionId: string) => void, set_show_create_form: (show_create_form: boolean) => void }) {
-    let [sessions, setSessions] = useState([] as Session[])
+export function SessionSelector(props: {
+    on_session_click: (sessionId: string) => void;
+    set_show_create_form: (show_create_form: boolean) => void;
+}) {
+    let [sessions, setSessions] = useState<Session[]>([]);
     let [connected, setConnected] = useState(false);
+    const [showClosedSessions, setShowClosedSessions] = useState(false);
 
     const fetchSessions = async () => {
         try {
@@ -17,16 +19,16 @@ export function SessionSelector(props: { on_session_click: (sessionId: string) =
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const result = await response.json();
-            console.log(result)
+            console.log(result);
             setSessions(result);
         } catch (err) {
-            console.error("Failed to get sessions", err)
+            console.error("Failed to get sessions", err);
         }
     };
 
     useEffect(() => {
         fetchSessions();
-    }, [])
+    }, []);
 
     useEffect(() => {
         let ws: WebSocket;
@@ -40,9 +42,9 @@ export function SessionSelector(props: { on_session_click: (sessionId: string) =
             ws.onclose = () => setConnected(false);
             ws.onmessage = (ev) => {
                 let data = JSON.parse(ev.data);
-                console.log(data)
-                updateSession(data)
-                props.on_session_click(data.session_id)
+                console.log(data);
+                updateSession(data);
+                props.on_session_click(data.session_id);
             };
         };
 
@@ -90,39 +92,95 @@ export function SessionSelector(props: { on_session_click: (sessionId: string) =
         });
     };
 
+    const openSessions = sessions.filter((session) => session.state === "open");
+    const closedSessions = sessions.filter((session) => session.state !== "open");
 
-    return <div className={`w-[40rem] max-w-[40rem] h-fit transition-opacity opacity-100`}>
-        <div className="flex justify-between">
-            <div className={`font-bold text-4xl transition-colors text-blue-600 mb-4`}>Sessions</div>
-            <div>
-                <CoolFrame offset={2} color="blue">
-                    <button className="px-3 py-2" onClick={() => props.set_show_create_form(true)}>
-                        Create Session
-                    </button>
-                </CoolFrame>
-            </div>
-        </div>
-        <CoolFrame offset={2} color="blue">
-            <div className="text-lg">
-                <div className={`px-8 py-4 flex flex-col gap-2 border-b border-blue-600`}>
-                    <ol className="list-decimal list-inside text-gray-700">
-                        {sessions.map((session, idx) =>
-                            <li key={idx}>
-                                <a href={`/?session-id=${session.session_id}`}
-                                    onClick={(e) => {
-                                        e.preventDefault(); // Prevent default anchor behavior
-                                        props.on_session_click(session.session_id);
-                                    }} className="text-blue-600 hover:underline"
-                                >
-                                    {session.session_id} {session.state}
-                                    {session.state === "open" ? <span className="font-bold text-teal-600"> (Connected)</span> : <span className="font-bold text-pink-600"> (Closed)</span>}
-
-                                </a>
-                            </li>
-                        )}
-                    </ol>
+    return (
+        <div className={`w-[40rem] max-w-[40rem] h-fit transition-opacity opacity-100`}>
+            <div className="flex justify-between">
+                <div className={`font-bold text-4xl transition-colors text-blue-600 mb-4`}>
+                    Sessions
+                </div>
+                <div>
+                    <CoolFrame offset={2} color="blue">
+                        <button
+                            className="px-3 py-2"
+                            onClick={() => props.set_show_create_form(true)}
+                        >
+                            Create Session
+                        </button>
+                    </CoolFrame>
                 </div>
             </div>
-        </CoolFrame>
-    </div>
+            <CoolFrame offset={2} color="blue">
+                <div className="text-lg max-h-[40vh] overflow-y-auto no-scrollbar">
+                    <div className={`px-8 py-4 flex flex-col gap-2 border-b border-blue-600`}>
+                        <h2 className="font-semibold text-xl text-gray-800">Open Sessions</h2>
+                        <ol className="list-decimal list-inside text-gray-700">
+                            {openSessions.map((session, idx) => (
+                                <li key={idx}>
+                                    <a
+                                        href={`/?session-id=${session.session_id}`}
+                                        onClick={(e) => {
+                                            e.preventDefault(); // Prevent default anchor behavior
+                                            props.on_session_click(session.session_id);
+                                        }}
+                                        className="text-blue-600 hover:underline"
+                                    >
+                                        {session.session_id}
+                                        {session.state === "open" ? (
+                                            <span className="font-bold text-teal-600"> (Connected)</span>
+                                        ) : (
+                                            <span className="font-bold text-pink-600"> (Closed)</span>
+                                        )}
+                                    </a>
+                                </li>
+                            ))}
+                        </ol>
+                        <button
+                            className="text-blue-500 hover:underline"
+                            onClick={() => setShowClosedSessions(!showClosedSessions)}
+                        >
+                            {showClosedSessions ? "Hide Closed Session History" : "Show Closed Session History"}
+                        </button>
+
+                        {showClosedSessions && (
+                            <>
+                                <h2 className="font-semibold text-xl text-gray-800 mt-4">
+                                    Closed Sessions
+                                </h2>
+                                <ol className="list-decimal list-inside text-gray-700">
+                                    {closedSessions.map((session, idx) => (
+                                        <li key={idx}>
+                                            <a
+                                                href={`/?session-id=${session.session_id}`}
+                                                onClick={(e) => {
+                                                    e.preventDefault(); // Prevent default anchor behavior
+                                                    props.on_session_click(session.session_id);
+                                                }}
+                                                className="text-blue-600 hover:underline"
+                                            >
+                                                {session.session_id}
+                                                {session.state === "open" ? (
+                                                    <span className="font-bold text-teal-600">
+                                                        {" "}
+                                                        (Connected)
+                                                    </span>
+                                                ) : (
+                                                    <span className="font-bold text-pink-600">
+                                                        {" "}
+                                                        (Closed)
+                                                    </span>
+                                                )}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ol>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </CoolFrame>
+        </div>
+    );
 }
