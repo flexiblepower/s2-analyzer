@@ -30,6 +30,9 @@ from s2_analyzer_backend.async_application import APPLICATIONS
 from s2python.s2_parser import S2Parser
 from s2python.s2_validation_error import S2ValidationError
 
+from s2_analyzer_backend.device_connection.session_details import SessionDetails
+from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -88,6 +91,12 @@ class DebuggerAPI:
             description="Validate an S2 message against the schema.",
             tags=["debugger"],
         )
+        self.router.add_api_route(
+            "/backend/connections/",
+            self.get_connections,
+            methods=["GET"],
+            tags=["connections"],
+        )
 
     async def get_root(self):
         return {"status": "healthy"}
@@ -131,6 +140,7 @@ class DebuggerAPI:
         await conn.wait_till_done_async(
             timeout=None, kill_after_timeout=False, raise_on_timeout=False
         )
+        LOGGER.warning("Exiting debugger frontend connection.")
 
     async def receive_new_session_update_frontend_connection(
         self,
@@ -153,6 +163,8 @@ class DebuggerAPI:
         await conn.wait_till_done_async(
             timeout=None, kill_after_timeout=False, raise_on_timeout=False
         )
+
+        LOGGER.warning("Exiting session frontend connection.")
 
     async def get_filtered_history(
         self,
@@ -217,3 +229,13 @@ class DebuggerAPI:
 
         LOGGER.info(f"Validated S2 message: {s2_message}")
         return {"message": s2_message, "errors": errors}
+
+    async def get_connections(
+        self,
+        history_filter: HistoryFilter = Depends(),  # Dependency injected history filter which queries database
+    ):
+        """Endpoint to view all open connections to the S2 Analyzer."""
+
+        history_sessions = history_filter.get_unique_sessions()
+
+        return history_sessions

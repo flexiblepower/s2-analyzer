@@ -11,6 +11,7 @@ export function SessionSelector(props: {
     let [sessions, setSessions] = useState<Session[]>([]);
     let [connected, setConnected] = useState(false);
     const [showClosedSessions, setShowClosedSessions] = useState(false);
+    const [historyFetched, setHistoryFetched] = useState(false);
 
     const fetchSessions = async () => {
         try {
@@ -19,7 +20,6 @@ export function SessionSelector(props: {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const result = await response.json();
-            console.log(result);
             setSessions(result);
         } catch (err) {
             console.error("Failed to get sessions", err);
@@ -29,6 +29,13 @@ export function SessionSelector(props: {
     useEffect(() => {
         fetchSessions();
     }, []);
+
+    useEffect(() => {
+        if (showClosedSessions && !historyFetched) {
+            fetchSessions(); // Re-fetch to get the closed sessions
+            setHistoryFetched(true);
+        }
+    }, [showClosedSessions, historyFetched]);
 
     useEffect(() => {
         let ws: WebSocket;
@@ -42,7 +49,6 @@ export function SessionSelector(props: {
             ws.onclose = () => setConnected(false);
             ws.onmessage = (ev) => {
                 let data = JSON.parse(ev.data);
-                console.log(data);
                 updateSession(data);
                 props.on_session_click(data.session_id);
             };
@@ -50,7 +56,6 @@ export function SessionSelector(props: {
 
         connectWebSocket();
 
-        // Cleanup function to close the websocket when currentSessionId changes or component unmounts
         return () => {
             if (ws && ws.readyState !== WebSocket.CLOSED) {
                 ws.close();
@@ -73,17 +78,15 @@ export function SessionSelector(props: {
                     ...newSession,
                 };
             } else {
-                // If session does not exist, add it
                 updatedSessions = [...prevSessions, { ...newSession, state: "open" }];
             }
 
-            // Sort the sessions array
             updatedSessions.sort((a, b) => {
                 if (a.state === "open" && b.state !== "open") {
-                    return -1; // a comes before b
+                    return -1;
                 }
                 if (a.state !== "open" && b.state === "open") {
-                    return 1; // b comes before a
+                    return 1;
                 }
                 return 0;
             });
@@ -94,6 +97,47 @@ export function SessionSelector(props: {
 
     const openSessions = sessions.filter((session) => session.state === "open");
     const closedSessions = sessions.filter((session) => session.state !== "open");
+
+    const renderSessionTable = (sessionsToRender: Session[]) => (
+        <table className="min-w-full">
+            <thead className="bg-gray-100">
+                <tr>
+                    <th className="px-4 py-2 font-medium text-gray-700 text-left">
+                        #
+                    </th>
+                    <th className="px-4 py-2 font-medium text-gray-700 text-left">
+                        CEM ID
+                    </th>
+                    <th className="px-4 py-2 font-medium text-gray-700 text-left">
+                        RM ID
+                    </th>
+                    <th className="px-4 py-2 font-medium text-gray-700 text-left">
+                        End Timestamp
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {sessionsToRender.map((session, index) => (
+                    <tr
+                        key={session.session_id}
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => props.on_session_click(session.session_id)}
+                    >
+                        <td className="px-4 py-2 text-gray-600">{index + 1}</td>
+                        <td className="px-4 py-2 text-gray-600">
+                            {session.cem_id || "N/A"}
+                        </td>
+                        <td className="px-4 py-2 text-gray-600">
+                            {session.rm_id || "N/A"}
+                        </td>
+                        <td className="px-4 py-2 text-gray-600">
+                            {session.end_timestamp || "N/A"}
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
 
     return (
         <div className={`w-[40rem] max-w-[40rem] h-fit transition-opacity opacity-100`}>
@@ -113,72 +157,26 @@ export function SessionSelector(props: {
                 </div>
             </div>
             <CoolFrame offset={2} color="blue">
-                <div className="text-lg max-h-[40vh] overflow-y-auto no-scrollbar">
-                    <div className={`px-8 py-4 flex flex-col gap-2 border-b border-blue-600`}>
-                        <h2 className="font-semibold text-xl text-gray-800">Open Sessions</h2>
-                        <ol className="list-decimal list-inside text-gray-700">
-                            {openSessions.map((session, idx) => (
-                                <li key={idx}>
-                                    <a
-                                        href={`/?session-id=${session.session_id}`}
-                                        onClick={(e) => {
-                                            e.preventDefault(); // Prevent default anchor behavior
-                                            props.on_session_click(session.session_id);
-                                        }}
-                                        className="text-blue-600 hover:underline"
-                                    >
-                                        {session.session_id}
-                                        {session.state === "open" ? (
-                                            <span className="font-bold text-teal-600"> (Connected)</span>
-                                        ) : (
-                                            <span className="font-bold text-pink-600"> (Closed)</span>
-                                        )}
-                                    </a>
-                                </li>
-                            ))}
-                        </ol>
-                        <button
-                            className="text-blue-500 hover:underline"
-                            onClick={() => setShowClosedSessions(!showClosedSessions)}
-                        >
-                            {showClosedSessions ? "Hide Closed Session History" : "Show Closed Session History"}
-                        </button>
+                <div className="text-lg max-h-[40vh] overflow-y-auto no-scrollbar p-4">
+                    <h2 className="font-semibold text-xl text-gray-800">Open Sessions</h2>
+                    {renderSessionTable(openSessions)}
+                    <button
+                        className="text-blue-500 hover:underline mt-2"
+                        onClick={() => setShowClosedSessions(!showClosedSessions)}
+                    >
+                        {showClosedSessions
+                            ? "Hide Closed Session History"
+                            : "Show Closed Session History"}
+                    </button>
 
-                        {showClosedSessions && (
-                            <>
-                                <h2 className="font-semibold text-xl text-gray-800 mt-4">
-                                    Closed Sessions
-                                </h2>
-                                <ol className="list-decimal list-inside text-gray-700">
-                                    {closedSessions.map((session, idx) => (
-                                        <li key={idx}>
-                                            <a
-                                                href={`/?session-id=${session.session_id}`}
-                                                onClick={(e) => {
-                                                    e.preventDefault(); // Prevent default anchor behavior
-                                                    props.on_session_click(session.session_id);
-                                                }}
-                                                className="text-blue-600 hover:underline"
-                                            >
-                                                {session.session_id}
-                                                {session.state === "open" ? (
-                                                    <span className="font-bold text-teal-600">
-                                                        {" "}
-                                                        (Connected)
-                                                    </span>
-                                                ) : (
-                                                    <span className="font-bold text-pink-600">
-                                                        {" "}
-                                                        (Closed)
-                                                    </span>
-                                                )}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ol>
-                            </>
-                        )}
-                    </div>
+                    {showClosedSessions && (
+                        <>
+                            <h2 className="font-semibold text-xl text-gray-800 mt-4">
+                                Closed Sessions
+                            </h2>
+                            {renderSessionTable(closedSessions)}
+                        </>
+                    )}
                 </div>
             </CoolFrame>
         </div>

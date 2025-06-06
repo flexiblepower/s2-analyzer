@@ -1,5 +1,6 @@
 import argparse
 import logging
+import logging.config
 import os
 import signal
 import threading
@@ -16,15 +17,17 @@ from s2_analyzer_backend.message_processor.message_processor import (
 )
 from s2_analyzer_backend.rest_apis.rest_api import RestAPI
 from s2_analyzer_backend.async_application import APPLICATIONS
-from s2_analyzer_backend.app_logging import LogLevel, setup_logging
+from s2_analyzer_backend.app_logging import get_log_config
 from s2_analyzer_backend.device_connection.router import MessageRouter
 from s2_analyzer_backend.config import CONFIG
 
 LOGGER = logging.getLogger(__name__)
 
+log_config = get_log_config()
+logging.config.dictConfig(get_log_config())
+
 
 def main():
-    setup_logging(LogLevel.parse(os.getenv("LOG_LEVEL", "INFO")))
 
     # Initialise and create the database tables in an SQLite db
     create_db_and_tables()
@@ -54,7 +57,7 @@ def main():
             CONFIG.http_port,
             msg_router,
             debugger_frontend_msg_processor,
-            session_update_msg_processor
+            session_update_msg_processor,
         )
     )
 

@@ -1,6 +1,7 @@
 import abc
 from builtins import ExceptionGroup
 from datetime import datetime
+import traceback
 from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -12,6 +13,7 @@ from uuid import UUID
 import uuid
 
 from fastapi import WebSocketException, WebSocketDisconnect
+from fastapi.websockets import WebSocketState
 from pydantic import BaseModel
 from websockets.exceptions import ConnectionClosedOK
 from s2_analyzer_backend.device_connection.session_details import SessionDetails
@@ -42,7 +44,7 @@ class ConnectionClosedReason(Enum):
     DISCONNECT = "disconnect"
 
 
-class S2Connection(AsyncApplication, ABC):
+class S2Connection(AsyncApplication):
     conn_adapter: ConnectionAdapter
 
     origin_id: str
@@ -71,6 +73,22 @@ class S2Connection(AsyncApplication, ABC):
         self.conn_adapter = conn_adapter
 
         self._queue = asyncio.Queue()
+
+        self._ready_event = asyncio.Event()
+
+    @property
+    def cem_id(self):
+        if self.s2_origin_type.is_cem():
+            return self.origin_id
+        else:
+            return self.dest_id
+
+    @property
+    def rm_id(self):
+        if self.s2_origin_type.is_cem():
+            return self.dest_id
+        else:
+            return self.origin_id
 
     async def receive_envelope(self, envelope: "Envelope") -> None:
         await self._queue.put(envelope)
@@ -125,12 +143,7 @@ class S2Connection(AsyncApplication, ABC):
             message_str = None
             try:
                 message_str = await self.conn_adapter.receive()
-                LOGGER.debug(
-                    "%s received message across websocket to %s: %s",
-                    self.origin_id,
-                    self.dest_id,
-                    message_str,
-                )
+
                 # self.msg_history.receive_line(f"[Message received][Sender: {self.s2_origin_type.value} {self.origin_id}][Receiver: {self.destination_type.value} {self.dest_id}] Message: {message_str}")
                 message = json.loads(message_str)
                 await self.msg_router.route_s2_message(self, message)
@@ -191,6 +204,8 @@ T = TypeVar("T")
 class WebsocketConnection(Generic[T], AsyncApplication):
     _queue: "asyncio.Queue[T]"
 
+    connected = True
+
     def __init__(
         self,
         websocket: "WebSocket",
@@ -211,6 +226,7 @@ class WebsocketConnection(Generic[T], AsyncApplication):
             async with asyncio.TaskGroup() as task_group:
                 self.create_tasks(task_group)
         except ExceptionGroup as exc_group:
+            LOGGER.warning("EXC.")
             for exc in exc_group.exceptions:
                 if isinstance(exc, WebSocketDisconnect):
                     threading.Thread(
@@ -221,8 +237,11 @@ class WebsocketConnection(Generic[T], AsyncApplication):
                     )
                 else:
                     raise exc from exc_group
+            if self.websocket.client_state != WebSocketState.DISCONNECTED:
+                await self.websocket.close()
+        LOGGER.warning("Exiting Main Loop.")
 
-    async def include_message(self, message: T) -> bool:
+    def include_message(self, message: T) -> bool:
         return True
 
     async def enqueue_message(self, message: T) -> None:
@@ -252,8 +271,10 @@ class WebsocketConnection(Generic[T], AsyncApplication):
                 LOGGER.exception(
                     "Connection to debugger frontend had an exception while receiving."
                 )
+                self.connected = False
             except json.JSONDecodeError:
                 LOGGER.exception("Error decoding message: %s", message_str)
+        LOGGER.warning("RECEIVER DONE")
 
     @abc.abstractmethod
     async def serialize_message(self, message: T) -> str:
@@ -275,13 +296,15 @@ class WebsocketConnection(Generic[T], AsyncApplication):
                 LOGGER.warning(
                     "Could not send message to debugger frontend as connection was already closed."
                 )
+                self.connected = False
             except WebSocketException:
                 LOGGER.exception(
                     "Connection to debugger frontend had an exception while sending."
                 )
+        LOGGER.warning("SENDER DONE")
 
     def stop(self) -> None:
-        self.websocket.close()
+        LOGGER.warning("EXITING Websocket connection")
         if (
             self._main_task
             and not self._main_task.done()
@@ -316,10 +339,12 @@ class DebuggerFrontendWebsocketConnection(WebsocketConnection[Message]):
             for communication in self.history_filter.get_s2_session_history(
                 uuid.UUID(self.filters.session_id)
             ):
+                LOGGER.info(communication)
                 message = Message(
                     session_id=communication.session_id,
                     cem_id=communication.cem_id,
                     rm_id=communication.rm_id,
+                    message_type=communication.message_type,
                     origin=S2OriginType(communication.origin),
                     msg=communication.s2_msg,
                     s2_msg=None,
@@ -334,7 +359,7 @@ class DebuggerFrontendWebsocketConnection(WebsocketConnection[Message]):
             task_group.create_task(self.send_session_history())
         return super().create_tasks(task_group)
 
-    async def include_message(self, message: "Message") -> bool:
+    def include_message(self, message: "Message") -> bool:
 
         # If no filters send all messages.
         if self.filters is None:

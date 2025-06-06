@@ -9,6 +9,7 @@ from s2python.s2_parser import S2Parser
 
 from s2_analyzer_backend.device_connection.origin_type import S2OriginType
 from s2_analyzer_backend.message_processor.message import Message
+from s2_analyzer_backend.message_processor.message_type import MessageType
 from s2_analyzer_backend.message_processor.message_processor import (
     MessageProcessorHandler,
 )
@@ -75,14 +76,10 @@ class MessageRouter:
         # Prepare the message to be processed
         message = Message(
             session_id=session_id,
-            cem_id=origin.origin_id if origin.s2_origin_type.is_cem() else dest_id,
-            rm_id=origin.origin_id if origin.s2_origin_type.is_rm() else dest_id,
+            cem_id=origin.cem_id,
+            rm_id=origin.rm_id,
             origin=origin.s2_origin_type,
             msg=s2_json_msg,
-            s2_msg=None,
-            s2_msg_type=None,
-            s2_validation_error=None,
-            timestamp=datetime.now(),
         )
 
         # Add the message to the processor handler's queue so that it can be processed when possible.
@@ -95,7 +92,7 @@ class MessageRouter:
         # If the receiving connection is not yet open, then buffer the message so it can be sent when the device connects.
         # IF the receiving connection is open then send the message.
         if dest is None:
-            LOGGER.error(
+            LOGGER.info(
                 "Connection %s->%s is unavailable. Buffering message.",
                 dest_id,
                 origin.origin_id,
@@ -108,7 +105,7 @@ class MessageRouter:
     async def _forward_envelope_to_connect(
         self, envelope: Envelope, conn: "S2Connection"
     ) -> None:
-        LOGGER.debug("Envelope is forwarded to %s: %s", conn, envelope)
+        # LOGGER.debug("Envelope is forwarded to %s: %s", conn, envelope)
         await conn.receive_envelope(envelope)
 
     async def route_envelope(self, envelope: Envelope) -> None:
@@ -124,12 +121,30 @@ class MessageRouter:
     async def receive_new_connection(self, conn: "S2Connection") -> uuid.UUID:
         """Stores a new connection in the lookup table to be used for routing messages."""
 
+        # Indicates whether both sides of the connection are connected.
+        complete = False
+        session_id = None
         # Check if the reverse connection exists to get the session id
         if (conn.dest_id, conn.origin_id) in self.connections:
             _, session_id = self.connections.get((conn.dest_id, conn.origin_id))
+            complete = True
         else:
+            # Create a new id if this is the first device to connect
             session_id = uuid.uuid4()
 
+        # LOGGER.info("Receiving new connection %s: %s", session_id, conn)
+        if not complete:
+            self._msg_processor_handler.add_message_to_process(
+                Message(
+                    session_id=session_id,
+                    cem_id=conn.cem_id,
+                    rm_id=conn.rm_id,
+                    origin=conn.s2_origin_type,
+                    message_type=MessageType.SESSION_STARTED,
+                )
+            )
+
+        # Add the connection to the connections dict
         self.connections[(conn.origin_id, conn.dest_id)] = (conn, session_id)
 
         buffered_messages = self._consume_buffer_queue(conn.origin_id, conn.dest_id)
@@ -147,20 +162,23 @@ class MessageRouter:
         return session_id
 
     def connection_has_closed(self, conn: "S2Connection") -> None:
-        LOGGER.info("Closing connection. Closing incoming conn.")
+        # LOGGER.info("Closing connection. Closing incoming conn.")
         conn_key = (conn.origin_id, conn.dest_id)
         reverse_conn_key = (conn.dest_id, conn.origin_id)
 
+        session_id = None
         # Cleanup the connection
         if conn_key in self.connections:
-            connection, _ = self.connections.get(conn_key)
+            connection, session_id = self.connections.get(conn_key)
+            LOGGER.info(session_id)
             if connection._running:
                 connection.stop()
             del self.connections[conn_key]
 
         # Cleanup the connection going in the reverse dir
         if reverse_conn_key in self.connections:
-            reverse_connection, _ = self.connections.get(reverse_conn_key)
+            reverse_connection, session_id = self.connections.get(reverse_conn_key)
+            LOGGER.info(session_id)
             if reverse_connection._running:
                 reverse_connection.stop()
             del self.connections[reverse_conn_key]
@@ -172,8 +190,29 @@ class MessageRouter:
         if reverse_conn_key in self._buffer_queue_by_origin_dest_id:
             del self._buffer_queue_by_origin_dest_id[reverse_conn_key]
 
+        if session_id is not None:
+            self._msg_processor_handler.add_message_to_process(
+                Message(
+                    session_id=session_id,
+                    cem_id=conn.cem_id,
+                    rm_id=conn.rm_id,
+                    origin=conn.s2_origin_type,
+                    message_type=MessageType.SESSION_ENDED,
+                )
+            )
+
     async def inject_message(self, origin_id, dest_id, message: dict):
         """Injects a message into the communication between two devices. At least one of the devices must be connected for this to work."""
         origin, session_id = self.connections.get((origin_id, dest_id))
+
+        self._msg_processor_handler.add_message_to_process(
+            Message(
+                session_id=session_id,
+                cem_id=origin.cem_id,
+                rm_id=origin.rm_id,
+                origin=origin.s2_origin_type,
+                message_type=MessageType.MSG_INJECTED,
+            )
+        )
 
         await self.route_s2_message(origin, message)

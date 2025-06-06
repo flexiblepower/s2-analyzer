@@ -12,8 +12,6 @@ from fastapi import (
     WebSocketException,
 )
 from pydantic import BaseModel, model_validator
-from s2_analyzer_backend.device_connection.session_details import SessionDetails
-from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
 from s2_analyzer_backend.device_connection.connection_adapter import (
     FastAPIWebSocketAdapter,
     ConnectionAdapter,
@@ -93,12 +91,6 @@ class ManInTheMiddleAPI:
             self.inject_message,
             methods=["POST"],
             tags=["inject"],
-        )
-        self.router.add_api_route(
-            "/backend/connections/",
-            self.get_connections,
-            methods=["GET"],
-            tags=["connections"],
         )
         self.router.add_api_route(
             "/backend/connections/",
@@ -205,7 +197,7 @@ class ManInTheMiddleAPI:
     async def create_new_connections(self, body: CreateConnection):
         LOGGER.info("Creating connections: %s", body)
 
-        if body.cem_uri is not None:
+        if body.cem_uri is not None and body.cem_uri != "":
             cem_connection, session_id = await self.create_outgoing_connection(
                 body.cem_uri, S2OriginType.CEM, body.cem_id, body.rm_id
             )
@@ -213,7 +205,7 @@ class ManInTheMiddleAPI:
         else:
             LOGGER.info("No CEM uri provided. Will wait for an incoming connection.")
 
-        if body.rm_uri is not None:
+        if body.rm_uri is not None and body.rm_uri != "":
             try:
                 rm_connection, session_id = await self.create_outgoing_connection(
                     body.rm_uri, S2OriginType.RM, body.rm_id, body.cem_id
@@ -267,30 +259,3 @@ class ManInTheMiddleAPI:
                 "Unable to inject message. Probably because there's no connection to inject into.",
                 400,
             )
-
-    async def get_connections(
-        self,
-        history_filter: HistoryFilter = Depends(),  # Dependency injected history filter which queries database
-    ):
-        """Endpoint to view all open connections to the S2 Analyzer."""
-        connections = []
-        sessions = set()
-        for conn, session_id in self.msg_router.connections.values():
-            if session_id in sessions:
-                continue
-            sessions.add(session_id)
-            cem_id = conn.origin_id if conn.s2_origin_type.is_cem() else conn.dest_id
-            rm_id = conn.origin_id if conn.s2_origin_type.is_rm() else conn.dest_id
-            connections.append(
-                SessionDetails(
-                    session_id=session_id, cem_id=cem_id, rm_id=rm_id, state="open"
-                )
-            )
-
-        history_sessions = history_filter.get_unique_sessions()
-
-        for session in history_sessions:
-            if session not in sessions:
-                connections.append(SessionDetails(session_id=session, state="closed"))
-
-        return connections

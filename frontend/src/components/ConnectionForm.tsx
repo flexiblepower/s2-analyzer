@@ -70,7 +70,7 @@ export function CreateConnectionForm(props: {
             console.log("Connection created:", result);
             setMessage("Connection created successfully!"); // Set success message
 
-            props.set_show_create_form(false);
+            // props.set_show_create_form(false);
         } catch (error: any) {
             setMessage(error.message || "An unexpected error occurred");
         } finally {

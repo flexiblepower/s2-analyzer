@@ -90,7 +90,7 @@ class RestAPI(AsyncApplication):
             host=self.listen_address,
             port=self.listen_port,
             loop="none",
-            log_level=s2_analyzer_backend.app_logging.LOG_LEVEL.value,
+            # log_level="WARN",
         )
         self.uvicorn_server = uvicorn.Server(config)
         # Prevent uvicorn from overwriting any signal handlers. Uvicorn does not yet has a nice way to do this.

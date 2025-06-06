@@ -3,7 +3,8 @@ from fastapi import HTTPException, Depends
 from typing import Optional, List
 from datetime import datetime
 import logging
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
+from s2_analyzer_backend.device_connection.session_details import SessionDetails
 from s2_analyzer_backend.message_processor.database import (
     Communication,
     get_session,
@@ -71,7 +72,50 @@ class HistoryFilter:
             data = serialize_communication_with_validation_errors(comm)
             yield data
 
-    def get_unique_sessions(self):
+    def get_unique_sessions(self) -> List[SessionDetails]:
+        """
+        Retrieves unique sessions with start and end timestamps,
+        ordered by end timestamp.
+        """
         statement = select(Communication.session_id).distinct()
         unique_session_ids: List[uuid.UUID] = self.session.exec(statement).all()
-        return unique_session_ids
+
+        session_details: List[SessionDetails] = []
+        for session_id in unique_session_ids:
+            # Get start and end timestamps
+            start_statement = select(func.min(Communication.timestamp)).where(
+                Communication.session_id == session_id
+            )
+            start_timestamp: datetime = self.session.exec(start_statement).first()
+
+            end_statement = select(func.max(Communication.timestamp)).where(
+                Communication.session_id == session_id
+            )
+            end_timestamp: datetime = self.session.exec(end_statement).first()
+
+            communication_statement = (
+                select(Communication)
+                .where(Communication.session_id == session_id)
+                .limit(1)
+            )
+            communication = self.session.exec(communication_statement).first()
+
+            if (
+                communication
+                and start_timestamp
+                and end_timestamp
+            ):
+                session_details.append(
+                    SessionDetails(
+                        session_id=communication.session_id,
+                        cem_id=communication.cem_id,
+                        rm_id=communication.rm_id,
+                        start_timestamp=start_timestamp,
+                        end_timestamp=end_timestamp,
+                        state="closed",
+                    )
+                )
+
+        # Sort by end_timestamp
+        session_details.sort(key=lambda x: x.end_timestamp, reverse=True)
+        return session_details

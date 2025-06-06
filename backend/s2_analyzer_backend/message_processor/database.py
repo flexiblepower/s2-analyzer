@@ -6,6 +6,8 @@ import uuid
 from sqlmodel import Field, Relationship, SQLModel, create_engine, Session
 from typing import Any, List, Optional, Dict
 
+from s2_analyzer_backend.message_processor.message_type import MessageType
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -14,6 +16,8 @@ class CommunicationBase(SQLModel):
     cem_id: str
     rm_id: str
     origin: str  # Adjust to match the data type of S2OriginType
+
+    message_type: MessageType #= MessageType.S2
 
     # This app doesn't need to do any filtering on the message content at the moment,
     # so there's no need to store it in it's own sparse table.
@@ -98,6 +102,7 @@ def serialize_communication_with_validation_errors(
         rm_id=comm.rm_id,
         cem_id=comm.cem_id,
         origin=comm.origin,
+        message_type=comm.message_type,
         s2_msg=json.loads(comm.s2_msg),
         s2_msg_type=comm.s2_msg_type,
         timestamp=comm.timestamp,

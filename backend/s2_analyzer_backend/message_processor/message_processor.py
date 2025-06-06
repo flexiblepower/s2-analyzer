@@ -2,6 +2,7 @@ import abc
 import asyncio
 from datetime import datetime
 import json
+from typing import Literal
 import uuid
 
 from pydantic import BaseModel
@@ -26,6 +27,7 @@ from s2_analyzer_backend.message_processor.message import (
     Message,
     MessageValidationDetails,
 )
+from s2_analyzer_backend.message_processor.message_type import MessageType
 
 
 class MessageProcessor(abc.ABC):
@@ -70,13 +72,17 @@ class MessageParserProcessor(MessageProcessor):
         """Validates an S2 message
 
         Args:
-            message (Message): Raw message data to be parsed and valdiated.
+            message (Message): Raw message data to be parsed and validated.
 
         Returns:
             Message: The message instance received as parameter, but with validation info added.
         """
         if message is None:
             raise ValueError("Message cannot be None")
+
+        # Non-S2 messages shouldn't be parsed.
+        if message.message_type != MessageType.S2:
+            return message
 
         s2_message_type = self.s2_parser.parse_message_type(message.msg)
 
@@ -131,6 +137,7 @@ class MessageStorageProcessor(MessageProcessor):
                 cem_id=message.cem_id,
                 rm_id=message.rm_id,
                 origin=message.origin.name,
+                message_type=message.message_type,
                 s2_msg=json.dumps(message.msg),
                 s2_msg_type=message.s2_msg_type,
                 timestamp=message.timestamp,
@@ -167,7 +174,9 @@ class WebSocketMessageProcessor(MessageProcessor):
     async def process_message(
         self, message: Message, loop: asyncio.AbstractEventLoop
     ) -> Message:
-        LOGGER.info(f"Sending message to debugger frontends. {len(self.connections)}")
+        LOGGER.warning(
+            f"Sending message to {len(self.connections)} debugger frontends: {message}"
+        )
         closed_connections = []
         for i, connection in enumerate(self.connections):
             if connection._running:
@@ -188,10 +197,10 @@ class WebSocketMessageProcessor(MessageProcessor):
             self.connections.pop(i)
             LOGGER.info(f"Removed closed connection at index {i}")
 
-    def close(self):
+    async def close(self):
         """Stop all of the websocket connections. Closes the websockets."""
         for connection in self.connections:
-            connection.stop()
+            await connection.stop()
 
 
 class DebuggerFrontendMessageProcessor(WebSocketMessageProcessor):
@@ -234,25 +243,53 @@ class SessionUpdateMessageProcessor(WebSocketMessageProcessor):
             if session.state == "open":
                 await connection.enqueue_message(session)
 
-    async def process_message(
-        self, message: Message, loop: asyncio.AbstractEventLoop
-    ) -> Message:
-        LOGGER.info("Message Received by Session Update Processor: %s", message)
-        LOGGER.info(self.sessions)
-        if message.session_id not in self.sessions:
+    async def add_or_update_session(
+        self, message: Message, state: Literal["open", "closed"]
+    ):
+        if state == "closed" and message.session_id in self.sessions:
+            session_details = self.sessions.pop(message.session_id)
+            # Update the session details so they can be sent to the frontend one last time
+            session_details.state = state
+            session_details.end_timestamp = message.timestamp
+        else:
             session_details = SessionDetails(
                 session_id=message.session_id,
                 cem_id=message.cem_id,
                 rm_id=message.rm_id,
-                # TODO: There's currently no easy way to get session close updates...
-                state="open",
+                state=state,
+                start_timestamp=message.timestamp,
             )
             self.sessions[message.session_id] = session_details
+        return session_details
+
+    async def process_message(
+        self, message: Message, loop: asyncio.AbstractEventLoop
+    ) -> Message:
+        if message.message_type == MessageType.SESSION_STARTED:
+            session_details = await self.add_or_update_session(
+                message=message,
+                state="open",
+            )
+        elif message.message_type == MessageType.SESSION_ENDED:
+            session_details = await self.add_or_update_session(
+                message=message,
+                state="closed",
+            )
+        elif (
+            message.message_type == MessageType.S2
+            and message.session_id not in self.sessions
+        ):
+            # Don't know if this case can happen but just for safety
+            session_details = await self.add_or_update_session(
+                message=message,
+                state="open",
+            )
         else:
-            # Skip if the session already exists.
             return message
 
-        LOGGER.info(f"Sending message to debugger frontends. {len(self.connections)}")
+        LOGGER.info(
+            f"Sending message to {len(self.connections)} debugger frontends: {message}"
+        )
         closed_connections = []
         for i, connection in enumerate(self.connections):
             if connection._running:
@@ -289,6 +326,7 @@ class MessageProcessorHandler(AsyncApplication):
         """Added a new message to the queue to be processed when the previous messages are done.
         Should be called by other async applications which need to have a message processed.
         """
+        LOGGER.info("Message Processor Handler Receiving Message: %s", message)
         self._queue.put_nowait(message)
 
     async def process_message(self, message: Message, loop: asyncio.AbstractEventLoop):
