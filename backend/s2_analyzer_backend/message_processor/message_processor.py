@@ -92,27 +92,35 @@ class MessageParserProcessor(MessageProcessor):
 
         try:
             s2_message_type = self.s2_parser.parse_message_type(message.msg)
-            LOGGER.warning(
-                "Parsing message of type %s in session %s",
-                s2_message_type,
-                message.session_id,
-            )
             s2_message = self.s2_parser.parse_as_any_message(message.msg)
         except S2ValidationError as e:
             errors = None
+
             if e.pydantic_validation_error is not None:
                 errors = e.pydantic_validation_error.errors()  # type: ignore
+                LOGGER.warning(e.pydantic_validation_error.errors())
+            # elif e.msg is not None:
+            #     errors = [{"type": "validation_error", "loc": [], "msg": e.msg}]
+            #     LOGGER.warning(f"Validation error: {e.msg}")
 
             if s2_message_type is None and message.msg is not None:
                 s2_message_type = json.loads(message.msg).get("message_type", "Unknown")  # type: ignore
 
             validation_error = MessageValidationDetails(msg=e.msg, errors=errors)  # type: ignore
-            LOGGER.warning(
-                f"Failed to parse message {message.msg} in session {message.session_id}: {e}"
-            )
+            # LOGGER.warning(
+            #     f"Failed to parse message {message.msg} in session {message.session_id}: {e}"
+            # )
+            # LOGGER.warning(
+            #     f"Validation errors: {validation_error.errors if validation_error else 'None'}"
+            # )
 
         message.s2_msg = s2_message
         message.s2_msg_type = s2_message_type
+
+        if validation_error is not None:
+            LOGGER.warning(
+                f"Validation error for message {message.msg} in session {message.session_id}: {validation_error}"
+            )
         message.s2_validation_error = validation_error
 
         return message
@@ -163,12 +171,21 @@ class MessageStorageProcessor(MessageProcessor):
             )
             session.add(db_message)
 
-            if message.s2_validation_error and message.s2_validation_error.errors:
-                for error in message.s2_validation_error.errors:
+            if message.s2_validation_error:
+                if message.s2_validation_error.errors and len(message.s2_validation_error.errors) > 0:
+                    for error in message.s2_validation_error.errors:
+                        validation_error = ValidationError(
+                            type=error["type"],
+                            loc=str(error["loc"]),
+                            msg=error["msg"],
+                            communication=db_message,
+                        )
+                        session.add(validation_error)
+                else:
                     validation_error = ValidationError(
-                        type=error["type"],
-                        loc=str(error["loc"]),
-                        msg=error["msg"],
+                        type="validation_error",
+                        loc="",
+                        msg=message.s2_validation_error.msg,
                         communication=db_message,
                     )
                     session.add(validation_error)
@@ -244,7 +261,7 @@ class DebuggerFrontendMessageProcessor(WebSocketMessageProcessor):
     async def process_message(
         self, message: Message, loop: asyncio.AbstractEventLoop
     ) -> Message:
-        LOGGER.warning(
+        LOGGER.debug(
             f"Sending message to {len(self.connections)} debugger frontends for session {message.session_id}: {message.s2_msg_type}"
         )
         return await super().process_message(message, loop)

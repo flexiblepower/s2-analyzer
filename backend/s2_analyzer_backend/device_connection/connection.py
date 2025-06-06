@@ -26,7 +26,10 @@ from s2_analyzer_backend.device_connection.connection_adapter.adapter import (
 from s2_analyzer_backend.async_application import AsyncApplication
 from s2_analyzer_backend.async_application import APPLICATIONS
 
-from s2_analyzer_backend.message_processor.message import Message
+from s2_analyzer_backend.message_processor.message import (
+    Message,
+    MessageValidationDetails,
+)
 from s2_analyzer_backend.device_connection.origin_type import S2OriginType
 
 if TYPE_CHECKING:
@@ -227,7 +230,6 @@ class WebsocketConnection(Generic[T], AsyncApplication):
                 self.create_tasks(task_group)
         except ExceptionGroup as exc_group:
             for exc in exc_group.exceptions:
-                LOGGER.exception("ERror in websocket connection main loop: %s", exc)
                 if isinstance(exc, WebSocketDisconnect):
                     threading.Thread(
                         target=APPLICATIONS.stop_and_remove_application, args=(self,)
@@ -336,10 +338,35 @@ class DebuggerFrontendWebsocketConnection(WebsocketConnection[Message]):
             and self.filters.session_id is not None
             and self.filters.include_session_history
         ):
+            LOGGER.warning(
+                "Sending session history for session %s", self.filters.session_id
+            )
             for communication in self.history_filter.get_s2_session_history(
                 uuid.UUID(self.filters.session_id)
             ):
-                LOGGER.info(communication)
+                LOGGER.warning(communication.validation_errors)
+                validation_error = None
+                if (
+                    communication.validation_errors is not None
+                    and len(communication.validation_errors) > 0
+                ):
+                    comm_validation_error = communication.validation_errors[0]
+                    validation_error = MessageValidationDetails(
+                        msg=comm_validation_error.msg,
+                        errors=[
+                            {
+                                "type": comm_validation_error.type,
+                                "loc": comm_validation_error.loc,
+                                "msg": comm_validation_error.msg,
+                            }
+                        ],
+                    )
+                    LOGGER.warning(
+                        "Validation error for message %s: %s",
+                        communication.s2_msg_type,
+                        validation_error,
+                    )
+
                 message = Message(
                     session_id=communication.session_id,
                     cem_id=communication.cem_id,
@@ -350,7 +377,7 @@ class DebuggerFrontendWebsocketConnection(WebsocketConnection[Message]):
                     s2_msg=None,
                     s2_msg_type=communication.s2_msg_type,
                     timestamp=communication.timestamp,
-                    s2_validation_error=None,
+                    s2_validation_error=validation_error,
                 )
                 await self._queue.put(message)
 
@@ -370,18 +397,7 @@ class DebuggerFrontendWebsocketConnection(WebsocketConnection[Message]):
             or message.cem_id == self.filters.cem_id
             or message.rm_id == self.filters.rm_id
         ):
-            LOGGER.warning(
-                "Message %s matches filter %s. Including it.",
-                message,
-                self.filters,
-            )
             return True
-        else:
-            LOGGER.warning(
-                "Message %s does not match filter %s. Not including it.",
-                message,
-                self.filters,
-            )
 
         return False
 
