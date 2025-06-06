@@ -17,7 +17,7 @@ class CommunicationBase(SQLModel):
     rm_id: str
     origin: str  # Adjust to match the data type of S2OriginType
 
-    message_type: MessageType #= MessageType.S2
+    message_type: MessageType  # = MessageType.S2
 
     # This app doesn't need to do any filtering on the message content at the moment,
     # so there's no need to store it in it's own sparse table.

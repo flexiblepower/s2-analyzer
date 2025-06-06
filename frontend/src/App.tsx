@@ -76,6 +76,8 @@ export default function App() {
 
 
     function selectSession(session_id: string) {
+        if (session_id === currentSessionId) return; // Prevent unnecessary updates
+
         // Clear message history as it will be filled on re-connection of the WebSocket
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.set("session-id", session_id)

@@ -2,7 +2,7 @@ import abc
 import asyncio
 from datetime import datetime
 import json
-from typing import Literal
+from typing import Any, Literal
 import uuid
 
 from pydantic import BaseModel
@@ -53,7 +53,7 @@ class MessageLoggerProcessor(MessageProcessor):
 
     async def process_message(
         self, message: dict, loop: asyncio.AbstractEventLoop
-    ) -> str:
+    ) -> Any:
         LOGGER.info(f"Message received: {message}")
         return message
 
@@ -68,7 +68,7 @@ class MessageParserProcessor(MessageProcessor):
 
     async def process_message(
         self, message: Message, loop: asyncio.AbstractEventLoop
-    ) -> str:
+    ) -> Message:
         """Validates an S2 message
 
         Args:
@@ -84,18 +84,32 @@ class MessageParserProcessor(MessageProcessor):
         if message.message_type != MessageType.S2:
             return message
 
-        s2_message_type = self.s2_parser.parse_message_type(message.msg)
-
         s2_message = None
         validation_error = None
+
+        if message.msg is None:
+            return message
+
         try:
+            s2_message_type = self.s2_parser.parse_message_type(message.msg)
+            LOGGER.warning(
+                "Parsing message of type %s in session %s",
+                s2_message_type,
+                message.session_id,
+            )
             s2_message = self.s2_parser.parse_as_any_message(message.msg)
         except S2ValidationError as e:
             errors = None
             if e.pydantic_validation_error is not None:
-                errors = e.pydantic_validation_error.errors()
-            validation_error = MessageValidationDetails(msg=e.msg, errors=errors)
-            LOGGER.warning(f"Error parsing message: {e}")
+                errors = e.pydantic_validation_error.errors()  # type: ignore
+
+            if s2_message_type is None and message.msg is not None:
+                s2_message_type = json.loads(message.msg).get("message_type", "Unknown")  # type: ignore
+
+            validation_error = MessageValidationDetails(msg=e.msg, errors=errors)  # type: ignore
+            LOGGER.warning(
+                f"Failed to parse message {message.msg} in session {message.session_id}: {e}"
+            )
 
         message.s2_msg = s2_message
         message.s2_msg_type = s2_message_type
@@ -131,6 +145,10 @@ class MessageStorageProcessor(MessageProcessor):
         """
         with Session(self.engine) as session:
             validation_error = None
+            if message.timestamp is not None:
+                timestamp = message.timestamp
+            else:
+                timestamp = datetime.now()
 
             db_message = Communication(
                 session_id=message.session_id,
@@ -140,8 +158,8 @@ class MessageStorageProcessor(MessageProcessor):
                 message_type=message.message_type,
                 s2_msg=json.dumps(message.msg),
                 s2_msg_type=message.s2_msg_type,
-                timestamp=message.timestamp,
-                validation_error=validation_error,
+                timestamp=timestamp,
+                validation_errors=validation_error if validation_error else [],
             )
             session.add(db_message)
 
@@ -174,9 +192,9 @@ class WebSocketMessageProcessor(MessageProcessor):
     async def process_message(
         self, message: Message, loop: asyncio.AbstractEventLoop
     ) -> Message:
-        LOGGER.warning(
-            f"Sending message to {len(self.connections)} debugger frontends: {message}"
-        )
+        # LOGGER.warning(
+        #     f"Sending message to {len(self.connections)} debugger frontends: {message}"
+        # )
         closed_connections = []
         for i, connection in enumerate(self.connections):
             if connection._running:
@@ -200,7 +218,7 @@ class WebSocketMessageProcessor(MessageProcessor):
     async def close(self):
         """Stop all of the websocket connections. Closes the websockets."""
         for connection in self.connections:
-            await connection.stop()
+            connection.stop()
 
 
 class DebuggerFrontendMessageProcessor(WebSocketMessageProcessor):
@@ -222,6 +240,14 @@ class DebuggerFrontendMessageProcessor(WebSocketMessageProcessor):
     """
 
     connections: list[DebuggerFrontendWebsocketConnection]
+
+    async def process_message(
+        self, message: Message, loop: asyncio.AbstractEventLoop
+    ) -> Message:
+        LOGGER.warning(
+            f"Sending message to {len(self.connections)} debugger frontends for session {message.session_id}: {message.s2_msg_type}"
+        )
+        return await super().process_message(message, loop)
 
 
 class SessionUpdateMessageProcessor(WebSocketMessageProcessor):
@@ -265,6 +291,9 @@ class SessionUpdateMessageProcessor(WebSocketMessageProcessor):
     async def process_message(
         self, message: Message, loop: asyncio.AbstractEventLoop
     ) -> Message:
+        if message is None:
+            return None
+
         if message.message_type == MessageType.SESSION_STARTED:
             session_details = await self.add_or_update_session(
                 message=message,
@@ -287,9 +316,6 @@ class SessionUpdateMessageProcessor(WebSocketMessageProcessor):
         else:
             return message
 
-        LOGGER.info(
-            f"Sending message to {len(self.connections)} debugger frontends: {message}"
-        )
         closed_connections = []
         for i, connection in enumerate(self.connections):
             if connection._running:

@@ -135,8 +135,10 @@ class DebuggerAPI:
         conn = DebuggerFrontendWebsocketConnection(websocket, history_filter, filters)
 
         APPLICATIONS.add_and_start_application(conn)
+        LOGGER.info("Degugger frontend connection added to applications.")
         await self.debugger_frontend_msg_processor.add_connection(conn)
 
+        LOGGER.info("Waiting for debugger frontend connection to finish.")
         await conn.wait_till_done_async(
             timeout=None, kill_after_timeout=False, raise_on_timeout=False
         )

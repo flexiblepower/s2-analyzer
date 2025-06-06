@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Session } from "../types/Session";
+import type { Session, SessionStatusUpdate } from "../types/Session";
 import { CoolFrame } from "./CoolFrame";
 
 const HOST = "localhost:8001";
@@ -19,7 +19,7 @@ export function SessionSelector(props: {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const result = await response.json();
+            const result: Session[] = await response.json();
             setSessions(result);
         } catch (err) {
             console.error("Failed to get sessions", err);
@@ -49,8 +49,11 @@ export function SessionSelector(props: {
             ws.onclose = () => setConnected(false);
             ws.onmessage = (ev) => {
                 let data = JSON.parse(ev.data);
-                updateSession(data);
-                props.on_session_click(data.session_id);
+                const isNew: boolean = updateSession(data);
+                if (isNew) {
+
+                    props.on_session_click(data.session_id);
+                }
             };
         };
 
@@ -64,10 +67,14 @@ export function SessionSelector(props: {
     }, []);
 
     const updateSession = (newSession: Session) => {
+        let isNew = false;
         setSessions((prevSessions) => {
             const existingSessionIndex = prevSessions.findIndex(
                 (session) => session.session_id === newSession.session_id,
             );
+            if (existingSessionIndex === -1) {
+                isNew = true;
+            }
 
             let updatedSessions: Session[];
 
@@ -93,6 +100,7 @@ export function SessionSelector(props: {
 
             return updatedSessions;
         });
+        return isNew;
     };
 
     const openSessions = sessions.filter((session) => session.state === "open");

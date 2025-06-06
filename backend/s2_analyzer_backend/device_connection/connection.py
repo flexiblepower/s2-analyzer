@@ -226,8 +226,8 @@ class WebsocketConnection(Generic[T], AsyncApplication):
             async with asyncio.TaskGroup() as task_group:
                 self.create_tasks(task_group)
         except ExceptionGroup as exc_group:
-            LOGGER.warning("EXC.")
             for exc in exc_group.exceptions:
+                LOGGER.exception("ERror in websocket connection main loop: %s", exc)
                 if isinstance(exc, WebSocketDisconnect):
                     threading.Thread(
                         target=APPLICATIONS.stop_and_remove_application, args=(self,)
@@ -266,7 +266,7 @@ class WebsocketConnection(Generic[T], AsyncApplication):
             try:
                 message_str = await self.websocket.receive_text()
 
-                self.handle_incoming(message_str)
+                await self.handle_incoming(message_str)
             except WebSocketException:
                 LOGGER.exception(
                     "Connection to debugger frontend had an exception while receiving."
@@ -366,11 +366,22 @@ class DebuggerFrontendWebsocketConnection(WebsocketConnection[Message]):
             return True
 
         if (
-            message.session_id == self.filters.session_id
+            message.session_id == uuid.UUID(self.filters.session_id)
             or message.cem_id == self.filters.cem_id
             or message.rm_id == self.filters.rm_id
         ):
+            LOGGER.warning(
+                "Message %s matches filter %s. Including it.",
+                message,
+                self.filters,
+            )
             return True
+        else:
+            LOGGER.warning(
+                "Message %s does not match filter %s. Not including it.",
+                message,
+                self.filters,
+            )
 
         return False
 
