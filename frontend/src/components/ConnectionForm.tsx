@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { CoolFrame } from "./CoolFrame";
+import LoadingSpinner from "./LoadingSpinner";
+import TextInput from "./TextInput";
 
 type CreateS2Connection = {
     rm_id: string;
@@ -92,105 +94,37 @@ export function CreateConnectionForm(props: {
                             {message && (
                                 <div
                                     className={`text-sm italic ${message.startsWith("Connection created")
-                                            ? "text-green-500"
-                                            : "text-red-500"
+                                        ? "text-green-500"
+                                        : "text-red-500"
                                         }`}
                                 >
                                     {message}
                                 </div>
                             )}
-                            <div>
-                                <label
-                                    htmlFor="rm_id"
-                                    className="block text-gray-700 text-sm font-bold mb-2"
-                                >
-                                    RM ID:
-                                </label>
-                                <input
-                                    type="text"
-                                    id="rm_id"
-                                    name="rm_id"
-                                    value={formData.rm_id}
-                                    onChange={handleChange}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                />
-                            </div>
-                            <div>
-                                <label
-                                    htmlFor="cem_id"
-                                    className="block text-gray-700 text-sm font-bold mb-2"
-                                >
-                                    CEM ID:
-                                </label>
-                                <input
-                                    type="text"
-                                    id="cem_id"
-                                    name="cem_id"
-                                    value={formData.cem_id}
-                                    onChange={handleChange}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                />
-                            </div>
-                            <div>
-                                <label
-                                    htmlFor="cem_uri"
-                                    className="block text-gray-700 text-sm font-bold mb-2"
-                                >
-                                    CEM URI:
-                                </label>
-                                <input
-                                    type="text"
-                                    id="cem_uri"
-                                    name="cem_uri"
-                                    value={formData.cem_uri}
-                                    onChange={handleChange}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                />
-                            </div>
-                            <div>
-                                <label
-                                    htmlFor="rm_uri"
-                                    className="block text-gray-700 text-sm font-bold mb-2"
-                                >
-                                    RM URI:
-                                </label>
-                                <input
-                                    type="text"
-                                    id="rm_uri"
-                                    name="rm_uri"
-                                    value={formData.rm_uri}
-                                    onChange={handleChange}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                />
-                            </div>
+
+                            <TextInput label="RM ID:" name="rm_id" id="rm_id" onChange={handleChange} value={formData.rm_id} ></TextInput>
+                            <TextInput label="CEM ID:" name="cem_id" id="cem_id" onChange={handleChange} value={formData.cem_id} ></TextInput>
+                            <TextInput label="CEM URI:" name="cem_uri" id="cem_uri" onChange={handleChange} value={formData.cem_uri} ></TextInput>
+                            <TextInput label="RM URI:" name="rm_uri" id="rm_uri" onChange={handleChange} value={formData.rm_uri} ></TextInput>
+
                             <div>
                                 <button
                                     type="submit"
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+                                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
                                     disabled={isLoading}
                                 >
                                     {isLoading ? (
-                                        <svg
-                                            className="animate-spin h-5 w-5 mr-3"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <circle
-                                                className="opacity-25"
-                                                cx="12"
-                                                cy="12"
-                                                r="10"
-                                                stroke="currentColor"
-                                                strokeWidth="4"
-                                            />
-                                            <path
-                                                className="opacity-75"
-                                                fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                            />
-                                        </svg>
+                                        <LoadingSpinner></LoadingSpinner>
                                     ) : (
                                         "Create Connection"
                                     )}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="bg-rose-400 hover:bg-rose-500 text-white font-bold py-2 px-4 ms-2 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
+                                    disabled={isLoading}
+                                >
+                                    Close
                                 </button>
                             </div>
                         </form>
