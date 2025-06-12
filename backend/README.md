@@ -93,6 +93,7 @@ Currently there are 3 Message processors:
 1. `MessageValidator` - Validates the s2 message.
 2. `MessageStorage` - Stores the message and any validation errors in the SQLite database.
 3. `FrontendMessageProcessor` - Sends the message to all open debugger websockets. 
+4. `SessionMessageProcessor` - Sends session updated to the frontend so that it can have an up to date list of running and historical session.
 
 ## Configuration
 Main configuration parameters may be passed through a `.yaml` file. An example:

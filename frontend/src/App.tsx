@@ -4,7 +4,6 @@ import type { Message } from "./types/Message";
 import { CoolFrame } from "./components/CoolFrame";
 import { SessionSelector } from "./components/SessionsList";
 import { CreateConnectionForm } from "./components/ConnectionForm";
-import React from "react";
 import MessageDetails from "./components/MessageDetails";
 import MessageList from "./components/MessageList";
 

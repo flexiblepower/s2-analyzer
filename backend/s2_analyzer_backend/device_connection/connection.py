@@ -344,7 +344,6 @@ class DebuggerFrontendWebsocketConnection(WebsocketConnection[Message]):
             for communication in self.history_filter.get_s2_session_history(
                 uuid.UUID(self.filters.session_id)
             ):
-                LOGGER.warning(communication.validation_errors)
                 validation_error = None
                 if (
                     communication.validation_errors is not None
@@ -393,7 +392,8 @@ class DebuggerFrontendWebsocketConnection(WebsocketConnection[Message]):
             return True
 
         if (
-            message.session_id == uuid.UUID(self.filters.session_id)
+            # Need to check if session ID filter is provided since will error UUID if not
+            (self.filters.session_id and message.session_id == uuid.UUID(self.filters.session_id))
             or message.cem_id == self.filters.cem_id
             or message.rm_id == self.filters.rm_id
         ):

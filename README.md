@@ -22,20 +22,27 @@ The backend of the s2 analyzer is tasked with processing, forwarding and validat
   1. From RM to S2 analyzer
   2. From CEM to S2 analyzer
 
-In the current version of the S2 analyzer, it is up to the RM and CEM to initiate the websocket connection. In future versions, the S2 analyzer may be configured to initiate the connection to a listening RM and/or CEM as well.
+This connection can be initiated in 3 ways:
+ 1. The devices connect to the S2 Analyzer, specifying their role and the id of the other device in the URI
+ 2. The S2 Analyzer initiates the connection to the devices (using the form in the frontend)
+ 3. A combination of 1 and 2 (As long as the IDs match)
 
-It is possible to connect a number of RM's and CEM's to the S2 analyzer so that many S2 conversations are analyzed by the S2 analyzer simultaneously.
+It is possible to connect a number of RM's and CEM's to the S2 analyzer so that many S2 conversations are analyzed by the S2 analyzer simultaneously. You can switch between different sessions using the session selector on the frontend. This can also be used to look at old 
 
 After the connections have been set up, the S2 analyzer provides a number of functionalities. The S2 analyzer will:
 - Forward any message from the RM to the CEM connection and vice versa
-- Store the messages in a message history SQLite database
+- Store the messages in a message history SQLite database (grouped by session)
 - Validate the format of the s2 messages using the S2 python package. Validation errors are stored in the message history database.
 
-- Provide a websocket connection for debugging purposes. The frontend can connect to this websocket to see all messages in transit along with any validation errors.
-- Provide a REST API for the frontend to query the message history database.
-- Provides a REST API endpoint for injecting messages into a connection between a CEM and RM device.
+- Provide a websocket connection for debugging purposes. The frontend can connect to this websocket to see all messages in transit along with any validation errors. By providing a query parameter on the websocket url you can filter the messages by session.
+- Provide a REST API for the frontend to query the message history database. (To be implemented on frontend.)
+- Provides a REST API endpoint for injecting messages into a connection between a CEM and RM device. (To be implemented on backend.)
 
 ![Analyzer Structure](./diagrams/s2-project_basic.png)
+
+Frontend:
+
+![S2 Analyzer Frontend](./diagrams/frontend-screenshot.png)
 
 ## Features of backend and frontend
 

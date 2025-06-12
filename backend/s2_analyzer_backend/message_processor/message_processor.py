@@ -172,7 +172,10 @@ class MessageStorageProcessor(MessageProcessor):
             session.add(db_message)
 
             if message.s2_validation_error:
-                if message.s2_validation_error.errors and len(message.s2_validation_error.errors) > 0:
+                if (
+                    message.s2_validation_error.errors
+                    and len(message.s2_validation_error.errors) > 0
+                ):
                     for error in message.s2_validation_error.errors:
                         validation_error = ValidationError(
                             type=error["type"],
@@ -209,28 +212,25 @@ class WebSocketMessageProcessor(MessageProcessor):
     async def process_message(
         self, message: Message, loop: asyncio.AbstractEventLoop
     ) -> Message:
-        # LOGGER.warning(
-        #     f"Sending message to {len(self.connections)} debugger frontends: {message}"
-        # )
-        closed_connections = []
         for i, connection in enumerate(self.connections):
             if connection._running:
                 await connection.enqueue_message(message)
-            else:
-                closed_connections.append(i)
 
-        self.cleanup_closed_connections(closed_connections)
+        self.cleanup_closed_connections()
 
         return message
 
-    def cleanup_closed_connections(self, closed_connections: list[int]):
+    def cleanup_closed_connections(self):
         """Finds any connections that are closed and removes them from the connection list.
         This could be done in a more sophisticated why by removing it when a connection is closed, however since it is
         unlikely that there will be more than a handful of connections, this simple cleanup method is fine.
         Doing it another way just adds unnecessary complexity."""
-        for i in closed_connections:
-            self.connections.pop(i)
-            LOGGER.info(f"Removed closed connection at index {i}")
+
+        # Go in reverse so that popping doesn't effect future iterations
+        for i in range(len(self.connections) - 1, -1, -1):
+            if not self.connections[i]._running:
+                self.connections.pop(i)
+                LOGGER.info(f"Removed closed connection at index {i}")
 
     async def close(self):
         """Stop all of the websocket connections. Closes the websockets."""
@@ -340,7 +340,7 @@ class SessionUpdateMessageProcessor(WebSocketMessageProcessor):
             else:
                 closed_connections.append(i)
 
-        self.cleanup_closed_connections(closed_connections)
+        self.cleanup_closed_connections()
 
         return message
 
