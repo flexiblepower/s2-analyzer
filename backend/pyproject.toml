@@ -11,3 +11,13 @@ dependencies = [
     "sqlmodel>=0.0.24",
     "websockets>=13.1",
 ]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.16.0",
+    "pylink>=0.3.3",
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.0.0",
+    "pytest-coverage>=0.0",
+    "pytest-timer>=1.0.0",
+]

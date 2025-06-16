@@ -12,7 +12,7 @@ export default function MessageList(props: { messages: Message[], current_sessio
                 props.current_session_id ?
                     <div className="text-xl text-gray-500">Session ID: {props.current_session_id} </div>
                     :
-                    <div className="text-xl text-gray-500">Select a session to view it's messages.</div>
+                    <div className="text-xl text-gray-500">Select a session to view its messages.</div>
             }
         </div>
         <div className="flex flex-col gap-2 items-start max-h-[80vh] no-scrollbar overflow-y-scroll">
