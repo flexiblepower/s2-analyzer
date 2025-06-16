@@ -124,7 +124,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync
 ```
 
-### Development tooling (Not Maintanined)
+### Development tooling (Not Maintained)
 
 To unit test:
 
