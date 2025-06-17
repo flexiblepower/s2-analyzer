@@ -1,10 +1,10 @@
-FROM node:18-slim AS build
+FROM node:24-slim AS build
 
 WORKDIR /build
 
-COPY package.json .
+COPY ./package.json ./package-lock.json ./
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 

@@ -1,6 +1,5 @@
 # S2 analyzer backend
 
-
 ## Quickstart
 
 In order to run the s2 analyzer both an S2 resource manager (RM) and an S2 Customer Energy Manager (CEM) are also
@@ -19,7 +18,7 @@ docker compose up --build
 
 ## Features
 
-The s2 analyzer acts as a man in the middle between a CEM and RM connection. All messages sent between the CEM and RM are forwarded through the S2 analyzer. The S2 analyzer also keeps a history of all messages sent between the CEM and RM. 
+The s2 analyzer acts as a man in the middle between a CEM and RM connection. All messages sent between the CEM and RM are forwarded through the S2 analyzer. The S2 analyzer also keeps a history of all messages sent between the CEM and RM.
 
 FastAPI provides OpenAPI documentation for the API endpoints. The OpenAPI documentation is available at `http://localhost:8001/docs`. Consult this documentation for more information on the available endpoints.
 
@@ -82,19 +81,23 @@ This will inject the message into the channel to `rm1` and will look like it cam
 ![Analyzer Structure](../diagrams/s2-project_new_structure.png)
 
 The S2 analyzer backend has 2 distinct parts:
+
 1. The part that acts as a man in the middle between the CEM and RM device
 2. The debugging and persistence part
 
-Our primary design goal was to keep these 2 parts separate. This involved moving all of the debugging functionality out of the path of the CEM and RM message routing. 
+Our primary design goal was to keep these 2 parts separate. This involved moving all of the debugging functionality out of the path of the CEM and RM message routing.
 
 Our second main design goal was to make the processing of messages modular to allow for additional functionality to be added in the future. This is why the message processing is done in a separate module. To this end we created the `MessageProcessorHandler` class which is a pipeline handler. It holds a number of `MessageProcessor` implementations which are called in order to process a message. To add additional functionality to the message processing, a new `MessageProcessor` implementation can be added to the pipeline.
 
 Currently there are 3 Message processors:
+
 1. `MessageValidator` - Validates the s2 message.
 2. `MessageStorage` - Stores the message and any validation errors in the SQLite database.
-3. `FrontendMessageProcessor` - Sends the message to all open debugger websockets. 
+3. `FrontendMessageProcessor` - Sends the message to all open debugger websockets.
+4. `SessionMessageProcessor` - Sends session updated to the frontend so that it can have an up to date list of running and historical session.
 
 ## Configuration
+
 Main configuration parameters may be passed through a `.yaml` file. An example:
 
 ```yaml
@@ -111,39 +114,34 @@ LOG_LEVEL=INFO  # May be DEBUG, INFO, WARNING or ERROR.
 ```
 
 ## Development workflow
+
 ### Preparation of development environment
+
+This project uses the [UV package manager](https://docs.astral.sh/uv/) to simplify and speed up package management. UV creates a virtual environment automatically for you when you run it.
+
 ```bash
-python -m venv ./.venv
-. ./.venv/bin/activate
-pip install pip-tools
-ci/install_dependencies.sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv sync
 ```
 
-### Updating dependencies
-After you change a dependency in `dev-requirements.in` or `requirements.in` you can update the pinned
-dependencies in `dev-requirements.txt` and `requirements.txt` with:
-```bash
-ci/update_dependencies.h
-```
+### Development tooling (Not Maintained)
 
-Finally, to install the new or updated dependencies:
-```bash
-ci/install_dependencies.sh
-```
-
-### Development tooling
 To unit test:
+
 ```bash
 ci/test_unit.sh
 ```
 
 To typecheck:
+
 ```bash
 ci/typecheck.sh
 ```
 
 ### Run the backend
+
 To run the backend locally:
+
 ```bash
 ./run.sh
 ```

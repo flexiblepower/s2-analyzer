@@ -14,9 +14,12 @@ from fastapi import (
 from pydantic import BaseModel
 from s2_analyzer_backend.message_processor.message_processor import (
     DebuggerFrontendMessageProcessor,
+    SessionUpdateMessageProcessor,
 )
 from s2_analyzer_backend.device_connection.connection import (
     DebuggerFrontendWebsocketConnection,
+    DebuggerMessageFilter,
+    SessionUpdatesWebsocketConnection,
 )
 
 from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
@@ -27,11 +30,15 @@ from s2_analyzer_backend.async_application import APPLICATIONS
 from s2python.s2_parser import S2Parser
 from s2python.s2_validation_error import S2ValidationError
 
+from s2_analyzer_backend.device_connection.session_details import SessionDetails
+from s2_analyzer_backend.endpoints.history_filter import HistoryFilter
+
 LOGGER = logging.getLogger(__name__)
 
 
 class ValidateS2Message(BaseModel):
     """Pydantic model for receiving the message validation request body."""
+
     message: dict
 
 
@@ -51,16 +58,22 @@ class DebuggerAPI:
     def __init__(
         self,
         debugger_frontend_msg_processor: "DebuggerFrontendMessageProcessor",
+        session_update_msg_processor: "SessionUpdateMessageProcessor",
     ) -> None:
         super().__init__()
         self.uvicorn_server = None
 
         self.router = APIRouter()
         self.debugger_frontend_msg_processor = debugger_frontend_msg_processor
+        self.session_update_msg_processor = session_update_msg_processor
 
         self.router.add_api_route("/", self.get_root)
         self.router.add_api_websocket_route(
             "/backend/debugger/", self.receive_new_debugger_frontend_connection
+        )
+        self.router.add_api_websocket_route(
+            "/backend/session-updates/",
+            self.receive_new_session_update_frontend_connection,
         )
         self.router.add_api_route(
             "/backend/history-filter/",
@@ -78,12 +91,26 @@ class DebuggerAPI:
             description="Validate an S2 message against the schema.",
             tags=["debugger"],
         )
+        self.router.add_api_route(
+            "/backend/connections/",
+            self.get_connections,
+            methods=["GET"],
+            tags=["connections"],
+        )
 
     async def get_root(self):
         return {"status": "healthy"}
 
     async def receive_new_debugger_frontend_connection(
-        self, websocket: WebSocket
+        self,
+        websocket: WebSocket,
+        session_id: Optional[str] = Query(None, description="UUID of Session"),
+        cem_id: Optional[str] = Query(None, description="ID of CEM."),
+        rm_id: Optional[str] = Query(None, description="ID of RM."),
+        include_session_history: Optional[bool] = Query(
+            True, description="Send past messages on connection."
+        ),
+        history_filter: HistoryFilter = Depends(),  # Dependency injected history filter which queries database
     ) -> None:
         """Accepts an incoming websocket connection from the debugger frontend.
         Creates a new DebuggerFrontendWebsocketConnection instance which will handle the receiving and sending of messages on the new websocket.
@@ -98,14 +125,48 @@ class DebuggerAPI:
                 "Debugger frontend WS connection had an exception while accepting."
             )
 
-        conn = DebuggerFrontendWebsocketConnection(websocket)
+        filters = DebuggerMessageFilter(
+            rm_id=rm_id,
+            cem_id=cem_id,
+            session_id=session_id,
+            include_session_history=include_session_history,
+        )
+
+        conn = DebuggerFrontendWebsocketConnection(websocket, history_filter, filters)
 
         APPLICATIONS.add_and_start_application(conn)
-        self.debugger_frontend_msg_processor.add_connection(conn)
+        LOGGER.info("Degugger frontend connection added to applications.")
+        await self.debugger_frontend_msg_processor.add_connection(conn)
+
+        LOGGER.info("Waiting for debugger frontend connection to finish.")
+        await conn.wait_till_done_async(
+            timeout=None, kill_after_timeout=False, raise_on_timeout=False
+        )
+        LOGGER.warning("Exiting debugger frontend connection.")
+
+    async def receive_new_session_update_frontend_connection(
+        self,
+        websocket: WebSocket,
+    ):
+        LOGGER.info("Received new session update connection from debugger frontend.")
+
+        try:
+            await websocket.accept()
+        except WebSocketException:
+            LOGGER.exception(
+                "Debugger frontend session update WS connection had an exception while accepting."
+            )
+
+        conn = SessionUpdatesWebsocketConnection(websocket)
+
+        APPLICATIONS.add_and_start_application(conn)
+        await self.session_update_msg_processor.add_connection(conn)
 
         await conn.wait_till_done_async(
             timeout=None, kill_after_timeout=False, raise_on_timeout=False
         )
+
+        LOGGER.warning("Exiting session frontend connection.")
 
     async def get_filtered_history(
         self,
@@ -170,3 +231,13 @@ class DebuggerAPI:
 
         LOGGER.info(f"Validated S2 message: {s2_message}")
         return {"message": s2_message, "errors": errors}
+
+    async def get_connections(
+        self,
+        history_filter: HistoryFilter = Depends(),  # Dependency injected history filter which queries database
+    ):
+        """Endpoint to view all open connections to the S2 Analyzer."""
+
+        history_sessions = history_filter.get_unique_sessions()
+
+        return history_sessions

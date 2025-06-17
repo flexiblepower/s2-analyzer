@@ -1,22 +1,30 @@
 import json
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, Optional, Self
+import uuid
 
 from fastapi import (
+    Depends,
+    HTTPException,
     Response,
     WebSocket,
     APIRouter,
     WebSocketException,
 )
-from pydantic import BaseModel
-from s2_analyzer_backend.device_connection.connection import (
-    WebSocketConnection,
+from pydantic import BaseModel, model_validator
+from s2_analyzer_backend.device_connection.connection_adapter import (
+    FastAPIWebSocketAdapter,
+    ConnectionAdapter,
+    WebSocketConnectionAdapter,
 )
+from s2_analyzer_backend.device_connection.connection import S2Connection
 
 from s2_analyzer_backend.async_application import APPLICATIONS
 from s2_analyzer_backend.device_connection.origin_type import S2OriginType
 from s2python.s2_parser import S2Parser
 from s2python.s2_validation_error import S2ValidationError
+
+from websockets import connect
 
 if TYPE_CHECKING:
     from s2_analyzer_backend.device_connection.router import MessageRouter
@@ -34,13 +42,20 @@ class InjectMessage(BaseModel):
     message: dict
 
 
-class ConnectionDetails(BaseModel):
-    """Pydantic model used to serialize the connection information
-    for the connection list endpoint."""
+class CreateConnection(BaseModel):
+    rm_id: str
+    cem_id: str
 
-    origin_id: str
-    dest_id: str
-    connection_type: S2OriginType
+    rm_uri: Optional[str] = None
+    cem_uri: Optional[str] = None
+
+    @model_validator(mode="after")
+    def check_at_least_one_uri(self) -> Self:
+
+        if self.cem_uri is None and self.rm_uri is None:
+            raise ValueError("At least one of 'rm_uri' or 'cem_uri' must be provided")
+
+        return self
 
 
 class ManInTheMiddleAPI:
@@ -79,19 +94,19 @@ class ManInTheMiddleAPI:
         )
         self.router.add_api_route(
             "/backend/connections/",
-            self.get_connections,
-            methods=["GET"],
+            self.create_new_connections,
+            methods=["POST"],
             tags=["connections"],
         )
 
-    async def handle_connection(
+    async def create_connection(
         self,
-        websocket,
+        conn_adapter: ConnectionAdapter,
         connection_type: S2OriginType,
         origin_id,
         dest_id,
-    ) -> None:
-        """Handles the creation of a new WebsocketConnection instance when a CEM or RM device initiates a connection.
+    ) -> tuple[S2Connection, uuid.UUID]:
+        """Handles the creation of a new S2Connection instance when a CEM or RM device initiates a connection.
         WebSocketConnections are run as AsyncApplications so run on their own thread to receive messages.
 
         Args:
@@ -100,17 +115,15 @@ class ManInTheMiddleAPI:
             origin_id (_type_): The identifier of the sending device.
             dest_id (_type_): Identifier of the receiving device.
         """
-        conn = WebSocketConnection(
-            origin_id, dest_id, connection_type, self.msg_router, websocket
+        conn = S2Connection(
+            conn_adapter, origin_id, dest_id, connection_type, self.msg_router
         )
 
         APPLICATIONS.add_and_start_application(conn)
 
-        await self.msg_router.receive_new_connection(conn)
+        session_id = await self.msg_router.receive_new_connection(conn)
 
-        await conn.wait_till_done_async(
-            timeout=None, kill_after_timeout=False, raise_on_timeout=False
-        )
+        return conn, session_id
 
     async def receive_new_rm_connection(
         self, websocket: WebSocket, rm_id: str, cem_id: str
@@ -126,7 +139,16 @@ class ManInTheMiddleAPI:
                 cem_id,
             )
 
-        await self.handle_connection(websocket, S2OriginType.RM, rm_id, cem_id)
+        conn_adapter = FastAPIWebSocketAdapter(websocket)
+
+        connection, _ = await self.create_connection(
+            conn_adapter, S2OriginType.RM, rm_id, cem_id
+        )
+
+        # Need to wait for everything to be done. If we exit this function prematurely the websocket will be closed automatically
+        await connection.wait_till_done_async(
+            timeout=None, kill_after_timeout=False, raise_on_timeout=False
+        )
 
     async def receive_new_cem_connection(
         self, websocket: WebSocket, cem_id: str, rm_id: str
@@ -142,7 +164,64 @@ class ManInTheMiddleAPI:
                 rm_id,
             )
 
-        await self.handle_connection(websocket, S2OriginType.CEM, cem_id, rm_id)
+        conn_adapter = FastAPIWebSocketAdapter(websocket)
+
+        connection, _ = await self.create_connection(
+            conn_adapter, S2OriginType.CEM, cem_id, rm_id
+        )
+
+        # Need to wait for everything to be done. If we exit this function prematurely the websocket will be closed automatically
+        await connection.wait_till_done_async(
+            timeout=None, kill_after_timeout=False, raise_on_timeout=False
+        )
+
+    async def create_outgoing_connection(
+        self, uri, connection_type: S2OriginType, source_id, dest_id
+    ) -> tuple[S2Connection, uuid.UUID]:
+        try:
+            websocket = await connect(uri)
+        except:
+            raise HTTPException(
+                status_code=400, detail=f"Failed to connect to {connection_type.name}."
+            )
+        cem_conn_adapter = WebSocketConnectionAdapter(websocket)
+
+        connection, session_id = await self.create_connection(
+            cem_conn_adapter,
+            connection_type,
+            origin_id=source_id,
+            dest_id=dest_id,
+        )
+        return connection, session_id
+
+    async def create_new_connections(self, body: CreateConnection):
+        LOGGER.info("Creating connections: %s", body)
+
+        if body.cem_uri is not None and body.cem_uri != "":
+            cem_connection, session_id = await self.create_outgoing_connection(
+                body.cem_uri, S2OriginType.CEM, body.cem_id, body.rm_id
+            )
+            LOGGER.info("CEM connected")
+        else:
+            LOGGER.info("No CEM uri provided. Will wait for an incoming connection.")
+
+        if body.rm_uri is not None and body.rm_uri != "":
+            try:
+                rm_connection, session_id = await self.create_outgoing_connection(
+                    body.rm_uri, S2OriginType.RM, body.rm_id, body.cem_id
+                )
+                LOGGER.info(session_id)
+            except HTTPException:
+                # If connection to RM fails but we already connected to CEM then stop the CEM connection.
+                if cem_connection._running:
+                    cem_connection.stop()
+                raise
+
+            LOGGER.info("RM connected")
+        else:
+            LOGGER.info("No RM uri provided. Will wait for an incoming connection.")
+
+        return {"session_id": session_id}
 
     async def inject_message(self, body: InjectMessage, validate: bool = True):
         """
@@ -180,16 +259,3 @@ class ManInTheMiddleAPI:
                 "Unable to inject message. Probably because there's no connection to inject into.",
                 400,
             )
-
-    async def get_connections(self):
-        """Endpoint to view all open connections to the S2 Analyzer."""
-        connections = []
-        for conn in self.msg_router.connections.values():
-            connections.append(
-                ConnectionDetails(
-                    origin_id=conn.origin_id,
-                    dest_id=conn.dest_id,
-                    connection_type=conn.s2_origin_type,
-                )
-            )
-        return connections

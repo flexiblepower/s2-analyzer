@@ -8,11 +8,12 @@ services:
       - "8001:8001"
     environment:
       LOG_LEVEL: info
+      DATABASE_URL: sqlite:///data/database.sqlite3
 
   frontend:
     build:
       context: ./frontend
     ports:
-      - "8000:80"
+      - "8080:80"
     depends_on:
       - backend
