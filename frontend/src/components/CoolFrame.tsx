@@ -1,5 +1,3 @@
-
-
 export function CoolFrame(props: { children: React.ReactNode, offset: 1 | 2, color: "blue" | "pink" | "teal" }) {
     let color_fg = {
         blue: "bg-blue-600 border-blue-600",

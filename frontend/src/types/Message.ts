@@ -1,4 +1,3 @@
-
 export type MessageType = "S2" | "SESSION_STARTED" | "SESSION_ENDED" | "MSG_INJECTED";
 
 export type ValidationErrors = {

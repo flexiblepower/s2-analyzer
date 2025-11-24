@@ -16,7 +16,7 @@ const LOCAL_STORAGE_KEY = "createConnectionFormData";
 export function CreateConnectionForm(props: {
     set_show_create_form: (show_create_form: boolean) => void;
 }) {
-    const [formData, setFormData] = useState<CreateS2Connection>(() => {
+    const [form_data, set_form_data] = useState<CreateS2Connection>(() => {
         // Initialize from local storage
         const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
         return storedData
@@ -29,25 +29,25 @@ export function CreateConnectionForm(props: {
             };
     });
 
-    const [message, setMessage] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false); // New loading state
+    const [message, set_message] = useState<string | null>(null);
+    const [is_loading, set_is_loading] = useState(false); // New loading state
 
     useEffect(() => {
         // Save to local storage whenever formData changes
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(formData));
-    }, [formData]);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(form_data));
+    }, [form_data]);
 
-    const handleChange = (
+    const handle_change = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        set_form_data({ ...form_data, [name]: value });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handle_submit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setMessage(null); // Clear previous message
-        setIsLoading(true); // Start loading
+        set_message(null); // Clear previous message
+        set_is_loading(true); // Start loading
 
         try {
             const response = await fetch(`http://${HOST}/backend/connections/`, {
@@ -55,13 +55,13 @@ export function CreateConnectionForm(props: {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(form_data),
             });
 
             if (!response.ok) {
                 const errorData = await response.json(); // Try to parse the error response
                 if (errorData && errorData.detail) {
-                    setMessage(errorData.detail); // Display the error message from the backend
+                    set_message(errorData.detail); // Display the error message from the backend
                 } else {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -70,13 +70,13 @@ export function CreateConnectionForm(props: {
 
             const result = await response.json();
             console.log("Connection created:", result);
-            setMessage("Connection created successfully!"); // Set success message
+            set_message("Connection created successfully!"); // Set success message
 
-            // props.set_show_create_form(false);
+            props.set_show_create_form(false);
         } catch (error: any) {
-            setMessage(error.message || "An unexpected error occurred");
+            set_message(error.message || "An unexpected error occurred");
         } finally {
-            setIsLoading(false); // Stop loading
+            set_is_loading(false); // Stop loading
         }
     };
 
@@ -90,10 +90,10 @@ export function CreateConnectionForm(props: {
             <div>
                 <CoolFrame offset={2} color="blue">
                     <div className="px-8 py-4">
-                        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                        <form onSubmit={handle_submit} className="flex flex-col gap-4">
                             {message && (
                                 <div
-                                    className={`text-sm italic ${message.startsWith("Connection created")
+                                    className={`text-sm text-center italic ${message.startsWith("Connection created")
                                         ? "text-green-500"
                                         : "text-red-500"
                                         }`}
@@ -102,18 +102,18 @@ export function CreateConnectionForm(props: {
                                 </div>
                             )}
 
-                            <TextInput label="RM ID:" name="rm_id" id="rm_id" onChange={handleChange} value={formData.rm_id} ></TextInput>
-                            <TextInput label="CEM ID:" name="cem_id" id="cem_id" onChange={handleChange} value={formData.cem_id} ></TextInput>
-                            <TextInput label="CEM URI:" name="cem_uri" id="cem_uri" onChange={handleChange} value={formData.cem_uri} ></TextInput>
-                            <TextInput label="RM URI:" name="rm_uri" id="rm_uri" onChange={handleChange} value={formData.rm_uri} ></TextInput>
+                            <TextInput label="RM ID" name="rm_id" id="rm_id" onChange={handle_change} value={form_data.rm_id} ></TextInput>
+                            <TextInput label="CEM ID" name="cem_id" id="cem_id" onChange={handle_change} value={form_data.cem_id} ></TextInput>
+                            <TextInput label="CEM URI" name="cem_uri" id="cem_uri" onChange={handle_change} value={form_data.cem_uri} ></TextInput>
+                            <TextInput label="RM URI" name="rm_uri" id="rm_uri" onChange={handle_change} value={form_data.rm_uri} ></TextInput>
 
-                            <div>
+                            <div className="flex flex-row gap-4 justify-center">
                                 <button
                                     type="submit"
-                                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
-                                    disabled={isLoading}
+                                    className="bg-blue-600 hover:bg-blue-700 transition-colors text-white font-bold py-2 px-4 focus:outline-none focus:shadow-outline disabled:opacity-50"
+                                    disabled={is_loading}
                                 >
-                                    {isLoading ? (
+                                    {is_loading ? (
                                         <LoadingSpinner></LoadingSpinner>
                                     ) : (
                                         "Create Connection"
@@ -121,8 +121,9 @@ export function CreateConnectionForm(props: {
                                 </button>
                                 <button
                                     type="button"
-                                    className="bg-rose-400 hover:bg-rose-500 text-white font-bold py-2 px-4 ms-2 rounded focus:outline-none focus:shadow-outline disabled:opacity-50"
-                                    disabled={isLoading}
+                                    className="border border-rose-500 text-rose-600 bg-transparent hover:bg-rose-50 transition-colors font-bold py-2 px-4 focus:outline-none focus:shadow-outline disabled:opacity-50"
+                                    disabled={is_loading}
+                                    onClick={() => props.set_show_create_form(false)}
                                 >
                                     Close
                                 </button>

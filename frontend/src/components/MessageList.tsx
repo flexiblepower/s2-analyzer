@@ -2,7 +2,6 @@ import React from "react";
 import { CoolFrame } from "./CoolFrame";
 import { Message } from "../types/Message";
 
-
 export default function MessageList(props: { messages: Message[], current_session_id: string | null, on_click_message: (message_idx: number) => void }) {
     return <div className="w-fit h-fit">
         <div className="mb-4">

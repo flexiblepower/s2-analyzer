@@ -14,25 +14,23 @@ export default function App() {
     let [messages, set_messages] = useState([] as Message[]);
     let [detail_message, set_detail_message] = useState(null as Message | null);
     let [show_session_form, set_show_session_form] = useState(false as boolean)
-
-    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+    const [current_session_id, set_current_session_id] = useState<string | null>(null);
 
     useEffect(() => {
         // Parse the initial session ID from the URL on mount
-        const urlParams = new URLSearchParams(window.location.search);
-        const initialSessionId = urlParams.get("session-id");
-        setCurrentSessionId(initialSessionId);
+        const url_params = new URLSearchParams(window.location.search);
+        const initial_session_id = url_params.get("session-id");
+        set_current_session_id(initial_session_id);
     }, []); // Run once on mount
-
 
     useEffect(() => {
         let ws: WebSocket;
 
-        const connectWebSocket = () => {
+        const connect_websocket = () => {
             let url = `ws://${HOST}/backend/debugger/`;
 
-            if (currentSessionId) {
-                url += `?session_id=${currentSessionId}`;
+            if (current_session_id) {
+                url += `?session_id=${current_session_id}`;
             }
 
             ws = new WebSocket(url);
@@ -60,7 +58,7 @@ export default function App() {
             };
         };
 
-        connectWebSocket();
+        connect_websocket();
 
         // Cleanup function to close the websocket when currentSessionId changes or component unmounts
         return () => {
@@ -68,16 +66,14 @@ export default function App() {
                 ws.close();
             }
         };
-    }, [currentSessionId]);
+    }, [current_session_id]);
 
     useEffect(() => {
         console.info("Messages: ", messages);
     }, [messages]);
 
-
-
-    function selectSession(session_id: string) {
-        if (session_id === currentSessionId) return; // Prevent unnecessary updates
+    function select_session(session_id: string) {
+        if (session_id === current_session_id) return; // Prevent unnecessary updates
 
         // Clear message history as it will be filled on re-connection of the WebSocket
         const urlParams = new URLSearchParams(window.location.search);
@@ -88,15 +84,15 @@ export default function App() {
         window.history.pushState({}, "", newUrl);
 
         set_messages([])
-        setCurrentSessionId(session_id)
+        set_current_session_id(session_id)
     }
 
     return <div className="w-full h-full px-8 py-4 relative">
         <div className="flex flex-row justify-between items-start">
-            <MessageList messages={messages} current_session_id={currentSessionId} on_click_message={idx => set_detail_message(messages[idx])} />
+            <MessageList messages={messages} current_session_id={current_session_id} on_click_message={idx => set_detail_message(messages[idx])} />
             <div className="ms-2">
                 <SessionSelector
-                    on_session_click={selectSession} // Pass the handler
+                    on_session_click={select_session} // Pass the handler
                     set_show_create_form={set_show_session_form}
                 ></SessionSelector>
                 {show_session_form ? <CreateConnectionForm set_show_create_form={set_show_session_form}
@@ -107,10 +103,8 @@ export default function App() {
 
         <div className="absolute bottom-4 right-4">
             <CoolFrame offset={1} color={connected ? "blue" : "pink"}>
-                <div className="font-bold text-blue-800 p-4 text-2xl">{connected ? "Connected" : "Not connected"}</div>
+                <div className="font-bold p-4 text-2xl">{connected ? "Connected" : "Not connected"}</div>
             </CoolFrame>
         </div>
     </div>
 }
-
-

@@ -15,7 +15,7 @@ To quickly set up & run the S2 analyzer:
 docker compose up --build
 ```
 
-You can reach the frontend at `localhost:8000`. Connect your Resource Manager to `"ws://localhost:8001/backend/rm/battery1/cem/cem1/ws"` and connect your CEM to `ws://localhost:8001/backend/cem/cem1/rm/battery1/ws`, and you'll see the messages flowing between them in the frontend. If you don't have an RM, you can use one of the [example RM implementations](https://github.com/flexiblepower/s2-example-implementations) to test your CEM.
+You can reach the frontend at `localhost:8080`. Connect your Resource Manager to `"ws://localhost:8001/backend/rm/battery1/cem/cem1/ws"` and connect your CEM to `ws://localhost:8001/backend/cem/cem1/rm/battery1/ws`, and you'll see the messages flowing between them in the frontend. If you don't have an RM, you can use one of the [example RM implementations](https://github.com/flexiblepower/s2-example-implementations) to test your CEM.
 
 ## Goal
 
